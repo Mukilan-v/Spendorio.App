@@ -100,51 +100,21 @@ class AuthManager {
     }
   }
 
-  // Check if a saved session exists (localStorage or sessionStorage)
+  // Always initialize on the Index (Landing / Authentication) screen.
+  // Opening the link or starting the app will NEVER automatically bypass the Index page.
   checkSession() {
-    try {
-      // If user explicitly logged out during this session, show auth screen
-      if (sessionStorage.getItem('spendorio_explicit_logout') === 'true') {
-        this.currentUser = null;
-        this.applySessionUI(false);
-        return false;
-      }
-
-      let sessionData = localStorage.getItem(this.STORAGE_KEYS.SESSION);
-      if (!sessionData) {
-        sessionData = sessionStorage.getItem(this.STORAGE_KEYS.SESSION);
-      }
-
-      if (sessionData) {
-        const session = JSON.parse(sessionData);
-        if (session && session.user) {
-          // Rehydrate with latest user data from storage (profileImage, dob, etc.)
-          const users = this.getLocalUsers();
-          const freshUser = users.find(u => u.id === session.user.id || (u.username && u.username.toLowerCase() === (session.user.username || '').toLowerCase()));
-          let merged = freshUser ? { ...session.user, ...freshUser } : session.user;
-          const uname = (merged.username || '').toLowerCase();
-          if (merged.isOwner || merged.id === 'user-mukiviswa' || uname.includes('muki') || uname.includes('viswa')) {
-            if (!merged.profileImage) merged.profileImage = 'img/profile.jpg';
-            if (!merged.dob) merged.dob = '2004-09-12';
-            if (!merged.fullName || merged.fullName === 'User') merged.fullName = 'MukiViswa';
-          }
-          this.currentUser = merged;
-          session.user = merged;
-          if (localStorage.getItem(this.STORAGE_KEYS.SESSION)) {
-            localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(session));
-          } else {
-            sessionStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(session));
-          }
-          this.applySessionUI(true);
-          return true;
-        }
-      }
-    } catch (e) {
-      console.warn('AuthManager: session parse error', e);
-    }
-
     this.currentUser = null;
     this.applySessionUI(false);
+
+    // Pre-fill remembered username/email on the login card if available
+    try {
+      const savedUser = localStorage.getItem('spendorio_remembered_user');
+      const input = document.getElementById('login-identifier');
+      if (savedUser && input && !input.value) {
+        input.value = savedUser;
+      }
+    } catch (e) {}
+
     return false;
   }
 
@@ -1658,12 +1628,20 @@ class AuthManager {
 
     sessionStorage.removeItem('spendorio_explicit_logout');
     if (rememberMe) {
-      localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
-      sessionStorage.removeItem(this.STORAGE_KEYS.SESSION);
+      try {
+        localStorage.setItem('spendorio_remembered_user', user.username || user.email || '');
+      } catch (e) {}
     } else {
-      sessionStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
-      localStorage.removeItem(this.STORAGE_KEYS.SESSION);
+      try {
+        localStorage.removeItem('spendorio_remembered_user');
+      } catch (e) {}
     }
+    // Store active session in sessionStorage so it stays active during current tab browsing
+    // but never auto-bypasses the Index landing page when opening the link fresh
+    sessionStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
+    try {
+      localStorage.removeItem(this.STORAGE_KEYS.SESSION);
+    } catch (e) {}
 
     this.currentUser = sessionUser;
     this.applySessionUI(true);
@@ -1706,8 +1684,11 @@ class AuthManager {
       loggedInAt: new Date().toISOString()
     };
 
-    // Store in sessionStorage / localStorage
-    localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
+    // Store in sessionStorage for this session only (never in localStorage to prevent auto-login)
+    sessionStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
+    try {
+      localStorage.removeItem(this.STORAGE_KEYS.SESSION);
+    } catch (e) {}
     this.currentUser = guestUser;
 
     // Reset guest trial space to 100% fresh, clean, empty slate (Zero owner personal data)

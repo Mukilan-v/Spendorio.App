@@ -37,6 +37,12 @@
 
   <!-- Force Purge of Old Caches & Auto-Update to Spendorio -->
   <script>
+    // Guarantee that opening the link displays the Index screen (never auto-bypasses into app)
+    try {
+      localStorage.removeItem('spendorio_session');
+      sessionStorage.removeItem('spendorio_session');
+    } catch (e) {}
+
     if ('caches' in window) {
       caches.keys().then(function(cacheNames) {
         cacheNames.forEach(function(cacheName) {
@@ -2697,14 +2703,14 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261025_v2_stable"></script>
-  <script src="js/auth.js?v=20261025_v2_stable"></script>
-  <script src="js/storage.js?v=20261025_v2_stable"></script>
-  <script src="js/tasks.js?v=20261025_v2_stable"></script>
-  <script src="js/expenses.js?v=20261025_v2_stable"></script>
+  <script src="js/pwa.js?v=20261025_index_guaranteed"></script>
+  <script src="js/auth.js?v=20261025_index_guaranteed"></script>
+  <script src="js/storage.js?v=20261025_index_guaranteed"></script>
+  <script src="js/tasks.js?v=20261025_index_guaranteed"></script>
+  <script src="js/expenses.js?v=20261025_index_guaranteed"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261025_v2_stable"></script>
-  <script src="js/charts.js?v=20261025_v2_stable"></script>
-  <script src="js/app.js?v=20261025_v2_stable"></script>
+  <script src="js/reports.js?v=20261025_index_guaranteed"></script>
+  <script src="js/charts.js?v=20261025_index_guaranteed"></script>
+  <script src="js/app.js?v=20261025_index_guaranteed"></script>
 </body>
 </html>
