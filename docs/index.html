@@ -40,13 +40,65 @@
     if ('caches' in window) {
       caches.keys().then(function(cacheNames) {
         cacheNames.forEach(function(cacheName) {
-          if (cacheName.indexOf('spendora') !== -1 || cacheName.indexOf('spendorio-v1.0.0') !== -1) {
+          if (cacheName.indexOf('spendora') !== -1 || cacheName.indexOf('spendorio-v1.0.0') !== -1 || cacheName.indexOf('spendorio-v1.0.3') !== -1) {
             console.log('[Spendorio] Purging stale cache:', cacheName);
             caches.delete(cacheName);
           }
         });
       });
     }
+
+    // Immediate Inline Feedback & Help Modal Handlers (Zero Cache Dependency)
+    function openSpendorioFeedbackModal() {
+      var modal = document.getElementById('help-feedback-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        document.body.classList.add('modal-open');
+      }
+    }
+    function closeSpendorioFeedbackModal() {
+      var modal = document.getElementById('help-feedback-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+      }
+    }
+    function copyOwnerEmail() {
+      var email = 'mukilanviswa5839@gmail.com';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(email);
+      } else {
+        var tempInput = document.createElement('input');
+        tempInput.value = email;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+      }
+      var toast = document.getElementById('feedback-copy-toast');
+      if (toast) {
+        toast.style.display = 'flex';
+        setTimeout(function() { toast.style.display = 'none'; }, 3500);
+      }
+      if (window.app && window.app.showToast) {
+        window.app.showToast('Copied mukilanviswa5839@gmail.com! 📋', 'success');
+      }
+    }
+    function sendOwnerEmail() {
+      var sel = document.getElementById('feedback-type');
+      var msg = document.getElementById('feedback-message');
+      var topic = sel ? sel.value : 'App Feedback / Problem';
+      var text = (msg && msg.value) ? msg.value.trim() : 'Hi Mukilan, I am sharing feedback or reporting a problem with Spendorio.';
+      var subject = encodeURIComponent('[Spendorio] ' + topic);
+      var body = encodeURIComponent('Hi Mukilan,\n\n' + text + '\n\nSent from Spendorio App');
+      window.location.href = 'mailto:mukilanviswa5839@gmail.com?subject=' + subject + '&body=' + body;
+    }
+    window.auth = window.auth || {};
+    window.auth.openHelpFeedbackModal = openSpendorioFeedbackModal;
+    window.auth.closeHelpFeedbackModal = closeSpendorioFeedbackModal;
+    window.auth.sendFeedbackEmail = sendOwnerEmail;
   </script>
 
   <!-- Fallback system font (no internet needed) - preserves FontAwesome icons -->
@@ -130,7 +182,7 @@
     </div>
 
     <!-- FLOATING CORNER HELP & SUPPORT / FEEDBACK (Contact Owner Mukilan) -->
-    <button type="button" class="auth-corner-feedback" onclick="window.auth.openHelpFeedbackModal()" title="Help & Support / Send Feedback to Owner Mukilan Viswa">
+    <button type="button" class="auth-corner-feedback" onclick="openSpendorioFeedbackModal()" title="Help & Support / Send Feedback to Owner Mukilan Viswa">
       <i class="fa-solid fa-headset"></i>
       <span class="feedback-text">Help &amp; Support</span>
       <span class="feedback-badge">Feedback</span>
@@ -462,7 +514,7 @@
           <span>User Manual</span>
         </button>
 
-        <button class="nav-item" onclick="window.auth.openHelpFeedbackModal()" title="Help, Support &amp; App Feedback (Owner: Mukilan Viswa)">
+        <button class="nav-item" onclick="openSpendorioFeedbackModal()" title="Help, Support &amp; App Feedback (Owner: Mukilan Viswa)">
           <i class="fa-solid fa-headset"></i>
           <span>Help &amp; Feedback</span>
         </button>
@@ -1271,7 +1323,7 @@
                   <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('mukilanviswa5839@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Owner email copied to clipboard! 📋', 'success');" style="font-size: 0.82rem; padding: 6px 14px;">
                     <i class="fa-solid fa-copy"></i> Copy Email
                   </button>
-                  <button type="button" class="action-btn" onclick="window.auth.openHelpFeedbackModal()" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">
+                  <button type="button" class="action-btn" onclick="openSpendorioFeedbackModal()" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">
                     <i class="fa-solid fa-comments"></i> In-App Form
                   </button>
                 </div>
@@ -1971,74 +2023,105 @@
   <!-- ========================================================================= -->
   <!-- MODAL: HELP & SUPPORT / FEEDBACK (CONTACT OWNER MUKILAN VISWA)            -->
   <!-- ========================================================================= -->
-  <div class="modal-overlay" id="help-feedback-modal" style="display: none; z-index: 1000004;" onclick="if(event.target === this) window.auth.closeHelpFeedbackModal()">
-    <div class="modal-box" style="max-width: 580px; width: 92%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); background: var(--bg-card);">
+  <div class="modal-overlay" id="help-feedback-modal" style="display: none; z-index: 1000004;" onclick="if(event.target === this) closeSpendorioFeedbackModal()">
+    <div class="modal-box" style="max-width: 580px; width: 92%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(99, 102, 241, 0.35); background: var(--bg-card);">
+      
       <!-- Header -->
-      <div class="modal-header" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.12)); border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem;">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(236, 72, 153, 0.15)); border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #ec4899); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);">
+          <div style="width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, #6366f1, #ec4899); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);">
             <i class="fa-solid fa-headset"></i>
           </div>
           <div>
             <h2 class="modal-title" style="margin: 0; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span>Help, Support &amp; Feedback</span>
+              <span>Help, Support &amp; App Feedback</span>
               <span style="font-size: 0.68rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Direct to Owner</span>
             </h2>
             <p style="margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted);">
-              Suggestions, ideas, or questions? Send a direct message to Mukilan Viswa.
+              Any feedback, questions, or facing any problem with Spendorio? Reach out directly.
             </p>
           </div>
         </div>
-        <button type="button" class="modal-close-btn" onclick="window.auth.closeHelpFeedbackModal()" aria-label="Close">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="closeSpendorioFeedbackModal()" aria-label="Close" style="font-size: 1.5rem; cursor: pointer; background: transparent; border: none; color: var(--text-muted);">&times;</button>
       </div>
 
       <!-- Body -->
       <div class="modal-body" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; max-height: 75vh; overflow-y: auto;">
         
-        <!-- Owner Contact Profile Badge -->
-        <div style="background: var(--bg-surface); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-md); padding: 1rem 1.15rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-          <div style="display: flex; align-items: center; gap: 0.85rem;">
-            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; box-shadow: 0 4px 10px rgba(225, 48, 108, 0.3);">
-              M
-            </div>
-            <div>
-              <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px;">
-                <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> App Creator &amp; Owner
-              </div>
-              <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</div>
-              <div style="font-size: 0.85rem; color: #6366f1; font-weight: 700; word-break: break-all;">mukilanviswa5839@gmail.com</div>
-            </div>
-          </div>
-          <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('mukilanviswa5839@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Copied mukilanviswa5839@gmail.com! 📋', 'success');" style="font-size: 0.8rem; padding: 6px 12px;">
-            <i class="fa-solid fa-copy"></i> Copy Email
-          </button>
+        <!-- COPY CONFIRMATION ALERT (Shown when user copies email) -->
+        <div id="feedback-copy-toast" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; color: #10b981; font-weight: 700; font-size: 0.88rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-check" style="font-size: 1.15rem;"></i>
+          <span>✓ Copied: <strong>mukilanviswa5839@gmail.com</strong> to your clipboard!</span>
         </div>
 
-        <!-- Quick Feedback Form -->
+        <!-- Big Highlight Owner Contact Card -->
+        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.08)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-md); padding: 1.15rem; display: flex; flex-direction: column; gap: 0.9rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; box-shadow: 0 4px 12px rgba(225, 48, 108, 0.35);">
+                M
+              </div>
+              <div>
+                <div style="font-size: 0.72rem; color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px;">
+                  <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> App Creator &amp; Owner
+                </div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</div>
+              </div>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 4px 10px; border-radius: 99px;">
+              <i class="fa-solid fa-circle-dot" style="font-size: 0.65rem;"></i> Active Support
+            </span>
+          </div>
+
+          <!-- Email Address Box -->
+          <div style="background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <i class="fa-solid fa-envelope" style="color: #ec4899; font-size: 1.25rem;"></i>
+              <div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Official Contact Email:</div>
+                <div style="font-size: 0.98rem; font-weight: 800; color: #6366f1; word-break: break-all;">mukilanviswa5839@gmail.com</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="action-btn btn-primary" onclick="copyOwnerEmail()" style="font-size: 0.82rem; padding: 6px 14px; background: #6366f1; border-color: #6366f1;">
+                <i class="fa-solid fa-copy"></i> Copy Email
+              </button>
+              <a href="mailto:mukilanviswa5839@gmail.com?subject=Spendorio%20Feedback%20%2F%20Problem" class="action-btn btn-secondary" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fa-solid fa-paper-plane"></i> Mail
+              </a>
+            </div>
+          </div>
+          
+          <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45;">
+            💬 <em>"If you notice any bug, have trouble with the app, or want to suggest new features for Spendorio, send me an email directly!"</em>
+          </div>
+        </div>
+
+        <!-- Feedback & Problem Form -->
         <div style="display: flex; flex-direction: column; gap: 0.85rem;">
           <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Topic / Feedback Type</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Select Reason / Category:</label>
             <select id="feedback-type" class="form-select" style="font-size: 0.88rem;">
-              <option value="💡 Feature Request / Idea">💡 Feature Request / Idea</option>
-              <option value="🐞 Bug / Problem Report">🐞 Bug / Problem Report</option>
-              <option value="⭐ General Feedback / Review">⭐ General Feedback / Review</option>
-              <option value="❓ Question &amp; Help">❓ Question &amp; Help</option>
+              <option value="🐞 Reporting a Problem / Bug">🐞 Reporting a Problem / Bug</option>
+              <option value="💡 Feature Request / App Idea">💡 Feature Request / App Idea</option>
+              <option value="❓ Question &amp; Help with App">❓ Question &amp; Help with App</option>
+              <option value="⭐ General Feedback &amp; Review">⭐ General Feedback &amp; Review</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Your Message</label>
-            <textarea id="feedback-message" class="form-input" rows="4" placeholder="Hi Mukilan, I have an idea / question about Spendorio..." style="font-size: 0.88rem; resize: vertical;"></textarea>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Your Message / Describe the Problem or Idea:</label>
+            <textarea id="feedback-message" class="form-input" rows="4" placeholder="Describe the problem you faced or your feedback for Mukilan here..." style="font-size: 0.88rem; resize: vertical;"></textarea>
           </div>
         </div>
 
         <!-- Direct Actions -->
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          <button type="button" class="action-btn btn-primary" onclick="window.auth.sendFeedbackEmail()" style="flex: 1; min-width: 180px; padding: 0.75rem 1rem; font-size: 0.9rem; justify-content: center; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);">
-            <i class="fa-solid fa-paper-plane"></i> Send via Email Client
+          <button type="button" class="action-btn btn-primary" onclick="sendOwnerEmail()" style="flex: 1; min-width: 180px; padding: 0.75rem 1rem; font-size: 0.9rem; justify-content: center; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);">
+            <i class="fa-solid fa-paper-plane"></i> Send to mukilanviswa5839@gmail.com
           </button>
-          <button type="button" class="action-btn btn-secondary" onclick="window.auth.openUserManual('start'); window.auth.closeHelpFeedbackModal();" style="padding: 0.75rem 1rem; font-size: 0.9rem;">
-            <i class="fa-solid fa-book-open"></i> Read User Manual
+          <button type="button" class="action-btn btn-secondary" onclick="closeSpendorioFeedbackModal()" style="padding: 0.75rem 1rem; font-size: 0.9rem;">
+            Close
           </button>
         </div>
 
@@ -2614,14 +2697,14 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261024_pwa_fix_v3"></script>
-  <script src="js/auth.js?v=20261023_speed_fast"></script>
-  <script src="js/storage.js?v=20261024_live_sync"></script>
-  <script src="js/tasks.js?v=20261023_speed_fast"></script>
-  <script src="js/expenses.js?v=20261023_speed_fast"></script>
+  <script src="js/pwa.js?v=20261025_v4"></script>
+  <script src="js/auth.js?v=20261025_v4"></script>
+  <script src="js/storage.js?v=20261025_v4"></script>
+  <script src="js/tasks.js?v=20261025_v4"></script>
+  <script src="js/expenses.js?v=20261025_v4"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261023_speed_fast"></script>
-  <script src="js/charts.js?v=20261023_speed_fast"></script>
-  <script src="js/app.js?v=20261023_speed_fast"></script>
+  <script src="js/reports.js?v=20261025_v4"></script>
+  <script src="js/charts.js?v=20261025_v4"></script>
+  <script src="js/app.js?v=20261025_v4"></script>
 </body>
 </html>
