@@ -3,7 +3,7 @@
  * Enables 100% Offline Capability, Instant (<0.05s) App Launch, and Asset Caching.
  */
 
-const CACHE_NAME = 'spendorio-v1.0.5';
+const CACHE_NAME = 'spendorio-v1.0.6';
 
 // Core assets required to run Spendorio completely offline
 const STATIC_ASSETS = [

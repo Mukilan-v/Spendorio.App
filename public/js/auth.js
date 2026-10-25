@@ -1887,7 +1887,7 @@ class AuthManager {
     
     const subject = encodeURIComponent(`[Spendorio] ${topic}`);
     const body = encodeURIComponent(`Hi Mukilan,\n\n${message}\n\nSent from Spendorio Web App`);
-    const mailtoUrl = `mailto:mukilanviswa5839@gmail.com?subject=${subject}&body=${body}`;
+    const mailtoUrl = `mailto:spendorio102026@gmail.com?subject=${subject}&body=${body}`;
     
     window.open(mailtoUrl, '_blank');
     if (window.app && window.app.showToast) {
