@@ -33,13 +33,8 @@
     // 1. Service Worker Registration
     registerServiceWorker() {
       if ('serviceWorker' in navigator) {
-        let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            console.log('[Spendorio PWA] Controller updated, refreshing automatically to Spendorio!');
-            window.location.reload();
-          }
+          console.log('[Spendorio PWA] Service worker controller updated successfully.');
         });
 
         window.addEventListener('load', () => {

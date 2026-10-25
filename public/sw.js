@@ -3,7 +3,7 @@
  * Enables 100% Offline Capability, Instant (<0.05s) App Launch, and Asset Caching.
  */
 
-const CACHE_NAME = 'spendorio-v1.1.0';
+const CACHE_NAME = 'spendorio-v2.0.0';
 
 // Core assets required to run Spendorio completely offline
 const STATIC_ASSETS = [
@@ -131,21 +131,30 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static Assets (CSS, JS, Fonts, Images, Icons): Cache-First Strategy
+  // 3. Scripts and Stylesheets: Network-First Strategy to ensure users always receive latest code
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(request).then(cached => cached || caches.match(request, { ignoreSearch: true }));
+        })
+    );
+    return;
+  }
+
+  // 4. Static Assets (Fonts, Images, Icons): Cache-First Strategy
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return instantly from cache!
-        // Background revalidation: update cache if on network
-        fetch(request).then((freshResponse) => {
-          if (freshResponse && freshResponse.ok && freshResponse.type === 'basic') {
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, freshResponse));
-          }
-        }).catch(() => {/* Offline, ignore */});
         return cachedResponse;
       }
-
-      // Not in cache: fetch from network and cache
       return fetch(request).then((networkResponse) => {
         if (!networkResponse || !networkResponse.ok || networkResponse.type !== 'basic') {
           return networkResponse;
@@ -157,7 +166,6 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       }).catch((err) => {
         console.warn(`[Spendorio SW] Asset fetch failed offline: ${url.pathname}`, err.message);
-        // Fallback for missing images/resources if applicable
         return new Response('', { status: 408, statusText: 'Request timed out / offline' });
       });
     })
