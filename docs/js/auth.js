@@ -103,6 +103,13 @@ class AuthManager {
   // Check if a saved session exists (localStorage or sessionStorage)
   checkSession() {
     try {
+      // If user explicitly logged out during this session, show auth screen
+      if (sessionStorage.getItem('spendorio_explicit_logout') === 'true') {
+        this.currentUser = null;
+        this.applySessionUI(false);
+        return false;
+      }
+
       let sessionData = localStorage.getItem(this.STORAGE_KEYS.SESSION);
       if (!sessionData) {
         sessionData = sessionStorage.getItem(this.STORAGE_KEYS.SESSION);
@@ -132,6 +139,30 @@ class AuthManager {
           return true;
         }
       }
+
+      // DIRECT APP ENTRY (DESKTOP & MOBILE PHONE):
+      // When opening the link, directly go inside the app without requiring login screen
+      const users = this.getLocalUsers();
+      const primaryUser = users.find(u => u.isOwner || u.id === 'user-mukiviswa') || users[0] || {
+        id: 'user-mukiviswa',
+        username: 'MukilanViswa',
+        fullName: 'MukiViswa',
+        email: 'spendorio102026@gmail.com',
+        isOwner: true,
+        dob: '2004-09-12',
+        profileImage: 'img/profile.jpg'
+      };
+
+      const directSession = {
+        user: primaryUser,
+        token: 'direct-entry-' + Date.now(),
+        rememberMe: true,
+        loginTime: new Date().toISOString()
+      };
+      localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(directSession));
+      this.currentUser = primaryUser;
+      this.applySessionUI(true);
+      return true;
     } catch (e) {
       console.warn('AuthManager: session parse error', e);
     }
@@ -1213,6 +1244,7 @@ class AuthManager {
   }
 
   confirmGuestLogin() {
+    sessionStorage.removeItem('spendorio_explicit_logout');
     this.closeGuestConfirmModal(false);
     this.loginAsGuest();
   }
@@ -1646,6 +1678,7 @@ class AuthManager {
       loggedInAt: new Date().toISOString()
     };
 
+    sessionStorage.removeItem('spendorio_explicit_logout');
     if (rememberMe) {
       localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
       sessionStorage.removeItem(this.STORAGE_KEYS.SESSION);
@@ -1728,6 +1761,7 @@ class AuthManager {
 
     localStorage.removeItem(this.STORAGE_KEYS.SESSION);
     sessionStorage.removeItem(this.STORAGE_KEYS.SESSION);
+    sessionStorage.setItem('spendorio_explicit_logout', 'true');
     this.currentUser = null;
 
     // If logging out of Guest mode, immediately erase all temporary guest data
