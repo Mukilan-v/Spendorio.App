@@ -883,9 +883,39 @@ class AuthManager {
     // Close modal
     this.closeProfileModal();
 
+    // Trigger cloud sync for profile update
+    if (typeof window.markLocalUpdated === "function") window.markLocalUpdated();
+    if (window.FirebaseSync && typeof window.FirebaseSync.pushLocalData === "function") {
+      window.FirebaseSync.pushLocalData(true);
+    }
+
     if (window.app && window.app.showToast) {
       window.app.showToast('Profile & Picture updated successfully! 🎉', 'success');
     }
+  }
+
+    applyCloudProfile(profileData) {
+    if (!profileData || !this.currentUser) return;
+    if (this.currentUser.username && profileData.username && 
+        this.currentUser.username.toLowerCase() !== profileData.username.toLowerCase()) {
+      return;
+    }
+    this.currentUser = { ...this.currentUser, ...profileData };
+    try {
+      const sess = localStorage.getItem(this.STORAGE_KEYS.SESSION);
+      if (sess) {
+        const s = JSON.parse(sess);
+        s.user = this.currentUser;
+        localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(s));
+      }
+      const users = this.getLocalUsers();
+      const idx = users.findIndex(u => u.username && u.username.toLowerCase() === this.currentUser.username.toLowerCase());
+      if (idx !== -1) {
+        users[idx] = { ...users[idx], ...this.currentUser };
+        this.saveLocalUsers(users);
+      }
+    } catch (e) {}
+    this.updateUserProfileBadges();
   }
 
   updateSettingsProfileCard() {

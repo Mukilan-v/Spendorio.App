@@ -214,7 +214,15 @@
           tasks: window.storage.getTasks() || [],
           expenses: window.storage.getExpenses() || [],
           incomes: window.storage.getIncomes() || [],
-          settings: window.storage.getSettings() || {}
+          settings: window.storage.getSettings() || {},
+          userProfile: (window.auth && window.auth.currentUser && (!window.storage.isCurrentGuest || !window.storage.isCurrentGuest())) ? {
+            fullName: window.auth.currentUser.fullName || '',
+            username: window.auth.currentUser.username || '',
+            dob: window.auth.currentUser.dob || '',
+            email: window.auth.currentUser.email || '',
+            phone: window.auth.currentUser.phone || '',
+            profileImage: window.auth.currentUser.profileImage || ''
+          } : null
         };
 
         const resp = await fetch(endpoint, {
@@ -253,6 +261,9 @@
         }
         if (cloudData.settings && typeof cloudData.settings === 'object') {
           window.storage.updateSettings(cloudData.settings);
+        }
+        if (cloudData.userProfile && window.auth && typeof window.auth.applyCloudProfile === 'function') {
+          window.auth.applyCloudProfile(cloudData.userProfile);
         }
 
         // Trigger UI updates across all modules
