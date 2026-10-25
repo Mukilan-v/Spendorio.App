@@ -90,9 +90,9 @@
       var sel = document.getElementById('feedback-type');
       var msg = document.getElementById('feedback-message');
       var topic = sel ? sel.value : 'App Feedback / Problem';
-      var text = (msg && msg.value) ? msg.value.trim() : 'Hi Mukilan, I am sharing feedback or reporting a problem with Spendorio.';
+      var text = (msg && msg.value) ? msg.value.trim() : 'I am sharing feedback or reporting a problem with Spendorio.';
       var subject = encodeURIComponent('[Spendorio] ' + topic);
-      var body = encodeURIComponent('Hi Mukilan,\n\n' + text + '\n\nSent from Spendorio App');
+      var body = encodeURIComponent('Hi Spendorio Team,\n\n' + text + '\n\nSent from Spendorio App');
       window.location.href = 'mailto:spendorio102026@gmail.com?subject=' + subject + '&body=' + body;
     }
     window.auth = window.auth || {};
@@ -181,8 +181,8 @@
       </div>
     </div>
 
-    <!-- FLOATING CORNER HELP & SUPPORT / FEEDBACK (Contact Owner Mukilan) -->
-    <button type="button" class="auth-corner-feedback" onclick="openSpendorioFeedbackModal()" title="Help & Support / Send Feedback to Owner Mukilan Viswa">
+    <!-- FLOATING CORNER HELP & SUPPORT / FEEDBACK -->
+    <button type="button" class="auth-corner-feedback" onclick="openSpendorioFeedbackModal()" title="Help & Support / Send Feedback">
       <i class="fa-solid fa-headset"></i>
       <span class="feedback-text">Help &amp; Support</span>
       <span class="feedback-badge">Feedback</span>
@@ -514,7 +514,7 @@
           <span>User Manual</span>
         </button>
 
-        <button class="nav-item" onclick="openSpendorioFeedbackModal()" title="Help, Support &amp; App Feedback (Owner: Mukilan Viswa)">
+        <button class="nav-item" onclick="openSpendorioFeedbackModal()" title="Help, Support &amp; App Feedback">
           <i class="fa-solid fa-headset"></i>
           <span>Help &amp; Feedback</span>
         </button>
@@ -1285,7 +1285,7 @@
               </div>
             </div>
 
-            <!-- HELP, SUPPORT & FEEDBACK CARD (APP OWNER: MUKILAN VISWA) -->
+            <!-- HELP, SUPPORT & FEEDBACK CARD -->
             <div class="settings-help-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.08)); border: 1.5px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-lg); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
                 <div style="display: flex; align-items: center; gap: 0.85rem;">
@@ -1295,32 +1295,32 @@
                   <div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Help, Support &amp; App Feedback</h3>
-                      <span style="font-size: 0.7rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #10b981, #059669); padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Owner Contact</span>
+                      <span style="font-size: 0.7rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #10b981, #059669); padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Official Support</span>
                     </div>
                     <p style="margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted);">
-                      Have an idea, suggestion, bug report, or need assistance? Reach out directly to the app owner &amp; developer.
+                      Have an idea, suggestion, bug report, or need assistance? Reach out directly to our support team.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <!-- Owner Info & Email Pill -->
+              <!-- Support Info & Email Pill -->
               <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.9rem 1.1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
                 <div style="display: flex; flex-direction: column; gap: 3px;">
                   <div style="font-size: 0.72rem; color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px;">
-                    <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> App Creator &amp; Owner
+                    <i class="fa-solid fa-headset" style="color: #6366f1;"></i> Spendorio Support
                   </div>
-                  <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</div>
+                  <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary);">Spendorio Support Team</div>
                   <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-envelope" style="color: #ec4899;"></i>
                     <strong id="settings-owner-email" style="color: #6366f1;">spendorio102026@gmail.com</strong>
                   </div>
                 </div>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                  <a href="mailto:spendorio102026@gmail.com?subject=Spendorio%20Feedback%20%26%20Support&body=Hi%20Mukilan,%0A%0AI%20am%20using%20Spendorio%20and%20wanted%20to%20share%20this%20feedback:%0A%0A" class="action-btn btn-primary" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-paper-plane"></i> Email Mukilan
+                  <a href="mailto:spendorio102026@gmail.com?subject=Spendorio%20Feedback%20%26%20Support&body=Hi%20Spendorio%20Team,%0A%0AI%20am%20using%20Spendorio%20and%20wanted%20to%20share%20this%20feedback:%0A%0A" class="action-btn btn-primary" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-paper-plane"></i> Email Support
                   </a>
-                  <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('spendorio102026@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Owner email copied to clipboard! 📋', 'success');" style="font-size: 0.82rem; padding: 6px 14px;">
+                  <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('spendorio102026@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Support email copied to clipboard! 📋', 'success');" style="font-size: 0.82rem; padding: 6px 14px;">
                     <i class="fa-solid fa-copy"></i> Copy Email
                   </button>
                   <button type="button" class="action-btn" onclick="openSpendorioFeedbackModal()" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">
@@ -2021,7 +2021,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL: HELP & SUPPORT / FEEDBACK (CONTACT OWNER MUKILAN VISWA)            -->
+  <!-- MODAL: HELP & SUPPORT / FEEDBACK (OFFICIAL SPENDORIO HELPDESK)            -->
   <!-- ========================================================================= -->
   <div class="modal-overlay" id="help-feedback-modal" style="display: none; z-index: 1000004;" onclick="if(event.target === this) closeSpendorioFeedbackModal()">
     <div class="modal-box" style="max-width: 580px; width: 92%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(99, 102, 241, 0.35); background: var(--bg-card);">
@@ -2035,7 +2035,7 @@
           <div>
             <h2 class="modal-title" style="margin: 0; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <span>Help, Support &amp; App Feedback</span>
-              <span style="font-size: 0.68rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Direct to Owner</span>
+              <span style="font-size: 0.68rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Official Support</span>
             </h2>
             <p style="margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted);">
               Any feedback, questions, or facing any problem with Spendorio? Reach out directly.
@@ -2054,18 +2054,18 @@
           <span>✓ Copied: <strong>spendorio102026@gmail.com</strong> to your clipboard!</span>
         </div>
 
-        <!-- Big Highlight Owner Contact Card -->
+        <!-- Big Highlight Support Contact Card -->
         <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.08)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-md); padding: 1.15rem; display: flex; flex-direction: column; gap: 0.9rem;">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
             <div style="display: flex; align-items: center; gap: 0.85rem;">
-              <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; box-shadow: 0 4px 12px rgba(225, 48, 108, 0.35);">
-                M
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #ec4899); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);">
+                <i class="fa-solid fa-headset"></i>
               </div>
               <div>
                 <div style="font-size: 0.72rem; color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px;">
-                  <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> App Creator &amp; Owner
+                  <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Official Helpdesk
                 </div>
-                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">Spendorio Support Team</div>
               </div>
             </div>
             <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 4px 10px; border-radius: 99px;">
@@ -2093,7 +2093,7 @@
           </div>
           
           <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45;">
-            💬 <em>"If you notice any bug, have trouble with the app, or want to suggest new features for Spendorio, send me an email directly!"</em>
+            💬 <em>"If you notice any bug, have trouble with the app, or want to suggest new features for Spendorio, send us an email directly!"</em>
           </div>
         </div>
 
@@ -2111,7 +2111,7 @@
 
           <div class="form-group">
             <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Your Message / Describe the Problem or Idea:</label>
-            <textarea id="feedback-message" class="form-input" rows="4" placeholder="Describe the problem you faced or your feedback for Mukilan here..." style="font-size: 0.88rem; resize: vertical;"></textarea>
+            <textarea id="feedback-message" class="form-input" rows="4" placeholder="Describe the problem you faced or your feedback here..." style="font-size: 0.88rem; resize: vertical;"></textarea>
           </div>
         </div>
 
@@ -2127,7 +2127,7 @@
 
         <!-- Quick FAQ / Info -->
         <div style="background: rgba(99, 102, 241, 0.06); border-radius: var(--radius-md); padding: 0.85rem 1rem; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
-          <strong>⚡ Quick Support Note:</strong> Spendorio is a 100% private Progressive Web App. All your routine records and costs are safely stored in your browser &amp; encrypted locally. For technical collaboration, ideas, or custom features, feel free to contact Mukilan anytime!
+          <strong>⚡ Quick Support Note:</strong> Spendorio is a 100% private Progressive Web App. All your routine records and costs are safely stored in your browser &amp; encrypted locally. For technical collaboration, ideas, or custom features, feel free to contact our support team anytime!
         </div>
 
       </div>
@@ -2214,7 +2214,7 @@
                   <h4 class="manual-step-title">Enter Account or Guest</h4>
                 </div>
                 <p class="manual-step-desc">
-                  Log in with your username (e.g., <strong>mukilanviswa</strong>) or tap <strong>"Continue as Guest User"</strong> to safely test all features without modifying authentic records.
+                  Log in with your username (e.g., <strong>demo_user</strong>) or tap <strong>"Continue as Guest User"</strong> to safely test all features without modifying authentic records.
                 </p>
                 <div>
                   <span class="manual-pill-example"><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> 100% Offline &amp; Private</span>
@@ -2551,12 +2551,12 @@
 
             <div class="manual-step-card" style="margin-bottom: 1rem; border: 1.5px solid rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.05); padding: 1.25rem;">
               <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; box-shadow: 0 4px 10px rgba(225, 48, 108, 0.3);">
-                  M
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #ec4899); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
+                  <i class="fa-solid fa-headset"></i>
                 </div>
                 <div>
-                  <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</h4>
-                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Spendorio Creator &amp; Owner</span>
+                  <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Spendorio Support Team</h4>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Official Support Helpdesk</span>
                 </div>
               </div>
               <p class="manual-step-desc" style="font-size: 0.9rem; margin-bottom: 0.75rem;">
@@ -2564,7 +2564,7 @@
               </p>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <a href="mailto:spendorio102026@gmail.com?subject=Spendorio%20Support%20%26%20Feedback" class="action-btn btn-primary" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);">
-                  <i class="fa-solid fa-paper-plane"></i> Email Mukilan
+                  <i class="fa-solid fa-paper-plane"></i> Email Support
                 </a>
                 <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('spendorio102026@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Copied spendorio102026@gmail.com! 📋', 'success');" style="font-size: 0.82rem; padding: 6px 14px;">
                   <i class="fa-solid fa-copy"></i> Copy Email
