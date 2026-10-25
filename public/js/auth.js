@@ -105,16 +105,7 @@ class AuthManager {
   checkSession() {
     this.currentUser = null;
     this.applySessionUI(false);
-
-    // Pre-fill remembered username/email on the login card if available
-    try {
-      const savedUser = localStorage.getItem('spendorio_remembered_user');
-      const input = document.getElementById('login-identifier');
-      if (savedUser && input && !input.value) {
-        input.value = savedUser;
-      }
-    } catch (e) {}
-
+    this.clearLoginForm();
     return false;
   }
 
@@ -1690,21 +1681,21 @@ class AuthManager {
     };
 
     sessionStorage.removeItem('spendorio_explicit_logout');
-    if (rememberMe) {
-      try {
-        localStorage.setItem('spendorio_remembered_user', user.username || user.email || '');
-      } catch (e) {}
-    } else {
-      try {
-        localStorage.removeItem('spendorio_remembered_user');
-      } catch (e) {}
-    }
+    try {
+      localStorage.removeItem('spendorio_remembered_user');
+      localStorage.removeItem('spendorio_saved_identifier');
+      localStorage.removeItem('spendorio_last_user');
+    } catch (e) {}
+
     // Store active session in sessionStorage so it stays active during current tab browsing
     // but never auto-bypasses the Index landing page when opening the link fresh
     sessionStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
     try {
       localStorage.removeItem(this.STORAGE_KEYS.SESSION);
     } catch (e) {}
+
+    // Immediately clear all typed login inputs
+    this.clearLoginForm();
 
     this.currentUser = sessionUser;
     this.applySessionUI(true);
@@ -1784,12 +1775,12 @@ class AuthManager {
     localStorage.removeItem(this.STORAGE_KEYS.SESSION);
     sessionStorage.removeItem(this.STORAGE_KEYS.SESSION);
     sessionStorage.setItem('spendorio_explicit_logout', 'true');
+    try {
+      localStorage.removeItem('spendorio_remembered_user');
+      localStorage.removeItem('spendorio_saved_identifier');
+      localStorage.removeItem('spendorio_last_user');
+    } catch (e) {}
     this.currentUser = null;
-
-    // If logging out of Guest mode, immediately erase all temporary guest data
-    if (wasGuest && window.storage && window.storage.resetGuestDataToFresh) {
-      window.storage.resetGuestDataToFresh();
-    }
 
     // Reset both login and signup form inputs completely
     this.clearLoginForm();
