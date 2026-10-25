@@ -1,6 +1,6 @@
 /**
  * Spendorio - Progressive Web App (PWA) Manager (js/pwa.js)
- * Manages Service Worker lifecycle, offline/online transitions, and Home Screen installation.
+ * Manages Service Worker lifecycle, offline/online transitions, and Desktop/Mobile installation.
  */
 
 (function () {
@@ -23,15 +23,13 @@
     return (
       window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone === true ||
-      document.referrer.includes('android-app://')
+      document.referrer.includes('android-app://') ||
+      window.location.search.includes('mode=standalone')
     );
   };
 
   const isInstalled = () => {
-    return (
-      isInStandaloneMode() ||
-      localStorage.getItem(INSTALLED_KEY) === 'true'
-    );
+    return isInStandaloneMode();
   };
 
   const SpendorioPWA = {
@@ -93,8 +91,8 @@
         deferredPrompt = e;
         console.log('[Spendorio PWA] Native beforeinstallprompt captured!');
 
-        // If already installed, never show banner or buttons
-        if (isInstalled() || isInStandaloneMode()) {
+        // If running in standalone installed app, never show banner or buttons
+        if (isInStandaloneMode()) {
           this.showInstallButtons(false);
           const banner = document.getElementById('pwa-install-banner');
           if (banner) banner.style.display = 'none';
@@ -128,35 +126,76 @@
       });
     },
 
+    // Download direct Windows Desktop Shortcut (.url file)
+    downloadDesktopShortcut() {
+      try {
+        const content = "[InternetShortcut]\r\nURL=https://mukilan-v.github.io/Spendorio.App/\r\nIconIndex=0\r\nIconFile=https://mukilan-v.github.io/Spendorio.App/icons/spendorio.ico\r\n";
+        const blob = new Blob([content], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Spendorio-App.url';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        if (window.showToast) {
+          window.showToast('📥 Spendorio desktop shortcut downloaded! Drag to your Desktop to launch anytime.', 'success');
+        }
+      } catch (err) {
+        console.error('[Spendorio PWA] Error downloading desktop shortcut:', err);
+      }
+    },
+
     // Trigger installation flow
     async promptInstall() {
-      console.log('[Spendorio PWA] promptInstall called! deferredPrompt available:', !!deferredPrompt);
+      console.log('[Spendorio PWA] promptInstall called! deferredPrompt available:', !!deferredPrompt, 'isMobile:', isMobile());
 
-      if (isInstalled() || isInStandaloneMode()) {
-        try {
-          localStorage.setItem(INSTALLED_KEY, 'true');
-          localStorage.setItem(DISMISS_KEY, 'true');
-        } catch (e) {}
-        this.showInstallButtons(false);
-        const banner = document.getElementById('pwa-install-banner');
-        if (banner) banner.style.display = 'none';
+      if (isInStandaloneMode()) {
         if (window.showToast) {
-          window.showToast('Spendorio is already installed on your device!', 'info');
+          window.showToast('Spendorio is already running in app mode!', 'info');
         }
         return;
       }
 
+      // Desktop installation workflow
+      if (!isMobile()) {
+        // 1. Immediately trigger the direct desktop launcher shortcut download
+        this.downloadDesktopShortcut();
+
+        // 2. If native browser PWA install prompt is ready, trigger it too
+        if (deferredPrompt) {
+          try {
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            console.log('[Spendorio PWA] User install choice:', choice.outcome);
+            if (choice.outcome === 'accepted') {
+              deferredPrompt = null;
+              this.showInstallButtons(false);
+              const banner = document.getElementById('pwa-install-banner');
+              if (banner) banner.style.display = 'none';
+            }
+          } catch (err) {
+            console.warn('[Spendorio PWA] Error triggering native prompt:', err);
+          }
+        }
+
+        // 3. Open desktop confirmation modal with clear instructions
+        this.openGenericInstallModal();
+        return;
+      }
+
+      // Mobile installation workflow
       if (deferredPrompt) {
         try {
           deferredPrompt.prompt();
+          if (window.showToast) {
+            window.showToast('👆 Tap "Install" on the prompt to add to Home Screen!', 'info');
+          }
           const choice = await deferredPrompt.userChoice;
           console.log('[Spendorio PWA] User install choice:', choice.outcome);
           if (choice.outcome === 'accepted') {
             deferredPrompt = null;
-            try {
-              localStorage.setItem(INSTALLED_KEY, 'true');
-              localStorage.setItem(DISMISS_KEY, 'true');
-            } catch (e) {}
             this.showInstallButtons(false);
             const banner = document.getElementById('pwa-install-banner');
             if (banner) banner.style.display = 'none';
@@ -168,10 +207,6 @@
       } else if (isIos() && !isInStandaloneMode()) {
         this.openIosInstallModal();
       } else {
-        // Desktop Edge / Chrome fallback
-        if (window.showToast) {
-          window.showToast('Click the App (⊕) icon in your browser address bar to install on Desktop!', 'info');
-        }
         this.openGenericInstallModal();
       }
     },
@@ -181,23 +216,20 @@
       if (banner) banner.style.display = 'none';
       try {
         localStorage.setItem(DISMISS_KEY, 'true');
-        localStorage.setItem(INSTALLED_KEY, 'true');
       } catch (e) {}
-      this.showInstallButtons(false);
     },
 
     showInstallButtons(show) {
       const btns = document.querySelectorAll('.pwa-install-trigger');
       btns.forEach((btn) => {
-        btn.style.display = show ? 'inline-flex' : 'none';
+        if (btn) {
+          btn.style.display = show ? (btn.id === 'pwa-header-install-btn' ? 'inline-flex' : 'flex') : 'none';
+        }
       });
     },
 
     checkInstalledState() {
-      const alreadyInstalled = isInstalled();
-      const dismissed = localStorage.getItem(DISMISS_KEY) === 'true';
-
-      if (alreadyInstalled || isInStandaloneMode()) {
+      if (isInStandaloneMode()) {
         console.log('[Spendorio PWA] Running in Standalone Installed Mode!');
         document.body.classList.add('pwa-standalone');
         this.showInstallButtons(false);
@@ -206,10 +238,10 @@
         return;
       }
 
-      // If not yet installed, make install button available in header & sidebar
+      // If running inside standard browser window, make install button accessible
       this.showInstallButtons(true);
 
-      // Show bottom banner unless dismissed
+      const dismissed = localStorage.getItem(DISMISS_KEY) === 'true';
       const banner = document.getElementById('pwa-install-banner');
       if (banner) {
         banner.style.display = dismissed ? 'none' : 'flex';
@@ -264,16 +296,73 @@
       if (modal) modal.style.display = 'none';
       try {
         localStorage.setItem(DISMISS_KEY, 'true');
-        localStorage.setItem(INSTALLED_KEY, 'true');
       } catch (e) {}
       const banner = document.getElementById('pwa-install-banner');
       if (banner) banner.style.display = 'none';
-      this.showInstallButtons(false);
     },
 
     openGenericInstallModal() {
       const modal = document.getElementById('pwa-generic-modal');
-      if (modal) modal.style.display = 'flex';
+      if (!modal) return;
+
+      const titleEl = modal.querySelector('.pwa-modal-title span');
+      const bodyEl = modal.querySelector('.pwa-modal-body');
+
+      if (!isMobile()) {
+        if (titleEl) titleEl.textContent = 'Spendorio Desktop App';
+        if (bodyEl) {
+          bodyEl.innerHTML = `
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
+              <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.5rem;"></i>
+              <div>
+                <div style="font-weight: 700; color: #10b981; font-size: 0.9rem;">Desktop Shortcut Downloaded!</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Check your browser's <strong>Downloads</strong> folder.</div>
+              </div>
+            </div>
+
+            <div class="pwa-step-item">
+              <div class="pwa-step-num">1</div>
+              <div class="pwa-step-text">Drag or move <strong>Spendorio-App.url</strong> from Downloads to your <strong>Desktop</strong>.</div>
+            </div>
+            <div class="pwa-step-item">
+              <div class="pwa-step-num">2</div>
+              <div class="pwa-step-text">Double-click it anytime on your computer to launch Spendorio instantly!</div>
+            </div>
+            <div class="pwa-step-item">
+              <div class="pwa-step-num">3</div>
+              <div class="pwa-step-text"><strong>Standalone Window App:</strong> You can also click the <strong>App (⊕) icon</strong> in your browser's address bar to install as a dedicated window.</div>
+            </div>
+
+            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color); text-align: center;">
+              <button type="button" class="btn-insta-gradient" onclick="window.SpendorioPWA.downloadDesktopShortcut()" style="width: 100%; padding: 0.65rem 1rem; font-size: 0.85rem; font-weight: 700; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fa-solid fa-download"></i>
+                <span>Download Desktop Shortcut (.url) Again</span>
+              </button>
+            </div>
+          `;
+        }
+      } else {
+        if (titleEl) titleEl.textContent = 'Install Spendorio App';
+        if (bodyEl) {
+          bodyEl.innerHTML = `
+            <p style="margin: 0 0 1rem; font-size: 0.85rem; color: var(--text-muted);">Install Spendorio on your phone for full offline access:</p>
+            <div class="pwa-step-item">
+              <div class="pwa-step-num">1</div>
+              <div class="pwa-step-text">Tap the browser <strong>Three Dots (⋮)</strong> menu in Chrome.</div>
+            </div>
+            <div class="pwa-step-item">
+              <div class="pwa-step-num">2</div>
+              <div class="pwa-step-text">Select <strong>"Install app"</strong> or <strong>"Add to Home Screen"</strong>.</div>
+            </div>
+            <div class="pwa-step-item">
+              <div class="pwa-step-num">3</div>
+              <div class="pwa-step-text">Launch Spendorio directly from your home screen like any native app!</div>
+            </div>
+          `;
+        }
+      }
+
+      modal.style.display = 'flex';
     },
 
     closeGenericInstallModal() {
@@ -281,11 +370,9 @@
       if (modal) modal.style.display = 'none';
       try {
         localStorage.setItem(DISMISS_KEY, 'true');
-        localStorage.setItem(INSTALLED_KEY, 'true');
       } catch (e) {}
       const banner = document.getElementById('pwa-install-banner');
       if (banner) banner.style.display = 'none';
-      this.showInstallButtons(false);
     }
   };
 

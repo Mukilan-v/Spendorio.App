@@ -2687,22 +2687,26 @@
         <button type="button" class="btn-pwa-dismiss" onclick="window.SpendorioPWA.closeGenericInstallModal()">&times;</button>
       </div>
       <div class="pwa-modal-body">
-        <p style="margin: 0 0 1rem; font-size: 0.85rem; color: var(--text-muted);">Spendorio can be installed directly from your browser menu:</p>
+        <p style="margin: 0 0 1rem; font-size: 0.85rem; color: var(--text-muted);">Install Spendorio on your Windows Desktop or Phone:</p>
         <div class="pwa-step-item">
           <div class="pwa-step-num">1</div>
-          <div class="pwa-step-text">Tap the browser <strong>Three Dots (⋮)</strong> menu in Chrome or edge of your screen.</div>
+          <div class="pwa-step-text">Click the <strong>App (⊕) icon</strong> in the top address bar in Microsoft Edge or Chrome to install the native desktop app.</div>
         </div>
         <div class="pwa-step-item">
           <div class="pwa-step-num">2</div>
-          <div class="pwa-step-text">Select <strong>"Install app"</strong> or <strong>"Add to Home Screen"</strong>.</div>
+          <div class="pwa-step-text">Or tap the browser <strong>Three Dots (⋮)</strong> &gt; <strong>Apps</strong> &gt; <strong>"Install Spendorio"</strong>.</div>
         </div>
-        <div class="pwa-step-item">
-          <div class="pwa-step-num">3</div>
-          <div class="pwa-step-text">Launch Spendorio directly like any native Android/iOS mobile application!</div>
+        
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color); text-align: center;">
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 0.5rem;">Or download the direct desktop launcher file:</p>
+          <button type="button" class="btn-insta-gradient" onclick="window.SpendorioPWA.downloadDesktopShortcut()" style="width: 100%; padding: 0.65rem 1rem; font-size: 0.85rem; font-weight: 700; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-download"></i>
+            <span>Download Desktop Shortcut (.url)</span>
+          </button>
         </div>
       </div>
       <div class="pwa-modal-footer">
-        <button type="button" class="btn-pwa-install" onclick="window.SpendorioPWA.closeGenericInstallModal()">Got It</button>
+        <button type="button" class="btn-pwa-install" onclick="window.SpendorioPWA.closeGenericInstallModal()">Close</button>
       </div>
     </div>
   </div>
@@ -2711,14 +2715,14 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261025_v7_clean_inputs"></script>
-  <script src="js/auth.js?v=20261025_v7_clean_inputs"></script>
-  <script src="js/storage.js?v=20261025_v7_clean_inputs"></script>
-  <script src="js/tasks.js?v=20261025_v7_clean_inputs"></script>
-  <script src="js/expenses.js?v=20261025_v7_clean_inputs"></script>
+  <script src="js/pwa.js?v=20261025_v9_desktop_dl"></script>
+  <script src="js/auth.js?v=20261025_v9_desktop_dl"></script>
+  <script src="js/storage.js?v=20261025_v9_desktop_dl"></script>
+  <script src="js/tasks.js?v=20261025_v9_desktop_dl"></script>
+  <script src="js/expenses.js?v=20261025_v9_desktop_dl"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261025_v7_clean_inputs"></script>
-  <script src="js/charts.js?v=20261025_v7_clean_inputs"></script>
-  <script src="js/app.js?v=20261025_v7_clean_inputs"></script>
+  <script src="js/reports.js?v=20261025_v9_desktop_dl"></script>
+  <script src="js/charts.js?v=20261025_v9_desktop_dl"></script>
+  <script src="js/app.js?v=20261025_v9_desktop_dl"></script>
 </body>
 </html>
