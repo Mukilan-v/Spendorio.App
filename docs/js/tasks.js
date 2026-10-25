@@ -217,7 +217,8 @@ class TaskManager {
   createTaskCardElement(task, currency) {
     const taskCard = document.createElement('div');
     taskCard.className = `task-card ${task.completed ? 'completed' : ''}`;
-    taskCard.dataset.id = task.id;
+    taskCard.setAttribute('data-id', task.id);
+    if (taskCard.dataset) taskCard.dataset.id = task.id;
     taskCard.style.cursor = 'pointer';
 
     const priorityBadgeClass = `badge-priority-${task.priority || 'medium'}`;
