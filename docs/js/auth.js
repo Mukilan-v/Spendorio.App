@@ -1863,21 +1863,25 @@ class AuthManager {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Help, Support & Feedback Modal (Contact Owner Mukilan Viswa)
+  // Help, Support & Feedback Modal (Official Spendorio Helpdesk)
   // ──────────────────────────────────────────────────────────────────────────
   openHelpFeedbackModal() {
     const modal = document.getElementById('help-feedback-modal');
     if (modal) {
+      modal.classList.add('active');
       modal.style.display = 'flex';
+      document.body.classList.add('modal-open');
     }
-  },
+  }
 
   closeHelpFeedbackModal() {
     const modal = document.getElementById('help-feedback-modal');
     if (modal) {
+      modal.classList.remove('active');
       modal.style.display = 'none';
+      document.body.classList.remove('modal-open');
     }
-  },
+  }
 
   sendFeedbackEmail() {
     const typeSelect = document.getElementById('feedback-type');
@@ -1893,7 +1897,7 @@ class AuthManager {
     if (window.app && window.app.showToast) {
       window.app.showToast('Opening your email client... 💌', 'success');
     }
-  },
+  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // User Manual & Beginner Guide
