@@ -15,6 +15,19 @@
 
 ---
 
+## 📸 Application Screenshots & Live Previews
+
+### 📊 Main Dashboard & Financial Analytics Overview
+![Spendorio Dashboard](docs/screenshots/preview-dashboard.png)
+
+<br>
+
+| 🔐 User Login & PWA Offline Install | ✍️ Multi-User Registration |
+| :---: | :---: |
+| ![Spendorio Login](docs/screenshots/preview-login.png) | ![Spendorio Sign Up](docs/screenshots/preview-signup.png) |
+
+---
+
 ## 🌟 Key Features
 
 ### 1. 📱 Progressive Web App (PWA) & 100% Offline Resilience
