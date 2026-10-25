@@ -1863,6 +1863,39 @@ class AuthManager {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
+  // Help, Support & Feedback Modal (Contact Owner Mukilan Viswa)
+  // ──────────────────────────────────────────────────────────────────────────
+  openHelpFeedbackModal() {
+    const modal = document.getElementById('help-feedback-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  },
+
+  closeHelpFeedbackModal() {
+    const modal = document.getElementById('help-feedback-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  },
+
+  sendFeedbackEmail() {
+    const typeSelect = document.getElementById('feedback-type');
+    const msgText = document.getElementById('feedback-message');
+    const topic = typeSelect ? typeSelect.value : 'App Feedback';
+    const message = msgText && msgText.value.trim() ? msgText.value.trim() : 'Hi Mukilan, I am sharing feedback about Spendorio.';
+    
+    const subject = encodeURIComponent(`[Spendorio] ${topic}`);
+    const body = encodeURIComponent(`Hi Mukilan,\n\n${message}\n\nSent from Spendorio Web App`);
+    const mailtoUrl = `mailto:mukilanviswa5839@gmail.com?subject=${subject}&body=${body}`;
+    
+    window.open(mailtoUrl, '_blank');
+    if (window.app && window.app.showToast) {
+      window.app.showToast('Opening your email client to send to Mukilan... 💌', 'success');
+    }
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
   // User Manual & Beginner Guide
   // ──────────────────────────────────────────────────────────────────────────
   openUserManual(activeTab = 'start') {

@@ -129,6 +129,13 @@
       </div>
     </div>
 
+    <!-- FLOATING CORNER HELP & SUPPORT / FEEDBACK (Contact Owner Mukilan) -->
+    <button type="button" class="auth-corner-feedback" onclick="window.auth.openHelpFeedbackModal()" title="Help & Support / Send Feedback to Owner Mukilan Viswa">
+      <i class="fa-solid fa-headset"></i>
+      <span class="feedback-text">Help &amp; Support</span>
+      <span class="feedback-badge">Feedback</span>
+    </button>
+
     <!-- FLOATING CORNER USER MANUAL GUIDE (For new users before entering) -->
     <button type="button" class="auth-corner-guide" onclick="window.auth.openUserManual('start')" title="New to Spendorio? Read how to use &amp; manage tasks and costs">
       <i class="fa-solid fa-book-open"></i>
@@ -453,6 +460,11 @@
         <button class="nav-item" onclick="window.auth.openUserManual('start')" title="User Manual &amp; Beginner Instructions">
           <i class="fa-solid fa-book-open"></i>
           <span>User Manual</span>
+        </button>
+
+        <button class="nav-item" onclick="window.auth.openHelpFeedbackModal()" title="Help, Support &amp; App Feedback (Owner: Mukilan Viswa)">
+          <i class="fa-solid fa-headset"></i>
+          <span>Help &amp; Feedback</span>
         </button>
 
         <button class="nav-item pwa-install-trigger" id="pwa-sidebar-install-btn" onclick="window.SpendorioPWA.promptInstall()" title="Install Spendorio App (Works 100% Offline)" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12)); border: 1px dashed #6366f1; color: #6366f1; font-weight: 700;">
@@ -1221,6 +1233,51 @@
               </div>
             </div>
 
+            <!-- HELP, SUPPORT & FEEDBACK CARD (APP OWNER: MUKILAN VISWA) -->
+            <div class="settings-help-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.08)); border: 1.5px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-lg); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                  <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #ec4899); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);">
+                    <i class="fa-solid fa-headset"></i>
+                  </div>
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Help, Support &amp; App Feedback</h3>
+                      <span style="font-size: 0.7rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #10b981, #059669); padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Owner Contact</span>
+                    </div>
+                    <p style="margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                      Have an idea, suggestion, bug report, or need assistance? Reach out directly to the app owner &amp; developer.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Owner Info & Email Pill -->
+              <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.9rem 1.1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                  <div style="font-size: 0.72rem; color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px;">
+                    <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> App Creator &amp; Owner
+                  </div>
+                  <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</div>
+                  <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-envelope" style="color: #ec4899;"></i>
+                    <strong id="settings-owner-email" style="color: #6366f1;">mukilanviswa5839@gmail.com</strong>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <a href="mailto:mukilanviswa5839@gmail.com?subject=Spendorio%20Feedback%20%26%20Support&body=Hi%20Mukilan,%0A%0AI%20am%20using%20Spendorio%20and%20wanted%20to%20share%20this%20feedback:%0A%0A" class="action-btn btn-primary" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-paper-plane"></i> Email Mukilan
+                  </a>
+                  <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('mukilanviswa5839@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Owner email copied to clipboard! 📋', 'success');" style="font-size: 0.82rem; padding: 6px 14px;">
+                    <i class="fa-solid fa-copy"></i> Copy Email
+                  </button>
+                  <button type="button" class="action-btn" onclick="window.auth.openHelpFeedbackModal()" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">
+                    <i class="fa-solid fa-comments"></i> In-App Form
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
               <div class="form-group">
                 <label class="form-label">Default Currency Symbol</label>
@@ -1911,6 +1968,89 @@
     </div>
   </div>
 
+  <!-- ========================================================================= -->
+  <!-- MODAL: HELP & SUPPORT / FEEDBACK (CONTACT OWNER MUKILAN VISWA)            -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="help-feedback-modal" style="display: none; z-index: 1000004;" onclick="if(event.target === this) window.auth.closeHelpFeedbackModal()">
+    <div class="modal-box" style="max-width: 580px; width: 92%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); background: var(--bg-card);">
+      <!-- Header -->
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.12)); border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #ec4899); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);">
+            <i class="fa-solid fa-headset"></i>
+          </div>
+          <div>
+            <h2 class="modal-title" style="margin: 0; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span>Help, Support &amp; Feedback</span>
+              <span style="font-size: 0.68rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Direct to Owner</span>
+            </h2>
+            <p style="margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted);">
+              Suggestions, ideas, or questions? Send a direct message to Mukilan Viswa.
+            </p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="window.auth.closeHelpFeedbackModal()" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; max-height: 75vh; overflow-y: auto;">
+        
+        <!-- Owner Contact Profile Badge -->
+        <div style="background: var(--bg-surface); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-md); padding: 1rem 1.15rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; align-items: center; gap: 0.85rem;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; box-shadow: 0 4px 10px rgba(225, 48, 108, 0.3);">
+              M
+            </div>
+            <div>
+              <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px;">
+                <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> App Creator &amp; Owner
+              </div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</div>
+              <div style="font-size: 0.85rem; color: #6366f1; font-weight: 700; word-break: break-all;">mukilanviswa5839@gmail.com</div>
+            </div>
+          </div>
+          <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('mukilanviswa5839@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Copied mukilanviswa5839@gmail.com! 📋', 'success');" style="font-size: 0.8rem; padding: 6px 12px;">
+            <i class="fa-solid fa-copy"></i> Copy Email
+          </button>
+        </div>
+
+        <!-- Quick Feedback Form -->
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Topic / Feedback Type</label>
+            <select id="feedback-type" class="form-select" style="font-size: 0.88rem;">
+              <option value="💡 Feature Request / Idea">💡 Feature Request / Idea</option>
+              <option value="🐞 Bug / Problem Report">🐞 Bug / Problem Report</option>
+              <option value="⭐ General Feedback / Review">⭐ General Feedback / Review</option>
+              <option value="❓ Question &amp; Help">❓ Question &amp; Help</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Your Message</label>
+            <textarea id="feedback-message" class="form-input" rows="4" placeholder="Hi Mukilan, I have an idea / question about Spendorio..." style="font-size: 0.88rem; resize: vertical;"></textarea>
+          </div>
+        </div>
+
+        <!-- Direct Actions -->
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button type="button" class="action-btn btn-primary" onclick="window.auth.sendFeedbackEmail()" style="flex: 1; min-width: 180px; padding: 0.75rem 1rem; font-size: 0.9rem; justify-content: center; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);">
+            <i class="fa-solid fa-paper-plane"></i> Send via Email Client
+          </button>
+          <button type="button" class="action-btn btn-secondary" onclick="window.auth.openUserManual('start'); window.auth.closeHelpFeedbackModal();" style="padding: 0.75rem 1rem; font-size: 0.9rem;">
+            <i class="fa-solid fa-book-open"></i> Read User Manual
+          </button>
+        </div>
+
+        <!-- Quick FAQ / Info -->
+        <div style="background: rgba(99, 102, 241, 0.06); border-radius: var(--radius-md); padding: 0.85rem 1rem; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
+          <strong>⚡ Quick Support Note:</strong> Spendorio is a 100% private Progressive Web App. All your routine records and costs are safely stored in your browser &amp; encrypted locally. For technical collaboration, ideas, or custom features, feel free to contact Mukilan anytime!
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- USER MANUAL & HOW-TO-USE GUIDE MODAL -->
   <div class="modal-overlay" id="user-manual-modal" style="display: none; z-index: 1000003;">
     <div class="modal-box user-manual-modal-box">
@@ -1964,6 +2104,10 @@
           <button type="button" class="manual-nav-btn" data-tab="faq" onclick="window.auth.switchManualTab('faq')">
             <i class="fa-solid fa-circle-question"></i>
             <span>7. Pro Tips &amp; FAQ</span>
+          </button>
+          <button type="button" class="manual-nav-btn" data-tab="support" onclick="window.auth.switchManualTab('support')">
+            <i class="fa-solid fa-headset"></i>
+            <span>8. Support &amp; Owner</span>
           </button>
         </div>
 
@@ -2309,6 +2453,40 @@
               <p class="manual-step-desc">
                 Click the moon/sun icon in the top header bar (or in Settings) to toggle between modern Instagram Dark mode and clean Light mode.
               </p>
+            </div>
+          </div>
+
+          <!-- TAB 8: SUPPORT & OWNER INFO -->
+          <div class="manual-tab-pane" id="manual-tab-support" style="display: none;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-headset" style="color: #6366f1;"></i>
+              Help, Support &amp; App Creator
+            </h3>
+            <p class="manual-pane-subtitle">
+              Have feedback, questions, or need assistance? Reach out directly to the owner.
+            </p>
+
+            <div class="manual-step-card" style="margin-bottom: 1rem; border: 1.5px solid rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.05); padding: 1.25rem;">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; box-shadow: 0 4px 10px rgba(225, 48, 108, 0.3);">
+                  M
+                </div>
+                <div>
+                  <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Mukilan Viswa</h4>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Spendorio Creator &amp; Owner</span>
+                </div>
+              </div>
+              <p class="manual-step-desc" style="font-size: 0.9rem; margin-bottom: 0.75rem;">
+                Contact Email: <strong style="color: #6366f1;">mukilanviswa5839@gmail.com</strong>
+              </p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="mailto:mukilanviswa5839@gmail.com?subject=Spendorio%20Support%20%26%20Feedback" class="action-btn btn-primary" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);">
+                  <i class="fa-solid fa-paper-plane"></i> Email Mukilan
+                </a>
+                <button type="button" class="action-btn btn-secondary" onclick="navigator.clipboard.writeText('mukilanviswa5839@gmail.com'); if(window.app && window.app.showToast) window.app.showToast('Copied mukilanviswa5839@gmail.com! 📋', 'success');" style="font-size: 0.82rem; padding: 6px 14px;">
+                  <i class="fa-solid fa-copy"></i> Copy Email
+                </button>
+              </div>
             </div>
           </div>
 

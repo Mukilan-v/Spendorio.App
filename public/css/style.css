@@ -3611,6 +3611,53 @@ body.modal-open {
    USER MANUAL & HOW-TO-USE GUIDE STYLES
    ========================================================================== */
 
+/* Floating Corner Help & Feedback Button on Auth / Login Screen */
+.auth-corner-feedback {
+  position: fixed;
+  top: 1.25rem;
+  left: 1.5rem;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1.25rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1e293b;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.auth-corner-feedback:hover {
+  transform: translateY(-2px) scale(1.04);
+  background: #ffffff;
+  color: #6366f1;
+  box-shadow: 0 16px 36px -6px rgba(99, 102, 241, 0.5), 0 0 0 2px #6366f1;
+}
+
+.auth-corner-feedback i {
+  color: #6366f1;
+  font-size: 1.1rem;
+}
+
+.auth-corner-feedback .feedback-badge {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
 /* Floating Corner Guide Button on Auth / Login Screen */
 .auth-corner-guide {
   position: fixed;
@@ -4019,6 +4066,12 @@ body.modal-open {
   .manual-nav-btn {
     white-space: nowrap;
     padding: 0.45rem 0.75rem;
+  }
+  .auth-corner-feedback {
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
   }
   .auth-corner-guide {
     top: 0.75rem;
