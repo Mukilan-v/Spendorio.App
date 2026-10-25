@@ -8,10 +8,15 @@
 
   let deferredPrompt = null;
   const DISMISS_KEY = 'spendorio_pwa_banner_dismissed_v2';
+  const INSTALLED_KEY = 'spendorio_pwa_installed';
 
   const isIos = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
     return /iphone|ipad|ipod/.test(userAgent);
+  };
+
+  const isMobile = () => {
+    return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent || '');
   };
 
   const isInStandaloneMode = () => {
@@ -19,6 +24,13 @@
       window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone === true ||
       document.referrer.includes('android-app://')
+    );
+  };
+
+  const isInstalled = () => {
+    return (
+      isInStandaloneMode() ||
+      localStorage.getItem(INSTALLED_KEY) === 'true'
     );
   };
 
@@ -81,24 +93,34 @@
         deferredPrompt = e;
         console.log('[Spendorio PWA] Native beforeinstallprompt captured!');
 
-        // Make install triggers highly visible
-        this.showInstallButtons(true);
+        // If already installed or dismissed, never show banner
+        if (isInstalled() || localStorage.getItem(DISMISS_KEY) === 'true') {
+          this.showInstallButtons(false);
+          const banner = document.getElementById('pwa-install-banner');
+          if (banner) banner.style.display = 'none';
+          return;
+        }
 
-        const banner = document.getElementById('pwa-install-banner');
-        if (banner && !isInStandaloneMode()) {
-          banner.style.display = 'flex';
+        // Only show bottom banner on mobile devices
+        if (isMobile()) {
+          const banner = document.getElementById('pwa-install-banner');
+          if (banner) banner.style.display = 'flex';
         }
       });
 
       window.addEventListener('appinstalled', () => {
         console.log('[Spendorio PWA] Successfully installed on device!');
         deferredPrompt = null;
+        try {
+          localStorage.setItem(INSTALLED_KEY, 'true');
+          localStorage.setItem(DISMISS_KEY, 'true');
+        } catch (e) {}
         this.showInstallButtons(false);
         const banner = document.getElementById('pwa-install-banner');
         if (banner) banner.style.display = 'none';
 
         if (window.showToast) {
-          window.showToast('🎉 Spendorio added to Home Screen! You can now use it 100% offline.', 'success');
+          window.showToast('🎉 Spendorio installed! Works 100% offline.', 'success');
         }
       });
     },
@@ -107,6 +129,20 @@
     async promptInstall() {
       console.log('[Spendorio PWA] promptInstall called! deferredPrompt available:', !!deferredPrompt);
 
+      if (isInstalled() || isInStandaloneMode()) {
+        try {
+          localStorage.setItem(INSTALLED_KEY, 'true');
+          localStorage.setItem(DISMISS_KEY, 'true');
+        } catch (e) {}
+        this.showInstallButtons(false);
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.style.display = 'none';
+        if (window.showToast) {
+          window.showToast('Spendorio is already installed on your device!', 'info');
+        }
+        return;
+      }
+
       if (deferredPrompt) {
         try {
           deferredPrompt.prompt();
@@ -114,6 +150,10 @@
           console.log('[Spendorio PWA] User install choice:', choice.outcome);
           if (choice.outcome === 'accepted') {
             deferredPrompt = null;
+            try {
+              localStorage.setItem(INSTALLED_KEY, 'true');
+              localStorage.setItem(DISMISS_KEY, 'true');
+            } catch (e) {}
             this.showInstallButtons(false);
             const banner = document.getElementById('pwa-install-banner');
             if (banner) banner.style.display = 'none';
@@ -124,12 +164,11 @@
         }
       } else if (isIos() && !isInStandaloneMode()) {
         this.openIosInstallModal();
-      } else if (isInStandaloneMode()) {
-        if (window.showToast) {
-          window.showToast('Spendorio is already installed as an app on your phone!', 'info');
-        }
       } else {
-        // Direct browser menu fallback for Chrome / Edge
+        // Desktop Edge / Chrome fallback
+        if (window.showToast) {
+          window.showToast('Click the App (⊕) icon in your browser address bar to install on Desktop!', 'info');
+        }
         this.openGenericInstallModal();
       }
     },
@@ -139,7 +178,9 @@
       if (banner) banner.style.display = 'none';
       try {
         localStorage.setItem(DISMISS_KEY, 'true');
+        localStorage.setItem(INSTALLED_KEY, 'true');
       } catch (e) {}
+      this.showInstallButtons(false);
     },
 
     showInstallButtons(show) {
@@ -150,19 +191,36 @@
     },
 
     checkInstalledState() {
-      if (isInStandaloneMode()) {
+      const alreadyInstalled = isInstalled();
+      const dismissed = localStorage.getItem(DISMISS_KEY) === 'true';
+
+      if (alreadyInstalled || isInStandaloneMode()) {
         console.log('[Spendorio PWA] Running in Standalone Installed Mode!');
         document.body.classList.add('pwa-standalone');
         this.showInstallButtons(false);
         const banner = document.getElementById('pwa-install-banner');
         if (banner) banner.style.display = 'none';
-      } else {
-        // ALWAYS make install buttons active & visible on mobile / desktop
-        this.showInstallButtons(true);
+        return;
+      }
+
+      if (dismissed) {
+        this.showInstallButtons(false);
         const banner = document.getElementById('pwa-install-banner');
-        if (banner) {
-          banner.style.display = 'flex';
-        }
+        if (banner) banner.style.display = 'none';
+        return;
+      }
+
+      // On desktop, never show floating mobile bottom banner
+      if (!isMobile()) {
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.style.display = 'none';
+        return;
+      }
+
+      // On mobile, show only if not dismissed
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner && !dismissed) {
+        banner.style.display = 'flex';
       }
     },
 
@@ -212,6 +270,13 @@
     closeIosInstallModal() {
       const modal = document.getElementById('pwa-ios-modal');
       if (modal) modal.style.display = 'none';
+      try {
+        localStorage.setItem(DISMISS_KEY, 'true');
+        localStorage.setItem(INSTALLED_KEY, 'true');
+      } catch (e) {}
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'none';
+      this.showInstallButtons(false);
     },
 
     openGenericInstallModal() {
@@ -222,6 +287,13 @@
     closeGenericInstallModal() {
       const modal = document.getElementById('pwa-generic-modal');
       if (modal) modal.style.display = 'none';
+      try {
+        localStorage.setItem(DISMISS_KEY, 'true');
+        localStorage.setItem(INSTALLED_KEY, 'true');
+      } catch (e) {}
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'none';
+      this.showInstallButtons(false);
     }
   };
 
