@@ -1272,9 +1272,9 @@
               <div style="background: var(--bg-card); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
                 <div style="flex: 1; min-width: 200px;">
                   <div style="font-size: 0.72rem; color: #6366f1; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                    <i class="fa-solid fa-globe"></i> OPTION 1: PHONE 4G / 5G DATA LINK (WORKS ANYWHERE):
+                    <i class="fa-solid fa-globe"></i> OPTION 1: GLOBAL CLOUD LINK (WORKS WORLDWIDE 24/7):
                   </div>
-                  <div style="font-family: monospace; font-size: 0.88rem; font-weight: 700; color: var(--primary); word-break: break-all;" id="phone-access-tunnel-url">https://cheats-mayor-five-sign.trycloudflare.com</div>
+                  <div style="font-family: monospace; font-size: 0.88rem; font-weight: 700; color: var(--primary); word-break: break-all;" id="phone-access-tunnel-url">https://mukilan-v.github.io/Spendorio.App/</div>
                 </div>
                 <button type="button" class="action-btn btn-primary" onclick="const u = document.getElementById('phone-access-tunnel-url').innerText; navigator.clipboard.writeText(u); if(window.app && window.app.showToast) window.app.showToast('4G/5G Phone URL copied!', 'success');" style="font-size: 0.78rem; padding: 5px 12px;">
                   <i class="fa-solid fa-copy"></i> Copy Link
@@ -1296,6 +1296,45 @@
 
               <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.45;">
                 💡 <strong>Tip:</strong> Open either link above on your phone browser. Double-click <code>Scan_Phone_QR.png</code> on your laptop Desktop to scan with your phone camera!
+              </div>
+            </div>
+
+            <!-- FIREBASE MULTI-DEVICE CLOUD SYNC CARD -->
+            <div class="settings-help-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(99, 102, 241, 0.08)); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: var(--radius-lg); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                  <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #6366f1); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                      <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Automatic Cloud Sync (Firebase)</h3>
+                      <span id="firebase-sync-status-badge" style="font-size: 0.72rem; font-weight: 700; color: #f59e0b; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 99px;">
+                        <i class="fa-solid fa-circle-info"></i> Local Storage Only
+                      </span>
+                    </div>
+                    <p style="margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted);" id="firebase-last-sync-time">
+                      Syncs new tasks and expenses automatically in real-time between your Phone &amp; Laptop.
+                    </p>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="action-btn btn-secondary" onclick="window.firebaseSync && window.firebaseSync.openSetupGuide()" style="font-size: 0.8rem; padding: 6px 12px;">
+                    <i class="fa-solid fa-circle-question"></i> Setup Guide
+                  </button>
+                  <button type="button" class="action-btn btn-primary" onclick="window.firebaseSync && window.firebaseSync.syncNow(false)" style="font-size: 0.8rem; padding: 6px 12px; background: #10b981; border-color: #10b981;">
+                    <i class="fa-solid fa-arrows-rotate"></i> Sync Now
+                  </button>
+                </div>
+              </div>
+
+              <!-- Firebase URL Input Form -->
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="url" id="firebase-db-url-input" class="form-control" placeholder="https://your-project-default-rtdb.firebaseio.com" style="flex: 1; min-width: 250px; font-size: 0.85rem; font-family: monospace;">
+                <button type="button" class="btn-insta-gradient" onclick="window.firebaseSync && window.firebaseSync.saveFromInput()" style="padding: 0.55rem 1.1rem; font-size: 0.85rem; font-weight: 700; border-radius: 8px; cursor: pointer; white-space: nowrap;">
+                  <i class="fa-solid fa-floppy-disk"></i> Save &amp; Connect
+                </button>
               </div>
             </div>
 
@@ -2711,18 +2750,66 @@
     </div>
   </div>
 
+  
+  <!-- FIREBASE SETUP GUIDE MODAL -->
+  <div class="modal-overlay" id="firebase-setup-modal" style="display: none; z-index: 1000005;" onclick="if(event.target === this) window.firebaseSync.closeSetupGuide()">
+    <div class="modal-box" style="max-width: 580px; width: 92%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(16, 185, 129, 0.35); background: var(--bg-card);">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(99, 102, 241, 0.15)); border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #6366f1); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+            <i class="fa-solid fa-cloud"></i>
+          </div>
+          <div>
+            <h2 class="modal-title" style="margin: 0; font-size: 1.2rem; font-weight: 800;">Free Google Firebase Setup</h2>
+            <p style="margin: 2px 0 0; font-size: 0.8rem; color: var(--text-muted);">Connect your laptop and phone in 3 easy steps (Takes 2 minutes, 100% Free):</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="window.firebaseSync.closeSetupGuide()" aria-label="Close" style="font-size: 1.5rem; cursor: pointer; background: transparent; border: none; color: var(--text-muted);">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem 1.5rem; max-height: 70vh; overflow-y: auto;">
+        <div class="pwa-step-item" style="margin-bottom: 1rem;">
+          <div class="pwa-step-num">1</div>
+          <div class="pwa-step-text">
+            Go to <a href="https://console.firebase.google.com/" target="_blank" rel="noopener" style="color: #6366f1; font-weight: 700; text-decoration: underline;">console.firebase.google.com</a> and click <strong>"Create a project"</strong> (Name it <em>Spendorio</em>).
+          </div>
+        </div>
+        <div class="pwa-step-item" style="margin-bottom: 1rem;">
+          <div class="pwa-step-num">2</div>
+          <div class="pwa-step-text">
+            In the left sidebar under <strong>Build</strong>, click <strong>Realtime Database</strong> &gt; click <strong>Create Database</strong> (Choose default location and select <strong>Start in test mode</strong>).
+          </div>
+        </div>
+        <div class="pwa-step-item" style="margin-bottom: 1rem;">
+          <div class="pwa-step-num">3</div>
+          <div class="pwa-step-text">
+            Copy the Database URL at the top (e.g. <code>https://spendorio-app-default-rtdb.firebaseio.com</code>) and paste it into the box in <strong>Settings</strong>!
+          </div>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px; margin-top: 1rem;">
+          <p style="margin: 0; font-size: 0.82rem; color: var(--text-primary); line-height: 1.45;">
+            ✨ <strong>Once connected:</strong> Any task or cost you add on your phone will automatically appear on your laptop, and vice versa!
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-pwa-install" onclick="window.firebaseSync.closeSetupGuide()">Got It</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261025_v10_deep_audit"></script>
-  <script src="js/auth.js?v=20261025_v10_deep_audit"></script>
-  <script src="js/storage.js?v=20261025_v10_deep_audit"></script>
-  <script src="js/tasks.js?v=20261025_v10_deep_audit"></script>
-  <script src="js/expenses.js?v=20261025_v10_deep_audit"></script>
+  <script src="js/pwa.js?v=20261025_v11_firebase"></script>
+  <script src="js/firebase-sync.js?v=20261025_v11_firebase"></script>
+  <script src="js/auth.js?v=20261025_v11_firebase"></script>
+  <script src="js/storage.js?v=20261025_v11_firebase"></script>
+  <script src="js/tasks.js?v=20261025_v11_firebase"></script>
+  <script src="js/expenses.js?v=20261025_v11_firebase"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261025_v10_deep_audit"></script>
-  <script src="js/charts.js?v=20261025_v10_deep_audit"></script>
-  <script src="js/app.js?v=20261025_v10_deep_audit"></script>
+  <script src="js/reports.js?v=20261025_v11_firebase"></script>
+  <script src="js/charts.js?v=20261025_v11_firebase"></script>
+  <script src="js/app.js?v=20261025_v11_firebase"></script>
 </body>
 </html>

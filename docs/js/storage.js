@@ -1399,6 +1399,11 @@ class StorageManager {
       return;
     }
 
+    if (window.markLocalUpdated) window.markLocalUpdated();
+    if (window.firebaseSync && window.firebaseSync.isConfigured()) {
+      window.firebaseSync.pushLocalData();
+    }
+
     this.pushDataToServer();
   }
 
@@ -1584,6 +1589,11 @@ class StorageManager {
       return;
     }
 
+    if (window.markLocalUpdated) window.markLocalUpdated();
+    if (window.firebaseSync && window.firebaseSync.isConfigured()) {
+      window.firebaseSync.pushLocalData();
+    }
+
     this.pushDataToServer();
   }
 
@@ -1656,6 +1666,11 @@ class StorageManager {
     // CRITICAL: A guest MUST NEVER push to server
     if (isGuest) {
       return;
+    }
+
+    if (window.markLocalUpdated) window.markLocalUpdated();
+    if (window.firebaseSync && window.firebaseSync.isConfigured()) {
+      window.firebaseSync.pushLocalData();
     }
 
     this.pushDataToServer();
