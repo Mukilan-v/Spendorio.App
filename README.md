@@ -10,7 +10,7 @@
 ---
 
 ## 🌐 Live Web Demo
-👉 **[Open Live Spendorio App (GitHub Pages)](https://mukilan-software-developer.github.io/Spendorio/)**  
+👉 **[Open Live Spendorio App (GitHub Pages)](https://mukilan-v.github.io/Spendorio.App/)**  
 *(Can be installed directly to your phone or desktop home screen via Chrome/Safari!)*
 
 ---
