@@ -93,18 +93,21 @@
         deferredPrompt = e;
         console.log('[Spendorio PWA] Native beforeinstallprompt captured!');
 
-        // If already installed or dismissed, never show banner
-        if (isInstalled() || localStorage.getItem(DISMISS_KEY) === 'true') {
+        // If already installed, never show banner or buttons
+        if (isInstalled() || isInStandaloneMode()) {
           this.showInstallButtons(false);
           const banner = document.getElementById('pwa-install-banner');
           if (banner) banner.style.display = 'none';
           return;
         }
 
-        // Only show bottom banner on mobile devices
-        if (isMobile()) {
-          const banner = document.getElementById('pwa-install-banner');
-          if (banner) banner.style.display = 'flex';
+        // Make install triggers visible
+        this.showInstallButtons(true);
+
+        const dismissed = localStorage.getItem(DISMISS_KEY) === 'true';
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner && !dismissed) {
+          banner.style.display = 'flex';
         }
       });
 
@@ -203,24 +206,13 @@
         return;
       }
 
-      if (dismissed) {
-        this.showInstallButtons(false);
-        const banner = document.getElementById('pwa-install-banner');
-        if (banner) banner.style.display = 'none';
-        return;
-      }
+      // If not yet installed, make install button available in header & sidebar
+      this.showInstallButtons(true);
 
-      // On desktop, never show floating mobile bottom banner
-      if (!isMobile()) {
-        const banner = document.getElementById('pwa-install-banner');
-        if (banner) banner.style.display = 'none';
-        return;
-      }
-
-      // On mobile, show only if not dismissed
+      // Show bottom banner unless dismissed
       const banner = document.getElementById('pwa-install-banner');
-      if (banner && !dismissed) {
-        banner.style.display = 'flex';
+      if (banner) {
+        banner.style.display = dismissed ? 'none' : 'flex';
       }
     },
 
