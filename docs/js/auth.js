@@ -895,27 +895,42 @@ class AuthManager {
   }
 
     applyCloudProfile(profileData) {
-    if (!profileData || !this.currentUser) return;
-    if (this.currentUser.username && profileData.username && 
-        this.currentUser.username.toLowerCase() !== profileData.username.toLowerCase()) {
-      return;
-    }
-    this.currentUser = { ...this.currentUser, ...profileData };
+    if (!profileData) return;
     try {
-      const sess = localStorage.getItem(this.STORAGE_KEYS.SESSION);
-      if (sess) {
-        const s = JSON.parse(sess);
-        s.user = this.currentUser;
-        localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(s));
-      }
+      // 1. Update matching local user in storage
       const users = this.getLocalUsers();
-      const idx = users.findIndex(u => u.username && u.username.toLowerCase() === this.currentUser.username.toLowerCase());
-      if (idx !== -1) {
-        users[idx] = { ...users[idx], ...this.currentUser };
+      const uIdx = users.findIndex(u => u.username && profileData.username && u.username.toLowerCase() === profileData.username.toLowerCase());
+      if (uIdx !== -1) {
+        users[uIdx] = { ...users[uIdx], ...profileData };
         this.saveLocalUsers(users);
       }
-    } catch (e) {}
+
+      // 2. If user is currently logged in, update currentUser
+      if (this.currentUser) {
+        if (!profileData.username || (this.currentUser.username && this.currentUser.username.toLowerCase() === profileData.username.toLowerCase())) {
+          this.currentUser = { ...this.currentUser, ...profileData };
+          
+          // Update localStorage session
+          const lSess = localStorage.getItem(this.STORAGE_KEYS.SESSION);
+          if (lSess) {
+            const s = JSON.parse(lSess);
+            s.user = this.currentUser;
+            localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(s));
+          }
+          // Update sessionStorage session
+          const sSess = sessionStorage.getItem(this.STORAGE_KEYS.SESSION);
+          if (sSess) {
+            const s = JSON.parse(sSess);
+            s.user = this.currentUser;
+            sessionStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(s));
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error in applyCloudProfile:', e);
+    }
     this.updateUserProfileBadges();
+    this.updateSettingsProfileCard();
   }
 
   updateSettingsProfileCard() {

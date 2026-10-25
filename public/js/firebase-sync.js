@@ -157,7 +157,7 @@
         const cloudUpdatedAt = cloudData ? (cloudData.updatedAt || 0) : 0;
 
         // Case A: Cloud is newer than local device (e.g. You added tasks on phone, now viewing laptop!)
-        if (cloudData && cloudUpdatedAt > localUpdatedAt && (cloudData.tasks || cloudData.expenses)) {
+        if (cloudData && cloudUpdatedAt > localUpdatedAt) {
           console.log('[FirebaseSync] Cloud data is newer! Updating local device with latest records...');
           this.applyCloudDataToLocal(cloudData);
           localStorage.setItem(STORAGE_KEY_LOCAL_UPDATED, cloudUpdatedAt.toString());
