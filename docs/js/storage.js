@@ -1484,6 +1484,7 @@ class StorageManager {
     // Also delete linked expense
     const expenses = this.getExpenses().filter(e => e.taskId !== taskId);
     this.saveExpenses(expenses);
+    return true;
   }
 
   toggleTaskCompletion(taskId) {
@@ -1614,6 +1615,7 @@ class StorageManager {
     let expenses = this.getExpenses();
     expenses = expenses.filter(e => String(e.id) !== String(expenseId));
     this.saveExpenses(expenses);
+    return true;
   }
 
   // --- INCOMES ---
@@ -1663,6 +1665,7 @@ class StorageManager {
     let incomes = this.getIncomes();
     incomes = incomes.filter(i => String(i.id) !== String(incomeId));
     this.saveIncomes(incomes);
+    return true;
   }
 
   addIncome(income) {

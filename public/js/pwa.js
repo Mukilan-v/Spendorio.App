@@ -21,10 +21,10 @@
 
   const isInStandaloneMode = () => {
     return (
-      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
       window.navigator.standalone === true ||
-      document.referrer.includes('android-app://') ||
-      window.location.search.includes('mode=standalone')
+      (typeof document !== 'undefined' && (document.referrer || '').includes('android-app://')) ||
+      (window.location.search && window.location.search.includes('mode=standalone'))
     );
   };
 

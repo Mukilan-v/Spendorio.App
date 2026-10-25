@@ -115,17 +115,17 @@ class AuthManager {
     const appContainer = document.querySelector('.app-container');
 
     if (isLoggedIn && this.currentUser) {
-      if (authScreen) authScreen.style.display = 'none';
-      if (appContainer) appContainer.style.display = 'flex';
+      if (authScreen && authScreen.style) authScreen.style.display = 'none';
+      if (appContainer && appContainer.style) appContainer.style.display = 'flex';
       this.updateUserProfileBadges();
       // Start 1-minute gentle logout security reminder
       this.startLogoutReminderTimer();
     } else {
-      if (authScreen) authScreen.style.display = 'flex';
-      if (appContainer) appContainer.style.display = 'none';
+      if (authScreen && authScreen.style) authScreen.style.display = 'flex';
+      if (appContainer && appContainer.style) appContainer.style.display = 'none';
       this.clearLogoutReminderTimer();
       const reminder = document.getElementById('logout-gentle-reminder');
-      if (reminder) reminder.style.display = 'none';
+      if (reminder && reminder.style) reminder.style.display = 'none';
     }
   }
 
@@ -979,7 +979,7 @@ class AuthManager {
   // Clear all fields in the Sign Up form so no previous person's data is retained
   clearSignupForm() {
     const signupForm = document.getElementById('auth-signup-form');
-    if (signupForm) {
+    if (signupForm && typeof signupForm.reset === 'function') {
       signupForm.reset();
     }
     const fields = ['signup-fullname', 'signup-username', 'signup-email', 'signup-phone', 'signup-password'];
@@ -1125,7 +1125,7 @@ class AuthManager {
   // Clear all fields in the Login form
   clearLoginForm() {
     const loginForm = document.getElementById('auth-login-form');
-    if (loginForm) {
+    if (loginForm && typeof loginForm.reset === 'function') {
       loginForm.reset();
     }
     const fields = ['login-identifier', 'login-password'];

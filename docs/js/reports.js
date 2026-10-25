@@ -291,7 +291,10 @@ class ReportManager {
         container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         container.innerHTML = printHtml;
         const noPrint = container.querySelectorAll('.no-print, script');
-        noPrint.forEach(el => el.remove());
+        noPrint.forEach(el => {
+          if (typeof el.remove === 'function') el.remove();
+          else if (el.parentNode) el.parentNode.removeChild(el);
+        });
 
         if (window.app && window.app.showToast) {
           window.app.showToast('Generating direct PDF download...', 'info');

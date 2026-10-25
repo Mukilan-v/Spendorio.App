@@ -124,10 +124,12 @@ class Application {
       const hasActiveModal = document.querySelectorAll('.modal-overlay.active').length > 0;
       document.body.classList.toggle('modal-open', hasActiveModal);
     };
-    const modalObserver = new MutationObserver(syncModalBodyLock);
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-      modalObserver.observe(overlay, { attributes: true, attributeFilter: ['class'] });
-    });
+    if (typeof MutationObserver !== 'undefined') {
+      const modalObserver = new MutationObserver(syncModalBodyLock);
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        modalObserver.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+      });
+    }
 
     // Close export dropdown when clicking outside
     document.addEventListener('click', (e) => {
@@ -901,8 +903,10 @@ class Application {
 
   loadBudgetSettingsToForm() {
     const settings = window.storage.getSettings();
-    document.getElementById('input-daily-budget').value = settings.dailyBudget || 1500;
-    document.getElementById('input-monthly-budget').value = settings.monthlyBudget || 40000;
+    const dailyInput = document.getElementById('input-daily-budget');
+    if (dailyInput) dailyInput.value = settings.dailyBudget || 1500;
+    const monthlyInput = document.getElementById('input-monthly-budget');
+    if (monthlyInput) monthlyInput.value = settings.monthlyBudget || 40000;
     
     if (settings.categoryBudgets) {
       Object.entries(settings.categoryBudgets).forEach(([cat, val]) => {
@@ -939,7 +943,9 @@ class Application {
   }
 
   applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
+    if (document.documentElement) {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
     const themeBtnIcon = document.querySelector('#theme-toggle-btn i');
     if (themeBtnIcon) {
       themeBtnIcon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
@@ -1050,7 +1056,7 @@ class Application {
 
   setDashboardBackground(bgId) {
     const wrapper = document.querySelector('.main-wrapper') || document.body;
-    if (wrapper) {
+    if (wrapper && typeof wrapper.setAttribute === 'function') {
       wrapper.setAttribute('data-dash-bg', bgId);
       localStorage.setItem('spendorio_dash_bg', bgId);
     }
@@ -1099,10 +1105,19 @@ class Application {
       toast.style.opacity = '0';
       toast.style.transform = 'translateX(100%)';
       toast.style.transition = 'all 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
+      setTimeout(() => {
+        if (typeof toast.remove === 'function') {
+          toast.remove();
+        } else if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
     }, 3000);
   }
 }
+
+// Expose on window
+window.Application = Application;
 
 // Instantiate on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
