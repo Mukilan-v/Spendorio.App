@@ -33,7 +33,7 @@
   <script src="js/chart.min.js" defer></script>
 
   <!-- App Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=20261024_spendorio">
+  <link rel="stylesheet" href="css/style.css?v=20261025_v4_login_feedback">
 
   <!-- Force Purge of Old Caches & Auto-Update to Spendorio -->
   <script>
@@ -46,7 +46,7 @@
     if ('caches' in window) {
       caches.keys().then(function(cacheNames) {
         cacheNames.forEach(function(cacheName) {
-          if (cacheName !== 'spendorio-v2.0.0') {
+          if (cacheName !== 'spendorio-v2.0.1') {
             console.log('[Spendorio] Purging stale cache:', cacheName);
             caches.delete(cacheName);
           }
@@ -188,10 +188,10 @@
     </div>
 
     <!-- FLOATING CORNER HELP & SUPPORT / FEEDBACK -->
-    <button type="button" class="auth-corner-feedback" onclick="openSpendorioFeedbackModal()" title="Help & Support / Send Feedback">
-      <i class="fa-solid fa-headset"></i>
-      <span class="feedback-text">Help &amp; Support</span>
-      <span class="feedback-badge">Feedback</span>
+    <button type="button" class="auth-corner-feedback" onclick="openSpendorioFeedbackModal()" title="Help & Support / Send Feedback" style="position: fixed; top: 1.25rem; left: 1.5rem; z-index: 100000; display: inline-flex; align-items: center; gap: 0.65rem; padding: 0.7rem 1.25rem; background: rgba(255, 255, 255, 0.95); color: #1e293b; border: 1.5px solid rgba(255, 255, 255, 0.8); border-radius: 9999px; font-size: 0.9rem; font-weight: 700; cursor: pointer; box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.2); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); text-decoration: none;">
+      <i class="fa-solid fa-headset" style="color: #6366f1; font-size: 1.1rem;"></i>
+      <span class="feedback-text" style="font-weight: 700; color: #1e293b;">Help &amp; Support</span>
+      <span class="feedback-badge" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 12px; margin-left: 4px;">Feedback</span>
     </button>
 
     <!-- FLOATING CORNER USER MANUAL GUIDE (For new users before entering) -->
@@ -2703,14 +2703,14 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261025_index_guaranteed"></script>
-  <script src="js/auth.js?v=20261025_index_guaranteed"></script>
-  <script src="js/storage.js?v=20261025_index_guaranteed"></script>
-  <script src="js/tasks.js?v=20261025_index_guaranteed"></script>
-  <script src="js/expenses.js?v=20261025_index_guaranteed"></script>
+  <script src="js/pwa.js?v=20261025_v4_login_feedback"></script>
+  <script src="js/auth.js?v=20261025_v4_login_feedback"></script>
+  <script src="js/storage.js?v=20261025_v4_login_feedback"></script>
+  <script src="js/tasks.js?v=20261025_v4_login_feedback"></script>
+  <script src="js/expenses.js?v=20261025_v4_login_feedback"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261025_index_guaranteed"></script>
-  <script src="js/charts.js?v=20261025_index_guaranteed"></script>
-  <script src="js/app.js?v=20261025_index_guaranteed"></script>
+  <script src="js/reports.js?v=20261025_v4_login_feedback"></script>
+  <script src="js/charts.js?v=20261025_v4_login_feedback"></script>
+  <script src="js/app.js?v=20261025_v4_login_feedback"></script>
 </body>
 </html>
