@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Spendorio &amp; SpendTracker - Routine &amp; Cost Management</title>
+
+  <!-- Progressive Web App (PWA) Manifest & Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Spendorio">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <!-- WhatsApp & Social Media Preview Cards (Shows "Spendorio" when link is pasted) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Spendorio">
+  <meta property="og:title" content="Spendorio - Routine &amp; Cost Management">
+  <meta property="og:description" content="Spendorio: Daily Habit &amp; Routine Tracker with Automatic Cost Management. 100% Offline Support.">
+  <meta property="og:image" content="icons/icon-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Spendorio - Routine &amp; Cost Management">
+  <meta name="twitter:description" content="Spendorio: Daily Habit &amp; Routine Tracker with Automatic Cost Management. 100% Offline Support.">
+  <meta name="twitter:image" content="icons/icon-512.png">
+
+  <!-- FontAwesome 6 Icons - LOCAL (works without internet) -->
+  <link rel="stylesheet" href="css/fontawesome.min.css">
+
+  <!-- Chart.js - LOCAL (deferred for instant mobile load) -->
+  <script src="js/chart.min.js" defer></script>
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="css/style.css?v=20261024_spendorio">
+
+  <!-- Force Purge of Old Caches & Auto-Update to Spendorio -->
+  <script>
+    if ('caches' in window) {
+      caches.keys().then(function(cacheNames) {
+        cacheNames.forEach(function(cacheName) {
+          if (cacheName.indexOf('spendora') !== -1 || cacheName.indexOf('spendorio-v1.0.0') !== -1) {
+            console.log('[Spendorio] Purging stale cache:', cacheName);
+            caches.delete(cacheName);
+          }
+        });
+      });
+    }
+  </script>
+
+  <!-- Fallback system font (no internet needed) - preserves FontAwesome icons -->
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .fa, .fa-solid, .fas, .fa-regular, .far, .fa-brands, .fab, [class*="fa-"] {
+      font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    }
+    .fa-brands, .fab {
+      font-family: "Font Awesome 6 Brands", "FontAwesome" !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AUTHENTICATION GATEWAY (Instagram & Google Inspired UI) -->
+  <div id="auth-screen" class="auth-screen-overlay" data-bg="cyber-glass" style="display: flex;">
+    
+    <!-- DYNAMIC UNIQUE 3D GLASSMORPHIC BACKGROUND LAYER -->
+    <div id="auth-dynamic-bg" class="auth-dynamic-bg-container">
+      <!-- Animated Aurora Gradient Orbs -->
+      <div class="aurora-blob blob-1"></div>
+      <div class="aurora-blob blob-2"></div>
+      <div class="aurora-blob blob-3"></div>
+      <div class="aurora-blob blob-4"></div>
+      
+      <!-- 3D Perspective Cyber Grid Floor -->
+      <div class="cyber-grid-floor"></div>
+
+      <!-- Left Floating 3D Widget: Rupee Savings Coin -->
+      <div class="glass-float-card float-coin-card">
+        <div class="glass-coin-circle">
+          <span>₹</span>
+        </div>
+        <div class="glass-coin-text">
+          <span class="coin-label">Daily Savings</span>
+          <span class="coin-val">+₹1,500</span>
+        </div>
+      </div>
+
+      <!-- Right Floating 3D Widget: Routine Checklist Card -->
+      <div class="glass-float-card float-routine-card">
+        <div class="glass-card-header">
+          <i class="fa-solid fa-list-check" style="color: #10b981;"></i>
+          <span>Today's Routine</span>
+          <span class="pulse-live-dot"></span>
+        </div>
+        <div class="glass-task-item done">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Morning Fresh Up</span>
+        </div>
+        <div class="glass-task-item done">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Eggs &amp; Curd: ₹80</span>
+        </div>
+        <div class="glass-task-item">
+          <i class="fa-regular fa-circle"></i>
+          <span>Tech Training</span>
+        </div>
+      </div>
+
+      <!-- Bottom-Left Floating 3D Widget: Budget Health -->
+      <div class="glass-float-card float-metric-card">
+        <div class="metric-icon-wrap">
+          <i class="fa-solid fa-arrow-trend-up"></i>
+        </div>
+        <div>
+          <div class="metric-title">Budget Health</div>
+          <div class="metric-badge">94% Optimal</div>
+        </div>
+      </div>
+
+      <!-- Top-Right Floating 3D Widget: Spendorio Vault -->
+      <div class="glass-float-card float-vault-card">
+        <div class="vault-icon"><i class="fa-solid fa-wallet"></i></div>
+        <div>
+          <div class="vault-name">Spendorio Vault</div>
+          <div class="vault-sec"><i class="fa-solid fa-lock"></i> 100% Encrypted</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOATING CORNER USER MANUAL GUIDE (For new users before entering) -->
+    <button type="button" class="auth-corner-guide" onclick="window.auth.openUserManual('start')" title="New to Spendorio? Read how to use &amp; manage tasks and costs">
+      <i class="fa-solid fa-book-open"></i>
+      <span class="guide-text">User Manual &amp; Guide</span>
+      <span class="guide-badge">How to Use</span>
+    </button>
+
+    <!-- FLOATING BACKGROUND DESIGN PICKER (Unique Open-Source Styles) -->
+    <div class="auth-bg-picker-wrap">
+      <button type="button" class="auth-bg-picker-toggle" onclick="window.auth.toggleBgPicker()" title="Choose your favorite background design">
+        <i class="fa-solid fa-palette"></i>
+        <span>Change Design</span>
+      </button>
+      <div id="auth-bg-picker-menu" class="auth-bg-picker-menu" style="display: none;">
+        <div class="bg-picker-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Background Design</div>
+        <button type="button" class="bg-opt-btn active" data-bg="cyber-glass" onclick="window.auth.setAuthBackground('cyber-glass')">
+          <span class="bg-preview-pill" style="background: linear-gradient(135deg, #1e1035, #e1306c, #f59e0b);"></span>
+          <span>✨ 3D Cyber Glass (Unique)</span>
+        </button>
+        <button type="button" class="bg-opt-btn" data-bg="aurora-mesh" onclick="window.auth.setAuthBackground('aurora-mesh')">
+          <span class="bg-preview-pill" style="background: linear-gradient(135deg, #090d16, #06b6d4, #8b5cf6);"></span>
+          <span>🌌 Aurora Mesh (Modern)</span>
+        </button>
+        <button type="button" class="bg-opt-btn" data-bg="finance-desk" onclick="window.auth.setAuthBackground('finance-desk')">
+          <span class="bg-preview-pill" style="background: url('images/bg-finance.jpg') center/cover;"></span>
+          <span>💼 Financial Desk Planner</span>
+        </button>
+        <button type="button" class="bg-opt-btn" data-bg="golden-wealth" onclick="window.auth.setAuthBackground('golden-wealth')">
+          <span class="bg-preview-pill" style="background: url('images/bg-savings.jpg') center/cover;"></span>
+          <span>🪙 Golden Coins &amp; Wealth</span>
+        </button>
+        <button type="button" class="bg-opt-btn" data-bg="sunset-glow" onclick="window.auth.setAuthBackground('sunset-glow')">
+          <span class="bg-preview-pill" style="background: linear-gradient(135deg, #ff7e5f, #feb47b, #764ba2);"></span>
+          <span>🌅 Sunset Warm Glow</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="auth-wrapper">
+      
+      <!-- MAIN CARD (Instagram + Google Aesthetic) -->
+      <div class="auth-card">
+        
+        <!-- Header with Instagram Story Gradient Ring -->
+        <div class="auth-header">
+          <div class="insta-story-ring">
+            <div class="insta-story-avatar">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+          </div>
+          <h1 class="insta-logotype">Spendorio <span class="insta-dot"></span></h1>
+          <p class="auth-subtitle">SpendTracker • Routines, Habits &amp; Cost Monitor</p>
+        </div>
+
+        <!-- Pill Segmented Control -->
+        <div class="auth-tab-bar">
+          <button type="button" class="auth-tab-btn active" id="auth-tab-login-btn" onclick="window.auth.switchTab('login')">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Log In</span>
+          </button>
+          <button type="button" class="auth-tab-btn" id="auth-tab-signup-btn" onclick="window.auth.switchTab('signup')">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Sign Up</span>
+          </button>
+        </div>
+
+        <!-- Error Banner -->
+        <div id="auth-error-msg" class="auth-error-banner" style="display: none;"></div>
+
+        <!-- LOGIN FORM -->
+        <form id="auth-login-form" class="auth-form" onsubmit="event.preventDefault(); window.auth.handleLogin(new FormData(this));">
+          <div class="form-group">
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-user input-icon"></i>
+              <input type="text" id="login-identifier" name="identifier" class="form-input" placeholder="Phone number, username, or email" required autofocus autocomplete="username">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="login-password" name="password" class="form-input" placeholder="Password" required autocomplete="current-password">
+              <button type="button" class="btn-password-toggle" onclick="window.auth.togglePassword('login-password', 'login-pw-icon')" title="Show / Hide Password">
+                <i class="fa-solid fa-eye" id="login-pw-icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary);">
+              <input type="checkbox" id="login-remember-me" name="rememberMe" checked style="accent-color: #e1306c; cursor: pointer;">
+              <span>Save login info</span>
+            </label>
+            <a href="javascript:void(0)" class="auth-forgot-link" onclick="window.auth.showForgotForm()">
+              <i class="fa-solid fa-key"></i> Forgot password?
+            </a>
+          </div>
+
+          <button type="submit" class="btn-insta-gradient" style="width: 100%;">
+            <span>Log In</span>
+          </button>
+        </form>
+
+        <!-- FORGOT PASSWORD FORM (hidden by default) -->
+        <div id="auth-forgot-form" style="display: none; flex-direction: column; gap: 1rem;">
+          <div style="text-align: center; margin-bottom: 0.25rem;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔑</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Reset Password</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.25rem 0 0;">Enter the email you registered with</p>
+          </div>
+
+          <!-- Step 1: Email verification -->
+          <div id="forgot-step-email">
+            <div class="auth-input-wrap" style="margin-bottom: 0.75rem;">
+              <i class="fa-solid fa-envelope input-icon"></i>
+              <input type="email" id="forgot-email" class="form-input" placeholder="Enter your registered email" autocomplete="email">
+            </div>
+            <button type="button" class="btn-insta-gradient" style="width: 100%;" onclick="window.auth.verifyForgotEmail()">
+              <i class="fa-solid fa-magnifying-glass"></i> <span>Verify Email</span>
+            </button>
+          </div>
+
+          <!-- Step 2: New password (shown after email verified) -->
+          <div id="forgot-step-newpw" style="display: none; flex-direction: column; gap: 0.75rem;">
+            <div class="auth-success-note">
+              <i class="fa-solid fa-circle-check"></i>
+              <span id="forgot-verified-email-label">Email verified!</span>
+            </div>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="forgot-new-password" class="form-input" placeholder="New Password (min 4 chars)" autocomplete="new-password">
+              <button type="button" class="btn-password-toggle" onclick="window.auth.togglePassword('forgot-new-password','forgot-pw-icon')" title="Show / Hide">
+                <i class="fa-solid fa-eye" id="forgot-pw-icon"></i>
+              </button>
+            </div>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock-open input-icon"></i>
+              <input type="password" id="forgot-confirm-password" class="form-input" placeholder="Confirm New Password" autocomplete="new-password">
+            </div>
+            <button type="button" class="btn-insta-gradient" style="width: 100%;" onclick="window.auth.resetPassword()">
+              <i class="fa-solid fa-floppy-disk"></i> <span>Update Password</span>
+            </button>
+          </div>
+
+          <button type="button" class="auth-back-link" onclick="window.auth.hideForgotForm()">
+            <i class="fa-solid fa-arrow-left"></i> Back to Login
+          </button>
+        </div>
+
+        <!-- SIGN UP FORM -->
+        <form id="auth-signup-form" class="auth-form" style="display: none;" autocomplete="off" onsubmit="event.preventDefault(); window.auth.handleSignUp(new FormData(this));">
+          <div class="form-group">
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-id-card input-icon"></i>
+              <input type="text" id="signup-fullname" name="fullName" class="form-input" placeholder="Full Name (Compulsory)" required autocomplete="off">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-at input-icon"></i>
+              <input type="text" id="signup-username" name="username" class="form-input" placeholder="Username (min 3 chars)" required autocomplete="off">
+            </div>
+            <!-- Live Availability Status for Username -->
+            <div id="signup-username-status" class="auth-field-status" style="display: none;"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <div class="auth-input-wrap" style="position: relative;">
+                <i class="fa-solid fa-envelope input-icon" id="signup-email-icon" onclick="window.auth.toggleEmailHint()" style="cursor: pointer;" title="Click for email info"></i>
+                <input type="email" id="signup-email" name="email" class="form-input" placeholder="Gmail / Email (Compulsory)" required autocomplete="off" onfocus="window.auth.showEmailHint()" onblur="window.auth.hideEmailHintOnBlur()">
+                <button type="button" class="btn-input-hint" onclick="window.auth.toggleEmailHint()" title="Click for info about Gmail" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6366f1; cursor: pointer; padding: 2px 6px; font-size: 0.88rem;">
+                  <i class="fa-solid fa-circle-question"></i>
+                </button>
+              </div>
+              <!-- Live Availability Status for Email -->
+              <div id="signup-email-status" class="auth-field-status" style="display: none;"></div>
+              <!-- Helper Hint Banner for Email (Mobile & Laptop Friendly) -->
+              <div id="signup-email-hint" class="auth-field-helper-hint" style="display: none;">
+                <i class="fa-solid fa-lightbulb" style="color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i>
+                <span><strong>No real Gmail needed!</strong> Any demo email works (e.g., <code>demo123@gmail.com</code>). Compulsory only for signup.</span>
+              </div>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <div class="auth-input-wrap">
+                <i class="fa-solid fa-phone input-icon"></i>
+                <input type="tel" id="signup-phone" name="phone" class="form-input" placeholder="Phone Number (Optional)" autocomplete="off">
+              </div>
+              <!-- Live Availability Status for Phone -->
+              <div id="signup-phone-status" class="auth-field-status" style="display: none;"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="signup-password" name="password" class="form-input" placeholder="Create Password (min 3 chars)" required autocomplete="new-password">
+              <button type="button" class="btn-password-toggle" onclick="window.auth.togglePassword('signup-password', 'signup-pw-icon')" title="Show / Hide Password">
+                <i class="fa-solid fa-eye" id="signup-pw-icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-insta-gradient" style="width: 100%;">
+            <span>Sign Up &amp; Get Started</span>
+          </button>
+        </form>
+
+        <!-- GUEST BUTTON -->
+        <button type="button" class="auth-guest-pill" onclick="window.auth.showGuestConfirmModal()" title="Enter app without credentials">
+          <i class="fa-solid fa-user-astronaut"></i>
+          <span>Continue as Guest User</span>
+        </button>
+        <div style="text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-top: -6px; margin-bottom: 10px;">
+          <i class="fa-solid fa-circle-info" style="font-size: 0.68rem;"></i> Temporary trial • All data is erased when you log out
+        </div>
+
+        <!-- FIRST-TIME USER MANUAL PILL -->
+        <button type="button" class="auth-manual-guide-pill" onclick="window.auth.openUserManual('start')" title="First time here? Read instructions on how to use &amp; manage tasks">
+          <i class="fa-solid fa-book-open-reader"></i>
+          <span>New Person? Read User Manual &amp; Instructions</span>
+        </button>
+
+      </div>
+
+      <!-- SEPARATE INSTAGRAM-STYLE BOTTOM SWITCH CARD -->
+      <div class="auth-switch-card">
+        <span id="auth-switch-text">
+          Don't have an account? <a href="javascript:void(0)" onclick="window.auth.switchTab('signup')" class="auth-switch-link">Sign up</a>
+        </span>
+      </div>
+
+      <!-- Security / Offline note -->
+      <div class="auth-footer-note">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>100% Offline Ready • Data Stored Safely on Your Device</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WELCOME POPUP OVERLAY -->
+  <div id="welcome-popup" class="welcome-popup-overlay" style="display: none;">
+    <div class="welcome-popup-card">
+      <div class="welcome-popup-burst">
+        <div class="welcome-confetti-ring"></div>
+        <div class="welcome-avatar-ring">
+          <i class="fa-solid fa-user-check welcome-avatar-icon"></i>
+        </div>
+      </div>
+      <h2 class="welcome-popup-title">Welcome Back! 🎉</h2>
+      <p class="welcome-popup-subtitle" id="welcome-popup-name">Hey, MukiViswa!</p>
+      <p class="welcome-popup-msg">Your tasks &amp; expenses are ready.<br>Let's make today count! 💪</p>
+      <button class="welcome-popup-btn" onclick="window.auth.closeWelcomePopup()">
+        <i class="fa-solid fa-rocket"></i> Let's Go!
+      </button>
+    </div>
+  </div>
+
+  <!-- GOODBYE / LOGOUT SUCCESS POPUP -->
+  <div id="goodbye-popup" class="welcome-popup-overlay goodbye-popup-overlay" style="display: none;">
+    <div class="welcome-popup-card goodbye-popup-card">
+      <!-- Waving hand animation -->
+      <div class="goodbye-wave-wrap">
+        <span class="goodbye-wave-emoji">👋</span>
+      </div>
+      <h2 class="goodbye-popup-title">Successfully Logged Out!</h2>
+      <p class="goodbye-popup-subtitle" id="goodbye-popup-name">Goodbye, MukiViswa!</p>
+      <p class="goodbye-popup-msg">
+        Thanks for visiting <strong>Spendorio &amp; SpendTracker</strong>.<br>
+        See you again soon! 😊
+      </p>
+      <div class="goodbye-checkmark">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>Session ended securely</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" style="display: none;">
+    
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="brand-info">
+          <h2>Spendorio</h2>
+          <p>SpendTracker &amp; Routine Manager</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-item" data-tab="routines">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Daily Routines</span>
+          <span class="nav-badge" id="nav-task-badge">0</span>
+        </button>
+
+        <button class="nav-item" data-tab="expenses">
+          <i class="fa-solid fa-wallet"></i>
+          <span>Cost & Expenses</span>
+        </button>
+
+        <button class="nav-item" data-tab="analytics">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Analytics & Reports</span>
+        </button>
+
+        <button class="nav-item" data-tab="settings">
+          <i class="fa-solid fa-gear"></i>
+          <span>Settings & Backup</span>
+        </button>
+
+        <button class="nav-item" onclick="window.auth.openUserManual('start')" title="User Manual &amp; Beginner Instructions">
+          <i class="fa-solid fa-book-open"></i>
+          <span>User Manual</span>
+        </button>
+
+        <button class="nav-item pwa-install-trigger" id="pwa-sidebar-install-btn" onclick="window.SpendorioPWA.promptInstall()" title="Install Spendorio App (Works 100% Offline)" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12)); border: 1px dashed #6366f1; color: #6366f1; font-weight: 700;">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <span>Install App (Offline)</span>
+          <span class="nav-badge" style="background:#10b981; color:#fff;">PWA</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="quick-stats-widget">
+          <div class="quick-stats-row">
+            <span class="quick-stats-label">Daily Tasks:</span>
+            <span class="quick-stats-val" id="sb-today-tasks">0/0</span>
+          </div>
+          <div class="quick-stats-row">
+            <span class="quick-stats-label">Spent Today:</span>
+            <span class="quick-stats-val" id="sb-today-spent">₹0</span>
+          </div>
+          <div class="quick-stats-row">
+            <span class="quick-stats-label">Total Added Expenses:</span>
+            <span class="quick-stats-val" id="sb-total-added-expense" style="color: var(--danger); font-weight: 700;">₹0</span>
+          </div>
+          <div class="quick-stats-row">
+            <span class="quick-stats-label">Net Balance:</span>
+            <span class="quick-stats-val" id="sb-net-balance" style="font-weight: 700;">₹0</span>
+          </div>
+          <div class="quick-stats-row">
+            <span class="quick-stats-label">Streak:</span>
+            <span class="quick-stats-val" id="sb-today-streak">0d 🔥</span>
+          </div>
+        </div>
+
+        <!-- Sidebar User Badge & Logout Button -->
+        <div class="sidebar-user-widget" style="padding: 0.65rem 0.75rem; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; overflow: hidden; cursor: pointer; flex: 1;" onclick="window.auth.openProfileModal()" title="Click to view & edit Profile, Photo and Age">
+            <div id="sb-user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(99, 102, 241, 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0;">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <div id="sb-user-name" style="font-weight: 700; font-size: 0.82rem; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">User</div>
+              <div id="sb-user-email" style="font-size: 0.7rem; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">user@example.com</div>
+            </div>
+          </div>
+          <button type="button" onclick="window.auth.openProfileModal()" title="Edit Profile & Photo" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); color: var(--primary); padding: 5px 7px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; flex-shrink: 0; margin-right: 2px;">
+            <i class="fa-solid fa-user-pen"></i>
+          </button>
+          <button type="button" onclick="window.auth.logout()" title="Logout / Lock App" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: var(--danger); padding: 5px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; flex-shrink: 0; transition: var(--transition);">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN APP CONTENT AREA -->
+    <div class="main-wrapper">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle navigation">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title">
+            <h1 id="page-title-text">Dashboard Overview</h1>
+            <p id="page-subtitle-text">Daily Routine, Habits & Expense Analytics</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <!-- Date Navigator -->
+          <div class="date-navigator">
+            <button class="date-nav-btn" id="prev-date-btn" title="Previous Day">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <input type="date" class="current-date-picker" id="global-date-picker">
+            <button class="date-nav-btn" id="next-date-btn" title="Next Day">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <button class="date-nav-btn" id="today-date-btn" title="Jump to Today">
+              Today
+            </button>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <button class="action-btn btn-primary" onclick="window.tasks.openAddModal()" title="Add New Task">
+            <i class="fa-solid fa-plus"></i>
+            <span class="btn-text">Add Task</span>
+          </button>
+
+          <button class="action-btn btn-secondary" onclick="window.expenses.openAddModal()" title="Log New Expense or Cost">
+            <i class="fa-solid fa-receipt"></i>
+            <span class="btn-text">Log Cost</span>
+          </button>
+
+          <!-- Compact Icon Tool Pill (Manual Guide, Background Design, Theme Toggle) -->
+          <div class="header-icon-pill-group">
+            <button type="button" class="header-pill-btn" onclick="window.auth.openUserManual('start')" title="User Manual &amp; Instructions Guide" style="color: #6366f1;">
+              <i class="fa-solid fa-book-open"></i>
+            </button>
+
+            <div class="dash-bg-picker-container" style="position: relative; display: inline-flex;">
+              <button type="button" class="header-pill-btn" id="dash-bg-btn" onclick="window.app.toggleDashboardBgPicker()" title="Change Dashboard Background Design" style="color: #ec4899;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </button>
+              <div id="dash-bg-picker-menu" class="dash-bg-picker-dropdown" style="display: none;">
+                <div class="dash-bg-title"><i class="fa-solid fa-palette"></i> Dashboard Background</div>
+                <button type="button" class="dash-bg-opt-btn active" data-bg="dots-aurora" onclick="window.app.setDashboardBackground('dots-aurora')">
+                  <span class="dash-bg-preview" style="background: radial-gradient(circle, #6366f1 10%, #ec4899 70%);"></span>
+                  <span>✨ Ambient Dots &amp; Aurora (Default)</span>
+                </button>
+                <button type="button" class="dash-bg-opt-btn" data-bg="cyber-grid" onclick="window.app.setDashboardBackground('cyber-grid')">
+                  <span class="dash-bg-preview" style="background: linear-gradient(135deg, #1e1b4b, #312e81);"></span>
+                  <span>🌐 Cyber Architectural Grid</span>
+                </button>
+                <button type="button" class="dash-bg-opt-btn" data-bg="aurora-vibrant" onclick="window.app.setDashboardBackground('aurora-vibrant')">
+                  <span class="dash-bg-preview" style="background: linear-gradient(135deg, #f43f5e, #8b5cf6, #0ea5e9);"></span>
+                  <span>🌌 Vibrant Sunset Aurora</span>
+                </button>
+                <button type="button" class="dash-bg-opt-btn" data-bg="minimal-clean" onclick="window.app.setDashboardBackground('minimal-clean')">
+                  <span class="dash-bg-preview" style="background: #e2e8f0;"></span>
+                  <span>🤍 Minimal Pure Clean</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- PWA Network Status Badge (Online Synced / Offline Saved) -->
+            <div id="pwa-network-badge" class="pwa-network-badge online" title="Status: Cloud Synchronization Active">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Synced</span>
+            </div>
+
+            <!-- Header PWA Install Button (Mobile / Desktop) -->
+            <button type="button" class="header-pill-btn pwa-install-trigger" id="pwa-header-install-btn" onclick="window.SpendorioPWA.promptInstall()" title="Install Spendorio App on your Phone (100% Offline)" style="color: #6366f1; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">
+              <i class="fa-solid fa-download"></i>
+              <span style="font-size: 0.75rem; font-weight: 700; margin-left: 4px;">Install App</span>
+            </button>
+
+            <button type="button" class="header-pill-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
+              <i class="fa-solid fa-moon"></i>
+            </button>
+          </div>
+
+          <!-- User Profile & Always-Visible Logout Pill -->
+          <div class="user-profile-header-pill">
+            <div class="user-profile-info-click" onclick="window.auth.openProfileModal()" title="View &amp; Edit Profile, Photo &amp; Age">
+              <div id="header-user-avatar" class="header-avatar-circle">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div class="header-user-text">
+                <span id="header-user-name">User</span>
+                <span id="header-user-role">Member</span>
+              </div>
+            </div>
+            <button type="button" class="btn-profile-edit-header" onclick="window.auth.openProfileModal()" title="Edit Profile &amp; Photo">
+              <i class="fa-solid fa-user-pen"></i>
+            </button>
+            <button type="button" class="btn-header-logout" onclick="window.auth.logout()" title="Logout from Spendorio">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT BODY -->
+      <main class="content-body">
+
+        <!-- Sync Banner for file:// local viewers -->
+        <div id="file-sync-banner" style="display: none; background: linear-gradient(135deg, #10b981, #047857); color: white; padding: 12px 18px; border-radius: 14px; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; font-weight: 600; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div>
+              <div style="font-size: 0.95rem; font-weight: 700;">Local Offline Storage Active (file://)</div>
+              <div style="font-size: 0.78rem; opacity: 0.9;">Your 88 records are stored here. Click the button to sync them to your live server & phone!</div>
+            </div>
+          </div>
+          <button type="button" class="action-btn" onclick="window.storage.pushFileToLiveServer()" style="background: #ffffff; color: #047857; font-weight: 800; border: none; padding: 8px 18px; border-radius: 99px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+            <i class="fa-solid fa-arrows-rotate"></i> Sync All 88 Records to Server & Phone
+          </button>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TAB 1: DASHBOARD OVERVIEW -->
+        <!-- ========================================================================= -->
+        <section id="tab-dashboard" class="tab-content active">
+          
+          <!-- KPI Stats Grid: Total Added Expenses + Today's Spend + Incomes + Net Balance -->
+          <div class="stats-grid">
+            
+            <!-- Card 1: Total Spent Today -->
+            <div class="stat-card card-expenses stat-card-interactive" onclick="window.app.openStatDetails('today_expenses')" title="Click to view Today's Expense Details &amp; Shortcut">
+              <div class="stat-info">
+                <span class="stat-label">Today's Total Spend <i class="fa-solid fa-arrow-up-right-from-square stat-shortcut-icon"></i></span>
+                <span class="stat-value" id="stat-today-expense">₹0</span>
+                <span class="stat-sub" id="stat-routine-vs-standalone">Routine: ₹0 | Misc: ₹0</span>
+              </div>
+              <div class="stat-icon-wrap icon-expenses" title="Click to view details">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+            </div>
+
+            <!-- Card 2: Total Added Expenses (All-Time Pure Sum without minus) -->
+            <div class="stat-card stat-card-interactive" style="border-left: 4px solid #ef4444;" onclick="window.app.openStatDetails('total_expenses')" title="Click to view Total Added Expenses Details &amp; Shortcut">
+              <div class="stat-info">
+                <span class="stat-label">Total Added Expenses <i class="fa-solid fa-arrow-up-right-from-square stat-shortcut-icon"></i></span>
+                <span class="stat-value" id="stat-total-all-expense" style="color: #ef4444;">₹0</span>
+                <span class="stat-sub" id="stat-total-all-expense-sub">Pure all-time total expenses</span>
+              </div>
+              <div class="stat-icon-wrap" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;" title="Click to view all expense details">
+                <i class="fa-solid fa-wallet"></i>
+              </div>
+            </div>
+
+            <!-- Card 3: Total Incomes Received -->
+            <div class="stat-card card-budget stat-card-interactive" onclick="window.app.openStatDetails('incomes')" title="Click to view Total Incomes Details &amp; Shortcut">
+              <div class="stat-info">
+                <span class="stat-label">Total Incomes Received <i class="fa-solid fa-arrow-up-right-from-square stat-shortcut-icon"></i></span>
+                <span class="stat-value" id="stat-total-income" style="color: var(--success);">₹0</span>
+                <span class="stat-sub" id="stat-income-count">0 income sources</span>
+              </div>
+              <div class="stat-icon-wrap" style="background: var(--success-light); color: var(--success);" title="Click to view income details">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+            </div>
+
+            <!-- Card 4: Net Balance (Income - Spent) -->
+            <div class="stat-card card-streak stat-card-interactive" onclick="window.app.openStatDetails('net_balance')" title="Click to view Net Balance Breakdown &amp; Shortcut">
+              <div class="stat-info">
+                <span class="stat-label">Net Balance (Income - Spent) <i class="fa-solid fa-arrow-up-right-from-square stat-shortcut-icon"></i></span>
+                <span class="stat-value" id="stat-net-balance">₹0</span>
+                <span class="stat-sub" id="stat-net-balance-sub">Income vs Total Spent</span>
+              </div>
+              <div class="stat-icon-wrap icon-streak" title="Click to view balance breakdown">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+            </div>
+
+            <!-- Card 5: Tasks Completed & Streak -->
+            <div class="stat-card card-tasks stat-card-interactive" onclick="window.app.openStatDetails('tasks')" title="Click to view Tasks Details &amp; Shortcut">
+              <div class="stat-info">
+                <span class="stat-label">Tasks Completed <i class="fa-solid fa-arrow-up-right-from-square stat-shortcut-icon"></i></span>
+                <span class="stat-value" id="stat-tasks-completed">0 / 0</span>
+                <span class="stat-sub" id="stat-tasks-rate">0% completion rate</span>
+              </div>
+              <div class="stat-icon-wrap icon-tasks" title="Click to view tasks details">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Charts Overview in Dashboard -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-pie" style="color: var(--primary); margin-right: 6px;"></i> Expense Breakdown</h3>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="dash-category-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-line" style="color: #10b981; margin-right: 6px;"></i> 7-Day Spending History</h3>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="dash-trend-chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Split Row: Quick Schedule & Monthly Incomes -->
+          <div class="expense-grid-layout">
+            <div class="expense-table-card">
+              <div class="expense-table-header">
+                <h3 style="font-size: 1.05rem; font-weight: 700;">
+                  <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary); margin-right: 6px;"></i> Today's Schedule & Routine Tasks
+                </h3>
+                <button class="action-btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;" onclick="window.app.switchTab('routines')">
+                  Manage Routines <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+              <div style="padding: 1.25rem;">
+                <div id="dash-task-list" class="time-block-task-list" style="padding: 0; min-height: 120px;">
+                  <!-- Dynamically populated today's routines -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Balance & Income Summary Sidebar -->
+            <div class="budget-summary-panel">
+              <div class="budget-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700;"><i class="fa-solid fa-coins" style="color: var(--warning);"></i> Monthly Total Spent</h3>
+                  <span id="dash-month-spent" style="font-weight: 700; color: var(--danger); font-size: 1.1rem;">₹0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.825rem; color: var(--text-muted);">
+                  <span>All recorded expenses this month</span>
+                </div>
+              </div>
+
+              <div class="budget-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700;"><i class="fa-solid fa-money-bill-trend-up" style="color: var(--success);"></i> Monthly Incomes Received</h3>
+                  <span id="dash-month-income" style="font-weight: 700; color: var(--success); font-size: 1.1rem;">₹0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.825rem; color: var(--text-muted);">
+                  <span>Support & income received</span>
+                </div>
+              </div>
+
+              <!-- Dashboard Individual Cost Summary Card -->
+              <div class="budget-card" id="dash-person-summary-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700;">
+                    <i class="fa-solid fa-users" style="color: #8b5cf6;"></i> Individual Cost Summary
+                  </h3>
+                  <button class="action-btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;" onclick="window.app.switchTab('expenses')">
+                    View Details <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                </div>
+                <div id="dash-person-list" style="display: flex; flex-direction: column; gap: 0.45rem;">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- TAB 2: DAILY ROUTINES & TASKS -->
+        <!-- ========================================================================= -->
+        <section id="tab-routines" class="tab-content">
+          <div class="planner-container">
+            
+            <!-- Filter & Search Toolbar -->
+            <div class="section-header">
+              <div class="filter-bar">
+                <div class="search-input-wrap">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="task-search-input" class="search-input" placeholder="Search routine tasks...">
+                </div>
+
+                <select id="task-category-filter" class="select-filter">
+                  <option value="all">All Categories</option>
+                  <option value="Fitness & Health">Fitness & Health</option>
+                  <option value="Food & Dining">Food & Dining</option>
+                  <option value="Transportation">Transportation</option>
+                  <option value="Learning & Work">Learning & Work</option>
+                  <option value="Groceries & Household">Groceries & Household</option>
+                  <option value="Bills & Utilities">Bills & Utilities</option>
+                  <option value="Entertainment & Leisure">Entertainment & Leisure</option>
+                  <option value="Shopping & Others">Shopping & Others</option>
+                </select>
+
+                <select id="task-priority-filter" class="select-filter">
+                  <option value="all">All Priorities</option>
+                  <option value="high">High Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="low">Low Priority</option>
+                </select>
+
+                <select id="task-status-filter" class="select-filter">
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <button class="action-btn btn-primary" onclick="window.tasks.openAddModal()">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Routine Task</span>
+              </button>
+            </div>
+
+            <!-- Side-by-Side Live Daily Cost Breakdown Strip -->
+            <div class="cost-breakdown-strip">
+              <div class="cost-strip-item">
+                <span class="cost-strip-title"><i class="fa-solid fa-cloud-sun" style="color: var(--morning);"></i> Morning</span>
+                <span class="cost-strip-amount" id="strip-cost-morning">₹0</span>
+              </div>
+              <div class="cost-strip-item">
+                <span class="cost-strip-title"><i class="fa-solid fa-sun" style="color: var(--afternoon);"></i> Afternoon</span>
+                <span class="cost-strip-amount" id="strip-cost-afternoon">₹0</span>
+              </div>
+              <div class="cost-strip-item">
+                <span class="cost-strip-title"><i class="fa-solid fa-cloud-moon" style="color: var(--evening);"></i> Evening</span>
+                <span class="cost-strip-amount" id="strip-cost-evening">₹0</span>
+              </div>
+              <div class="cost-strip-item">
+                <span class="cost-strip-title"><i class="fa-solid fa-moon" style="color: var(--night);"></i> Night</span>
+                <span class="cost-strip-amount" id="strip-cost-night">₹0</span>
+              </div>
+              <div class="cost-strip-item">
+                <span class="cost-strip-title"><i class="fa-solid fa-bag-shopping" style="color: var(--warning);"></i> Standalone</span>
+                <span class="cost-strip-amount" id="strip-cost-standalone">₹0</span>
+              </div>
+              <div class="cost-strip-item total-highlight">
+                <span class="cost-strip-title" style="color: var(--primary);"><i class="fa-solid fa-receipt"></i> Today's Spend</span>
+                <span class="cost-strip-amount" id="strip-cost-total">₹0</span>
+              </div>
+              <div class="cost-strip-item" style="border-left: 2px solid #ef4444; background: rgba(239, 68, 68, 0.06);">
+                <span class="cost-strip-title" style="color: #ef4444;"><i class="fa-solid fa-wallet"></i> Total Added Expense</span>
+                <span class="cost-strip-amount" id="strip-total-all-expense" style="font-weight: 700; color: #ef4444;">₹0</span>
+              </div>
+              <div class="cost-strip-item" style="border-left: 2px solid var(--border-color); background: rgba(99, 102, 241, 0.05);">
+                <span class="cost-strip-title" style="color: var(--text-primary);"><i class="fa-solid fa-scale-balanced"></i> Net Balance</span>
+                <span class="cost-strip-amount" id="strip-net-balance" style="font-weight: 700;">₹0</span>
+              </div>
+            </div>
+
+            <!-- Time Block Sections with Side-by-Side Cost Badges -->
+            <div class="time-blocks-grid">
+              
+              <!-- Morning Block -->
+              <div class="time-block-card">
+                <div class="time-block-header morning">
+                  <div class="time-block-title morning">
+                    <i class="fa-solid fa-cloud-sun"></i>
+                    <span>Morning Routine (05:00 - 12:00)</span>
+                  </div>
+                  <div class="block-header-stats">
+                    <span class="time-block-count" id="count-morning">0/0</span>
+                    <span class="badge badge-cost" id="cost-morning">₹0</span>
+                  </div>
+                </div>
+                <div id="list-morning" class="time-block-task-list"></div>
+              </div>
+
+              <!-- Afternoon Block -->
+              <div class="time-block-card">
+                <div class="time-block-header afternoon">
+                  <div class="time-block-title afternoon">
+                    <i class="fa-solid fa-sun"></i>
+                    <span>Afternoon Tasks (12:00 - 17:00)</span>
+                  </div>
+                  <div class="block-header-stats">
+                    <span class="time-block-count" id="count-afternoon">0/0</span>
+                    <span class="badge badge-cost" id="cost-afternoon">₹0</span>
+                  </div>
+                </div>
+                <div id="list-afternoon" class="time-block-task-list"></div>
+              </div>
+
+              <!-- Evening Block -->
+              <div class="time-block-card">
+                <div class="time-block-header evening">
+                  <div class="time-block-title evening">
+                    <i class="fa-solid fa-cloud-moon"></i>
+                    <span>Evening Routine (17:00 - 21:00)</span>
+                  </div>
+                  <div class="block-header-stats">
+                    <span class="time-block-count" id="count-evening">0/0</span>
+                    <span class="badge badge-cost" id="cost-evening">₹0</span>
+                  </div>
+                </div>
+                <div id="list-evening" class="time-block-task-list"></div>
+              </div>
+
+              <!-- Night Block -->
+              <div class="time-block-card">
+                <div class="time-block-header night">
+                  <div class="time-block-title night">
+                    <i class="fa-solid fa-moon"></i>
+                    <span>Night & Wind Down (21:00 - 05:00)</span>
+                  </div>
+                  <div class="block-header-stats">
+                    <span class="time-block-count" id="count-night">0/0</span>
+                    <span class="badge badge-cost" id="cost-night">₹0</span>
+                  </div>
+                </div>
+                <div id="list-night" class="time-block-task-list"></div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- TAB 3: COST & EXPENSE TRACKER -->
+        <!-- ========================================================================= -->
+        <section id="tab-expenses" class="tab-content">
+          <div class="expense-grid-layout">
+            
+            <!-- Expenses Transactions Table -->
+            <div class="expense-table-card">
+              <div class="expense-table-header">
+                <div class="filter-bar">
+                  <select id="expense-period-filter" class="select-filter">
+                    <option value="today">Today's Costs</option>
+                    <option value="month">This Month</option>
+                    <option value="all">All Time</option>
+                  </select>
+
+                  <select id="expense-category-filter" class="select-filter">
+                    <option value="all">All Categories</option>
+                    <option value="Food & Dining">Food & Dining</option>
+                    <option value="Transportation">Transportation</option>
+                    <option value="Groceries & Household">Groceries & Household</option>
+                    <option value="Bills & Utilities">Bills & Utilities</option>
+                    <option value="Fitness & Health">Fitness & Health</option>
+                    <option value="Learning & Work">Learning & Work</option>
+                    <option value="Entertainment & Leisure">Entertainment & Leisure</option>
+                    <option value="Shopping & Others">Shopping & Others</option>
+                  </select>
+
+                  <div class="search-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="expense-search-input" class="search-input" placeholder="Search costs...">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                  <span id="expense-filtered-total" style="font-weight: 700; color: var(--primary); font-size: 0.95rem; background: var(--bg-surface); padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">Total Spent: ₹0</span>
+                  <span id="expense-filtered-net" style="font-weight: 700; font-size: 0.95rem; background: var(--bg-surface); padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">Net: ₹0</span>
+                  <button class="action-btn btn-primary" onclick="window.expenses.openAddModal()">
+                    <i class="fa-solid fa-plus"></i> Add Cost
+                  </button>
+                  <button class="action-btn btn-secondary" onclick="window.expenses.openIncomeModal()">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Add Income
+                  </button>
+
+                  <!-- Quick Export Dropdown in Expenses Toolbar -->
+                  <div style="position: relative; display: inline-block;">
+                    <button type="button" class="action-btn btn-secondary" onclick="const m=document.getElementById('expense-export-menu'); m.style.display = (m.style.display==='none'||!m.style.display)?'block':'none';" style="gap:6px;">
+                      <i class="fa-solid fa-file-arrow-down" style="color:var(--primary);"></i> Download ▾
+                    </button>
+                    <div id="expense-export-menu" style="display:none; position:absolute; right:0; top:calc(100% + 4px); background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); min-width:190px; z-index:90; padding:6px 0;">
+                      <a href="javascript:void(0)" onclick="window.reports.downloadPDF(window.expenses.periodFilter); document.getElementById('expense-export-menu').style.display='none';" style="display:flex; align-items:center; gap:8px; padding:8px 14px; color:var(--text-primary); text-decoration:none; font-size:0.85rem; font-weight:600;">
+                        <i class="fa-solid fa-file-pdf" style="color:#ef4444; width:16px;"></i> PDF Statement
+                      </a>
+                      <a href="javascript:void(0)" onclick="window.reports.downloadExcel(window.expenses.periodFilter); document.getElementById('expense-export-menu').style.display='none';" style="display:flex; align-items:center; gap:8px; padding:8px 14px; color:var(--text-primary); text-decoration:none; font-size:0.85rem; font-weight:600;">
+                        <i class="fa-solid fa-file-excel" style="color:#10b981; width:16px;"></i> Excel (.xls)
+                      </a>
+                      <a href="javascript:void(0)" onclick="window.reports.downloadWord(window.expenses.periodFilter); document.getElementById('expense-export-menu').style.display='none';" style="display:flex; align-items:center; gap:8px; padding:8px 14px; color:var(--text-primary); text-decoration:none; font-size:0.85rem; font-weight:600;">
+                        <i class="fa-solid fa-file-word" style="color:#3b82f6; width:16px;"></i> Word Document (.doc)
+                      </a>
+                      <a href="javascript:void(0)" onclick="window.reports.downloadCSV(window.expenses.periodFilter); document.getElementById('expense-export-menu').style.display='none';" style="display:flex; align-items:center; gap:8px; padding:8px 14px; color:var(--text-primary); text-decoration:none; font-size:0.85rem; font-weight:600;">
+                        <i class="fa-solid fa-file-csv" style="color:#f59e0b; width:16px;"></i> CSV Spreadsheet (.csv)
+                      </a>
+                      <a href="javascript:void(0)" onclick="window.reports.downloadText(window.expenses.periodFilter); document.getElementById('expense-export-menu').style.display='none';" style="display:flex; align-items:center; gap:8px; padding:8px 14px; color:var(--text-primary); text-decoration:none; font-size:0.85rem; font-weight:600;">
+                        <i class="fa-solid fa-file-lines" style="color:#8b5cf6; width:16px;"></i> Text Summary (.txt)
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Title & Note</th>
+                      <th>Category</th>
+                      <th>Amount</th>
+                      <th>Payment</th>
+                      <th>Date</th>
+                      <th>Routine Linked</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="expense-table-body">
+                    <!-- Populated dynamically via expenses.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Incomes and Category Budgets Sidebar -->
+            <div class="budget-summary-panel">
+              <!-- Monthly Income Box -->
+              <div class="budget-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700;"><i class="fa-solid fa-money-bill-trend-up" style="color: var(--success);"></i> Monthly Incomes</h3>
+                  <span id="income-total-display" style="font-weight: 700; color: var(--success);">₹0</span>
+                </div>
+                <div id="income-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 180px; overflow-y: auto;">
+                  <!-- Incomes populated here -->
+                </div>
+              </div>
+
+              <!-- Category Spending Breakdown Sidebar -->
+              <div class="budget-card">
+                <h3 style="font-size: 0.95rem; font-weight: 700;"><i class="fa-solid fa-chart-column" style="color: var(--primary);"></i> Category Spending Breakdown</h3>
+                <div id="category-budget-list" class="category-budget-list">
+                  <!-- Category progress bars -->
+                </div>
+              </div>
+
+              <!-- Individual Person Cost Monitor -->
+              <div class="budget-card" id="person-cost-panel" style="border: 1px solid rgba(139, 92, 246, 0.25);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:4px;">
+                  <h3 style="font-size:0.95rem; font-weight:700;">
+                    <i class="fa-solid fa-users" style="color:#8b5cf6;"></i> Individual Cost Monitor
+                  </h3>
+                  <span style="font-size:0.72rem; color:#8b5cf6; background:rgba(139,92,246,0.1); padding:2px 6px; border-radius:4px; font-weight:600;">Live Sync</span>
+                </div>
+                <div style="display:flex; gap:4px; margin-bottom:0.75rem;">
+                  <button type="button" class="person-period-btn active" data-period="all" onclick="window.expenses.setPersonPeriod('all', this)" style="flex:1; padding:3px 6px; font-size:0.72rem; border-radius:6px; border:1px solid var(--border-color); background:var(--primary); color:#fff; cursor:pointer;">All Time</button>
+                  <button type="button" class="person-period-btn" data-period="month" onclick="window.expenses.setPersonPeriod('month', this)" style="flex:1; padding:3px 6px; font-size:0.72rem; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-surface); color:var(--text-secondary); cursor:pointer;">This Month</button>
+                  <button type="button" class="person-period-btn" data-period="today" onclick="window.expenses.setPersonPeriod('today', this)" style="flex:1; padding:3px 6px; font-size:0.72rem; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-surface); color:var(--text-secondary); cursor:pointer;">Today</button>
+                </div>
+                <div id="person-cost-list" style="display:flex; flex-direction:column; gap:0.65rem;">
+                  <!-- Person cost cards populated here -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- TAB 5: ANALYTICS & REPORTS -->
+        <!-- ========================================================================= -->
+        <section id="tab-analytics" class="tab-content">
+          <div class="section-header">
+            <div class="section-title">
+              <i class="fa-solid fa-chart-column" style="font-size: 1.25rem; color: var(--primary);"></i>
+              <h2>Comprehensive Spending & Routine Analytics</h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="action-btn" onclick="window.reports.downloadPDF('all')" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight:600;">
+                <i class="fa-solid fa-file-pdf"></i> PDF Statement
+              </button>
+              <button class="action-btn" onclick="window.reports.downloadExcel('all')" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight:600;">
+                <i class="fa-solid fa-file-excel"></i> Excel (.xls)
+              </button>
+              <button class="action-btn" onclick="window.reports.downloadWord('all')" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); font-weight:600;">
+                <i class="fa-solid fa-file-word"></i> Word (.doc)
+              </button>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-pie" style="color: var(--primary); margin-right: 6px;"></i> Category Distribution</h3>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="category-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-scale-balanced" style="color: #f59e0b; margin-right: 6px;"></i> Routine vs Standalone Costs</h3>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="routine-cost-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-line" style="color: var(--danger); margin-right: 6px;"></i> 7-Day Spending Trend vs Cap</h3>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="trend-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-bar" style="color: #10b981; margin-right: 6px;"></i> Cost Spent vs Task Completion Rate</h3>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="monthly-trend-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- TAB 6: SETTINGS & DATA BACKUP -->
+        <!-- ========================================================================= -->
+        <section id="tab-settings" class="tab-content">
+          <div class="stat-card" style="flex-direction: column; gap: 1.5rem; max-width: 700px; margin: 0 auto; width: 100%;">
+            <div class="section-title">
+              <i class="fa-solid fa-gear" style="font-size: 1.35rem; color: var(--primary);"></i>
+              <div>
+                <h2>Preferences & Data Management</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Manage profile, mobile access, currency, backups, and reports.</p>
+              </div>
+            </div>
+
+            <!-- PROFILE & AGE CARD IN SETTINGS -->
+            <div id="settings-profile-card" class="settings-profile-card">
+              <div class="settings-profile-info">
+                <div id="sp-avatar" onclick="window.auth.openProfileModal()" style="cursor: pointer;" title="Change Profile Picture">
+                  <!-- Dynamically rendered -->
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <h3 id="sp-name" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">User</h3>
+                    <span id="sp-username" style="font-size: 0.78rem; font-weight: 600; color: #e1306c; background: rgba(225, 48, 108, 0.1); padding: 2px 7px; border-radius: 99px;">@user</span>
+                  </div>
+                  <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-cake-candles" style="color: #ec4899;"></i>
+                    <span>DOB: <strong id="sp-dob">Not set</strong></span>
+                  </div>
+                  <div style="font-size: 0.82rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-hourglass-half" style="color: #e1306c;"></i>
+                    <span>Current Age: <span id="sp-age">--</span></span>
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                    <span id="sp-email">user@gmail.com</span> • <span id="sp-phone">Phone</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <button type="button" class="action-btn btn-primary" onclick="window.auth.openProfileModal()" style="background: linear-gradient(135deg, #f09433, #dc2743); border: none; font-size: 0.85rem; padding: 0.6rem 1rem;">
+                  <i class="fa-solid fa-user-pen"></i> Edit Profile &amp; Photo
+                </button>
+              </div>
+            </div>
+
+            <!-- MOBILE PHONE ACCESS CARD -->
+            <div class="mobile-access-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #10b981); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                  </div>
+                  <div>
+                    <h3 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">Open on Phone &amp; Mobile Devices</h3>
+                    <p style="margin: 0; font-size: 0.78rem; color: var(--text-muted);">Access Spendorio from your phone anytime on mobile data (4G/5G) or Wi-Fi</p>
+                  </div>
+                </div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 3px 8px; border-radius: 99px;">
+                  <i class="fa-solid fa-signal"></i> 4G / 5G &amp; Wi-Fi Ready
+                </span>
+              </div>
+
+              <!-- Option 1: Mobile Data Anywhere (Cloudflare Secure Link) -->
+              <div style="background: var(--bg-card); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="flex: 1; min-width: 200px;">
+                  <div style="font-size: 0.72rem; color: #6366f1; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-globe"></i> OPTION 1: PHONE 4G / 5G DATA LINK (WORKS ANYWHERE):
+                  </div>
+                  <div style="font-family: monospace; font-size: 0.88rem; font-weight: 700; color: var(--primary); word-break: break-all;" id="phone-access-tunnel-url">https://cheats-mayor-five-sign.trycloudflare.com</div>
+                </div>
+                <button type="button" class="action-btn btn-primary" onclick="const u = document.getElementById('phone-access-tunnel-url').innerText; navigator.clipboard.writeText(u); if(window.app && window.app.showToast) window.app.showToast('4G/5G Phone URL copied!', 'success');" style="font-size: 0.78rem; padding: 5px 12px;">
+                  <i class="fa-solid fa-copy"></i> Copy Link
+                </button>
+              </div>
+
+              <!-- Option 2: Same Wi-Fi Link -->
+              <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="flex: 1; min-width: 200px;">
+                  <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-wifi"></i> OPTION 2: ON SAME WI-FI / HOTSPOT:
+                  </div>
+                  <div style="font-family: monospace; font-size: 0.88rem; font-weight: 700; color: var(--text-primary); word-break: break-all;" id="phone-access-wifi-url">http://192.168.1.19:3000</div>
+                </div>
+                <button type="button" class="action-btn btn-secondary" onclick="const u = document.getElementById('phone-access-wifi-url').innerText; navigator.clipboard.writeText(u); if(window.app && window.app.showToast) window.app.showToast('Wi-Fi Phone URL copied!', 'success');" style="font-size: 0.78rem; padding: 5px 12px;">
+                  <i class="fa-solid fa-copy"></i> Copy Link
+                </button>
+              </div>
+
+              <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.45;">
+                💡 <strong>Tip:</strong> Open either link above on your phone browser. Double-click <code>Scan_Phone_QR.png</code> on your laptop Desktop to scan with your phone camera!
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+              <div class="form-group">
+                <label class="form-label">Default Currency Symbol</label>
+                <select id="currency-select" class="form-select">
+                  <option value="₹">₹ (INR - Indian Rupee)</option>
+                  <option value="$">$ (USD - US Dollar)</option>
+                  <option value="€">€ (EUR - Euro)</option>
+                  <option value="£">£ (GBP - British Pound)</option>
+                  <option value="¥">¥ (JPY / CNY)</option>
+                </select>
+              </div>
+
+              <!-- Multi-format Expense Statement Downloads in Settings -->
+              <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; display: flex; flex-direction: column; gap: 0.85rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                      <i class="fa-solid fa-file-export" style="color: var(--primary);"></i> Download All Expenses in Any Format
+                    </h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+                      Export official expense statements in PDF, Excel Spreadsheet, Word Document, or CSV.
+                    </p>
+                  </div>
+                  <!-- Period Selector -->
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">Period:</label>
+                    <select id="export-period-select" class="form-select" style="padding:4px 10px; font-size:0.8rem; width:auto;">
+                      <option value="all">All-Time Expenses</option>
+                      <option value="month">This Month</option>
+                      <option value="today">Today</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Format Buttons Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+                  <!-- PDF Button -->
+                  <button type="button" class="action-btn" onclick="window.app.downloadPDFReport()" style="display:flex; align-items:center; gap:10px; padding:0.85rem 1rem; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-md); font-weight:700; cursor:pointer;">
+                    <i class="fa-solid fa-file-pdf" style="font-size:1.5rem;"></i>
+                    <div style="text-align:left;">
+                      <div style="font-size:0.875rem;">PDF Statement</div>
+                      <div style="font-size:0.72rem; font-weight:400; opacity:0.85;">Print / Save as .pdf</div>
+                    </div>
+                  </button>
+
+                  <!-- Excel Button -->
+                  <button type="button" class="action-btn" onclick="window.app.downloadExcelReport()" style="display:flex; align-items:center; gap:10px; padding:0.85rem 1rem; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius-md); font-weight:700; cursor:pointer;">
+                    <i class="fa-solid fa-file-excel" style="font-size:1.5rem;"></i>
+                    <div style="text-align:left;">
+                      <div style="font-size:0.875rem;">Excel Spreadsheet</div>
+                      <div style="font-size:0.72rem; font-weight:400; opacity:0.85;">Formulas & Styles (.xls)</div>
+                    </div>
+                  </button>
+
+                  <!-- Word Document Button -->
+                  <button type="button" class="action-btn" onclick="window.app.downloadWordDocReport()" style="display:flex; align-items:center; gap:10px; padding:0.85rem 1rem; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); border-radius:var(--radius-md); font-weight:700; cursor:pointer;">
+                    <i class="fa-solid fa-file-word" style="font-size:1.5rem;"></i>
+                    <div style="text-align:left;">
+                      <div style="font-size:0.875rem;">Word Document</div>
+                      <div style="font-size:0.72rem; font-weight:400; opacity:0.85;">Office Document (.doc)</div>
+                    </div>
+                  </button>
+
+                  <!-- CSV Button -->
+                  <button type="button" class="action-btn" onclick="window.app.downloadCSV()" style="display:flex; align-items:center; gap:10px; padding:0.85rem 1rem; background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); font-weight:700; cursor:pointer;">
+                    <i class="fa-solid fa-file-csv" style="font-size:1.5rem;"></i>
+                    <div style="text-align:left;">
+                      <div style="font-size:0.875rem;">CSV Data File</div>
+                      <div style="font-size:0.72rem; font-weight:400; opacity:0.85;">Raw Spreadsheet (.csv)</div>
+                    </div>
+                  </button>
+
+                  <!-- Text Summary Button -->
+                  <button type="button" class="action-btn" onclick="window.app.downloadTextSummary()" style="display:flex; align-items:center; gap:10px; padding:0.85rem 1rem; background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3); border-radius:var(--radius-md); font-weight:700; cursor:pointer;">
+                    <i class="fa-solid fa-file-lines" style="font-size:1.5rem;"></i>
+                    <div style="text-align:left;">
+                      <div style="font-size:0.875rem;">Text Statement</div>
+                      <div style="font-size:0.72rem; font-weight:400; opacity:0.85;">Notepad / Chat (.txt)</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <h3 style="font-size: 0.95rem; font-weight: 700;">Data Backup & Restore</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Save your complete routine, task history, costs and settings into a JSON backup file or restore previously saved data.</p>
+                
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <button class="action-btn btn-primary" id="export-json-btn">
+                    <i class="fa-solid fa-download"></i> Export JSON Backup
+                  </button>
+
+                  <button type="button" class="action-btn" onclick="window.storage.syncWithServer().then(() => { if (window.app) { window.app.updateSummaryMetrics(); window.app.showToast('Data restored from server backup! 🎉', 'success'); } })" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1.5px solid rgba(16, 185, 129, 0.35); font-weight: 700;">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Restore from Server Backup
+                  </button>
+
+                  <label class="action-btn btn-secondary" style="cursor: pointer;">
+                    <i class="fa-solid fa-upload"></i> Restore JSON Backup
+                    <input type="file" id="import-json-input" accept=".json" style="display: none;">
+                  </label>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--danger);">Danger Zone</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Reset all data back to the clean initial seed routine.</p>
+                <div>
+                  <button class="action-btn btn-danger" id="reset-demo-btn">
+                    <i class="fa-solid fa-arrows-rotate"></i> Reset All Data to Sample Demo
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: VIEW TASK DETAILS -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="task-details-modal">
+    <div class="modal-box" style="max-width: 500px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <i class="fa-solid fa-circle-info" style="color: var(--primary); font-size: 1.2rem;"></i>
+          <h3 id="td-modal-title">Task Details</h3>
+        </div>
+        <button class="modal-close-btn" onclick="window.tasks.closeDetailsModal()" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" id="td-modal-body" style="gap: 1.2rem;">
+        <!-- Dynamically rendered task details -->
+      </div>
+      <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="action-btn btn-danger" id="td-btn-delete" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-trash-can"></i> Delete
+          </button>
+          <button type="button" class="action-btn btn-secondary" id="td-btn-edit" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-pencil"></i> Edit
+          </button>
+          <button type="button" class="action-btn btn-secondary" id="td-btn-cost" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-coins"></i> Cost
+          </button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="action-btn btn-primary" id="td-btn-toggle" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-check"></i> Complete
+          </button>
+          <button type="button" class="action-btn btn-secondary" onclick="window.tasks.closeDetailsModal()" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD / EDIT ROUTINE TASK -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="task-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="task-modal-title">Add Daily Routine / Task</h3>
+        <button class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="task-form">
+        <div class="modal-body">
+          <input type="hidden" id="task-id" name="taskId">
+          <input type="hidden" id="task-date" name="date">
+
+          <div class="form-group">
+            <label class="form-label">Task / Routine Title *</label>
+            <input type="text" class="form-input" id="task-title" name="title" placeholder="e.g., Morning Gym, Metro Commute, Team Lunch" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Time Block</label>
+              <select class="form-select" id="task-time-block" name="timeBlock">
+                <option value="morning">Morning (05:00 - 12:00)</option>
+                <option value="afternoon">Afternoon (12:00 - 17:00)</option>
+                <option value="evening">Evening (17:00 - 21:00)</option>
+                <option value="night">Night (21:00 - 05:00)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Scheduled Time (Optional)</label>
+              <input type="time" class="form-input" id="task-time" name="time">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="task-category" name="category">
+                <option value="Fitness & Health">Fitness & Health</option>
+                <option value="Food & Dining">Food & Dining</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Learning & Work">Learning & Work</option>
+                <option value="Groceries & Household">Groceries & Household</option>
+                <option value="Bills & Utilities">Bills & Utilities</option>
+                <option value="Entertainment & Leisure">Entertainment & Leisure</option>
+                <option value="Shopping & Others">Shopping & Others</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select class="form-select" id="task-priority" name="priority">
+                <option value="high">High Priority</option>
+                <option value="medium" selected>Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Associated Cost (<span class="currency-symbol-label">₹</span>) (Optional)</label>
+            <input type="number" step="any" min="0" class="form-input" id="task-cost" name="cost" placeholder="0 if free, or enter spending">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Entering a cost automatically logs a linked expense item in your budget.</span>
+          </div>
+
+          <div class="form-group" style="display: flex; flex-direction: row; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="task-is-routine" name="isRoutine" style="width: 18px; height: 18px; cursor: pointer;">
+            <label for="task-is-routine" class="form-label" style="margin: 0; cursor: pointer;">Daily Recurring Routine Habit</label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes & Checklist</label>
+            <textarea class="form-textarea" id="task-notes" name="notes" rows="2" placeholder="Add extra guidelines, subtasks, or location"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="action-btn btn-secondary modal-cancel-btn">Cancel</button>
+          <button type="submit" class="action-btn btn-primary">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD / EDIT EXPENSE -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="expense-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="expense-modal-title">Log Expense</h3>
+        <button class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="expense-form">
+        <div class="modal-body">
+          <input type="hidden" id="expense-id" name="expenseId">
+
+          <div class="form-group">
+            <label class="form-label">Expense Title *</label>
+            <input type="text" class="form-input" id="expense-title" name="title" placeholder="e.g., Grocery Store, Coffee, Metro Card Recharge" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Amount (<span class="currency-symbol-label">₹</span>) *</label>
+              <input type="number" step="any" min="0.01" class="form-input" id="expense-amount" name="amount" placeholder="0.00" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="expense-category" name="category">
+                <option value="Food & Dining">Food & Dining</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Groceries & Household">Groceries & Household</option>
+                <option value="Bills & Utilities">Bills & Utilities</option>
+                <option value="Fitness & Health">Fitness & Health</option>
+                <option value="Learning & Work">Learning & Work</option>
+                <option value="Entertainment & Leisure">Entertainment & Leisure</option>
+                <option value="Shopping & Others">Shopping & Others</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Payment Method</label>
+              <select class="form-select" id="expense-payment-method" name="paymentMethod">
+                <option value="UPI">UPI / GPay / PhonePe</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="Cash">Cash</option>
+                <option value="Net Banking">Net Banking</option>
+                <option value="Metro Card">Metro / Transit Card</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-input" id="expense-date" name="date" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:4px;">
+              <label class="form-label" style="margin-bottom:0; font-weight:700;">
+                Notes &amp; Remarks <span style="color:var(--danger); font-size:1rem;">*</span> 
+                <span class="badge" style="background:var(--danger-light); color:var(--danger-text); font-size:0.7rem; padding:1px 6px; border-radius:4px; margin-left:4px; font-weight:700;">COMPULSORY</span>
+              </label>
+              <span style="font-size:0.72rem; color:var(--primary); font-weight:600;"><i class="fa-solid fa-user-tag"></i> Quick Select Person:</span>
+            </div>
+
+            <!-- Quick One-Tap Person Chips -->
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Amma')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(236,72,153,0.1); color:#ec4899; border:1px solid rgba(236,72,153,0.3); cursor:pointer;">👩 Amma</button>
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Appa')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); cursor:pointer;">👨 Appa</button>
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Friend')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.3); cursor:pointer;">🤝 Friend</button>
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Anna')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); cursor:pointer;">🧑 Anna</button>
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Dharshini')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3); cursor:pointer;">👧 Dharshini</button>
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Myself')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(14,165,233,0.1); color:#0ea5e9; border:1px solid rgba(14,165,233,0.3); cursor:pointer;">🙋 Myself</button>
+            </div>
+
+            <textarea class="form-textarea" id="expense-notes" name="notes" rows="3" 
+              placeholder="e.g. Amma recharge 299, Appa medicine, Dinner with friend, Dharshini college..." 
+              required 
+              oninput="window.expenses && window.expenses.previewPersonTags(this.value)" 
+              style="border-color:var(--primary); font-size:0.9rem;"></textarea>
+
+            <!-- Detected Live Person Tag Preview -->
+            <div id="expense-person-preview" style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.4rem; min-height:22px; align-items:center;"></div>
+            <span style="font-size:0.72rem; color:var(--text-muted); display:block; margin-top:2px;">
+              <i class="fa-solid fa-circle-info"></i> Mentioning a name (or tapping a chip) automatically tracks their cost in the <strong>Individual Cost Monitor</strong>.
+            </span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="action-btn btn-secondary modal-cancel-btn">Cancel</button>
+          <button type="submit" class="action-btn btn-primary">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD INCOME -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="income-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Log Income Entry</h3>
+        <button class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="income-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Income Source *</label>
+            <input type="text" class="form-input" id="income-title" name="title" placeholder="e.g., Monthly Salary, Freelancing, Dividend" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Amount (<span class="currency-symbol-label">₹</span>) *</label>
+              <input type="number" step="any" min="0.01" class="form-input" id="income-amount" name="amount" placeholder="0.00" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="income-category" name="category">
+                <option value="Salary">Salary</option>
+                <option value="Freelancing">Freelancing / Side Gig</option>
+                <option value="Investment">Investment / Dividend</option>
+                <option value="Bonus">Bonus</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="income-date" name="date" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" id="income-notes" name="notes" rows="2" placeholder="Optional notes..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="action-btn btn-secondary modal-cancel-btn">Cancel</button>
+          <button type="submit" class="action-btn btn-success">Save Income</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: STATS QUICK DETAILS & SHORTCUT -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="stat-details-modal">
+    <div class="modal-box" style="max-width: 680px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div id="stat-modal-icon-wrap" style="width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; background: rgba(239, 68, 68, 0.12); color: #ef4444;">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <div>
+            <h3 id="stat-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Total Added Expenses Details</h3>
+            <span id="stat-modal-badge" style="font-size: 0.75rem; color: var(--text-muted);">90 records • All-time total</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="window.app.closeStatDetailsModal()" aria-label="Close" style="background: none; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer; padding: 4px 8px;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 1.2rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; flex: 1;">
+        
+        <!-- Hero Summary Banner -->
+        <div id="stat-modal-hero" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Summary Value</div>
+            <div id="stat-modal-hero-val" style="font-size: 1.85rem; font-weight: 800; color: #ef4444; line-height: 1.2;">₹0</div>
+          </div>
+          <div id="stat-modal-hero-breakdown" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <!-- Category / Sub-breakdown chips dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="position: relative;">
+          <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+          <input type="text" id="stat-modal-search" class="form-input" placeholder="Quick search in these records..." oninput="window.app.filterStatDetailsList(this.value)" style="padding-left: 38px; border-radius: var(--radius-full); font-size: 0.85rem;">
+        </div>
+
+        <!-- Dynamic List of Records -->
+        <div id="stat-modal-list" style="display: flex; flex-direction: column; gap: 8px; min-height: 120px; max-height: 340px; overflow-y: auto; padding-right: 4px;">
+          <!-- Dynamically populated list -->
+        </div>
+
+      </div>
+
+      <!-- Footer with Direct Shortcut Button to Full Page -->
+      <div class="modal-footer" style="padding: 0.85rem 1.25rem; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: var(--bg-surface); border-radius: 0 0 16px 16px;">
+        <button type="button" class="action-btn btn-secondary" id="stat-modal-quick-action" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: var(--radius-full);">
+          <i class="fa-solid fa-plus"></i> <span id="stat-modal-quick-action-text">Add Record</span>
+        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" class="action-btn btn-primary" id="stat-modal-jump-btn" style="padding: 0.5rem 1.1rem; font-size: 0.82rem; border-radius: var(--radius-full); display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> <span id="stat-modal-jump-text">Open Full Expenses Page</span>
+          </button>
+          <button type="button" class="action-btn btn-secondary" onclick="window.app.closeStatDetailsModal()" style="padding: 0.5rem 0.9rem; font-size: 0.82rem; border-radius: var(--radius-full);">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: USER PROFILE, CIRCLE PHOTO & AGE CALCULATOR -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-box" style="max-width: 500px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+            <i class="fa-solid fa-user-gear"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">My Profile</h3>
+            <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">Set Circle Photo, Edit Details &amp; Calculate Age</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="window.auth.closeProfileModal()" aria-label="Close">&times;</button>
+      </div>
+
+      <form id="profile-edit-form" onsubmit="event.preventDefault(); window.auth.saveProfile();">
+        <div class="modal-body" style="gap: 1.15rem; max-height: calc(88vh - 140px); overflow-y: auto;">
+          
+          <!-- Circle Profile Picture Editor -->
+          <div class="profile-photo-section">
+            <div class="profile-avatar-wrapper" id="profile-avatar-wrapper" title="Profile Avatar">
+              <div id="pm-avatar-preview-wrap">
+                <!-- Injected dynamically with clean avatar (no hover overlay) -->
+              </div>
+              <button type="button" class="btn-avatar-camera" onclick="window.auth.triggerProfileImagePick()" title="Tap camera icon to choose profile photo">
+                <i class="fa-solid fa-camera"></i>
+              </button>
+            </div>
+            
+            <input type="file" id="profile-image-file-input" accept="image/*" style="display: none;" onchange="window.auth.handleProfileImageSelected(event)">
+            
+            <!-- Actions Below Avatar (No "Change Photo" button - camera icon is the sole picker) -->
+            <div style="display: flex; gap: 8px; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap;">
+              <button type="button" id="pm-btn-adjust" class="action-btn" onclick="window.auth.openImageAdjustModal()" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(99, 102, 241, 0.12); color: #4f46e5; border: 1.5px solid rgba(99, 102, 241, 0.35); font-weight: 700; display: none;">
+                <i class="fa-solid fa-crop-simple"></i> Adjust Position (Center Face)
+              </button>
+              <button type="button" id="pm-btn-remove" class="action-btn btn-secondary" onclick="window.auth.removeProfileImage()" style="font-size: 0.82rem; padding: 6px 10px; color: var(--danger); display: none;" title="Remove profile photo">
+                <i class="fa-solid fa-trash-can"></i> Remove
+              </button>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 6px 0 0; text-align: center;">
+              Tap the <strong style="color: #e1306c;"><i class="fa-solid fa-camera"></i> camera icon</strong> on the picture to choose or change photo
+            </p>
+          </div>
+
+          <!-- User Name & Display Name Fields -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label" for="pm-fullname">Full Name</label>
+              <input type="text" class="form-input" id="pm-fullname" placeholder="Your Full Name" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label" for="pm-username">Username</label>
+              <input type="text" class="form-input" id="pm-username" placeholder="Username (min 3 chars)" required>
+            </div>
+          </div>
+
+          <!-- Date of Birth (DOB) Field -->
+          <div class="form-group">
+            <label class="form-label" for="pm-dob" style="display: flex; justify-content: space-between; align-items: center;">
+              <span><i class="fa-solid fa-cake-candles" style="color: #ec4899; margin-right: 5px;"></i> Date of Birth (DOB)</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">Live Age Conversion</span>
+            </label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="date" class="form-input" id="pm-dob" style="flex: 1;" onchange="window.auth.handleDobChange(this.value)" oninput="window.auth.handleDobChange(this.value)" onkeyup="window.auth.handleDobChange(this.value)">
+              <button type="button" class="action-btn btn-secondary" onclick="window.auth.handleDobChange(document.getElementById('pm-dob').value)" style="padding: 0.6rem 0.9rem; font-size: 0.8rem; font-weight: 600; white-space: nowrap;" title="Recalculate Age">
+                <i class="fa-solid fa-calculator"></i> Calculate
+              </button>
+            </div>
+          </div>
+
+          <!-- Converted Age Live Highlight Box -->
+          <div id="pm-age-card" class="converted-age-card">
+            <div class="age-card-header">
+              <div class="age-card-icon">
+                <i class="fa-solid fa-hourglass-half"></i>
+              </div>
+              <div>
+                <div class="age-card-title">Converted Current Age</div>
+                <div class="age-card-subtitle" id="pm-age-seconds-live">--</div>
+              </div>
+            </div>
+            <div class="age-card-years" id="pm-age-years-text">
+              <span style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">No Date of Birth Set</span>
+            </div>
+            <div class="age-card-details" id="pm-age-sub-text">
+              Select your Date of Birth above to automatically calculate your converted age.
+            </div>
+          </div>
+
+          <!-- Contact Fields (Email & Phone) -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label" for="pm-email">Email / Gmail</label>
+              <input type="email" class="form-input" id="pm-email" placeholder="name@gmail.com">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label" for="pm-phone">Phone Number <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
+              <input type="tel" class="form-input" id="pm-phone" placeholder="Phone Number (Optional)">
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer" style="justify-content: flex-end; gap: 8px;">
+          <button type="button" class="action-btn btn-secondary" onclick="window.auth.closeProfileModal()">Cancel</button>
+          <button type="submit" class="action-btn btn-primary" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Profile &amp; Picture
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: IMAGE ADJUSTER & CIRCLE CROPPER -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="image-adjust-modal" style="z-index: 1000002;">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #f09433, #dc2743); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; box-shadow: 0 2px 8px rgba(220, 39, 67, 0.35);">
+            <i class="fa-solid fa-crop-simple"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">Adjust Profile Picture Fit</h3>
+            <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">Center face • Zoom & crop circular profile</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="window.auth.closeImageAdjustModal()" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="modal-body" style="align-items: center; gap: 0.9rem; padding: 1.1rem 1.25rem;">
+        
+        <!-- Resolution & Pixel Specs Badge -->
+        <div class="crop-pixel-banner" style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 0.76rem;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+            <span style="font-weight: 600; color: var(--text-primary);">Fit Output:</span>
+            <span style="color: #e1306c; font-weight: 700;">360 × 360 px Circle</span>
+          </div>
+          <div id="crop-source-pixel-info" style="color: var(--text-muted); font-size: 0.74rem;">
+            Source: <strong id="crop-src-dimensions">-- × -- px</strong>
+          </div>
+        </div>
+
+        <!-- Interactive Cropper Canvas Wrapper -->
+        <div class="cropper-viewport-wrap" id="cropper-viewport-wrap">
+          <canvas id="cropper-canvas" width="280" height="280"></canvas>
+          <div class="cropper-drag-hint">
+            <i class="fa-solid fa-up-down-left-right"></i> Drag image to center face inside circle
+          </div>
+        </div>
+
+        <!-- Zoom & Controls -->
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 0.65rem;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="btn-crop-ctrl" onclick="window.auth.adjustCropZoom(-0.1)" title="Zoom Out">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <input type="range" id="crop-zoom-slider" min="0.5" max="3.5" step="0.05" value="1" style="flex: 1; accent-color: #e1306c; cursor: pointer;" oninput="window.auth.setCropZoom(this.value)">
+            <button type="button" class="btn-crop-ctrl" onclick="window.auth.adjustCropZoom(0.1)" title="Zoom In">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <span style="min-width: 60px; text-align: right; font-size: 0.78rem; font-weight: 700; color: #e1306c;" id="crop-zoom-label">100% Zoom</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 5px;">
+              <button type="button" class="action-btn btn-secondary" onclick="window.auth.fitImageToCircle()" style="font-size: 0.76rem; padding: 4px 9px;" title="Scale to best fit circle">
+                <i class="fa-solid fa-expand"></i> Fit Circle
+              </button>
+              <button type="button" class="action-btn btn-secondary" onclick="window.auth.resetCropPosition()" style="font-size: 0.76rem; padding: 4px 9px;" title="Reset position">
+                <i class="fa-solid fa-arrows-to-dot"></i> Center
+              </button>
+              <button type="button" class="action-btn btn-secondary" onclick="window.auth.rotateCropImage()" style="font-size: 0.76rem; padding: 4px 9px;" title="Rotate 90 degrees">
+                <i class="fa-solid fa-rotate-right"></i> 90°
+              </button>
+            </div>
+            
+            <!-- Live Mini Preview -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 0.7rem; color: var(--text-muted);">Preview:</span>
+              <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 2px solid #e1306c; box-shadow: 0 1px 4px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; background: #0f172a;">
+                <canvas id="crop-mini-preview-canvas" width="32" height="32" style="width: 32px; height: 32px; border-radius: 50%;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between; gap: 8px; border-top: 1px solid var(--border-color); padding: 0.85rem 1.25rem;">
+        <button type="button" class="action-btn btn-secondary" onclick="window.auth.closeImageAdjustModal()">Cancel</button>
+        <button type="button" class="action-btn btn-primary" onclick="window.auth.applyCroppedImage()" style="background: linear-gradient(135deg, #f09433, #dc2743); border: none; font-weight: 700; padding: 8px 18px;">
+          <i class="fa-solid fa-check"></i> Set Profile Picture
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: GUEST USER WARNING & CONFIRMATION -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="guest-confirm-modal" style="display: none; z-index: 1000005;">
+    <div class="modal-box" style="max-width: 440px; text-align: center; padding: 1.75rem 1.5rem; border-radius: var(--radius-lg, 16px); background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 16px 40px rgba(0,0,0,0.35);">
+      <div style="width: 58px; height: 58px; margin: 0 auto 0.85rem; border-radius: 50%; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 style="margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Guest Login Notice</h3>
+      <p style="margin: 0 0 1rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+        You are entering <strong>Guest Trial Mode</strong>. You can test all app features freely.
+      </p>
+      <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; text-align: left; display: flex; gap: 10px; align-items: flex-start;">
+        <i class="fa-solid fa-trash-can" style="color: #ef4444; font-size: 1.15rem; margin-top: 2px; flex-shrink: 0;"></i>
+        <div style="font-size: 0.82rem; color: var(--text-primary); line-height: 1.45;">
+          <strong>Data Erase Warning:</strong> When you <strong>log out</strong>, all expenses, incomes, and tasks added during this guest session will be <strong>permanently erased</strong>!
+        </div>
+      </div>
+      <p style="margin: 0 0 1.25rem; font-size: 0.78rem; color: var(--text-muted);">
+        Want to save your data permanently? Click <strong>Go to Sign Up</strong> instead.
+      </p>
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn-insta-gradient" onclick="window.auth.confirmGuestLogin()" style="flex: 1; min-width: 140px; padding: 0.65rem 1rem; font-size: 0.88rem;">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i> Continue as Guest
+        </button>
+        <button type="button" class="action-btn btn-secondary" onclick="window.auth.closeGuestConfirmModal(true)" style="flex: 1; min-width: 120px; padding: 0.65rem 1rem; font-size: 0.85rem; border-radius: var(--radius-full);">
+          <i class="fa-solid fa-user-plus"></i> Go to Sign Up
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER MANUAL & HOW-TO-USE GUIDE MODAL -->
+  <div class="modal-overlay" id="user-manual-modal" style="display: none; z-index: 1000003;">
+    <div class="modal-box user-manual-modal-box">
+      <!-- Header -->
+      <div class="modal-header user-manual-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="manual-header-icon-ring">
+            <i class="fa-solid fa-book-open-reader"></i>
+          </div>
+          <div>
+            <h2 class="modal-title" style="margin: 0; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span>Spendorio User Manual &amp; Beginner Guide</span>
+              <span class="manual-badge-pill">Step-by-Step Instructions</span>
+            </h2>
+            <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-muted);">
+              Learn how to manage daily routine tasks, automate expense tracking &amp; monitor your budget
+            </p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="window.auth.closeUserManual()" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Body with Sidebar Tabs + Content Area -->
+      <div class="user-manual-body">
+        <!-- Left Sidebar Navigation Pills -->
+        <div class="user-manual-sidebar">
+          <button type="button" class="manual-nav-btn active" data-tab="start" onclick="window.auth.switchManualTab('start')">
+            <i class="fa-solid fa-rocket"></i>
+            <span>1. Quick Start Guide</span>
+          </button>
+          <button type="button" class="manual-nav-btn" data-tab="routines" onclick="window.auth.switchManualTab('routines')">
+            <i class="fa-solid fa-list-check"></i>
+            <span>2. Routines &amp; Tasks</span>
+          </button>
+          <button type="button" class="manual-nav-btn" data-tab="expenses" onclick="window.auth.switchManualTab('expenses')">
+            <i class="fa-solid fa-wallet"></i>
+            <span>3. Expenses &amp; Incomes</span>
+          </button>
+          <button type="button" class="manual-nav-btn" data-tab="budget" onclick="window.auth.switchManualTab('budget')">
+            <i class="fa-solid fa-bullseye"></i>
+            <span>4. Budget &amp; Limits</span>
+          </button>
+          <button type="button" class="manual-nav-btn" data-tab="analytics" onclick="window.auth.switchManualTab('analytics')">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>5. Reports &amp; Charts</span>
+          </button>
+          <button type="button" class="manual-nav-btn" data-tab="sync" onclick="window.auth.switchManualTab('sync')">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span>6. Mobile 4G/5G Sync</span>
+          </button>
+          <button type="button" class="manual-nav-btn" data-tab="faq" onclick="window.auth.switchManualTab('faq')">
+            <i class="fa-solid fa-circle-question"></i>
+            <span>7. Pro Tips &amp; FAQ</span>
+          </button>
+        </div>
+
+        <!-- Right Content Area -->
+        <div class="user-manual-content">
+
+          <!-- TAB 1: QUICK START -->
+          <div class="manual-tab-pane" id="manual-tab-start" style="display: block;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-rocket" style="color: #6366f1;"></i>
+              Welcome to Spendorio &amp; SpendTracker!
+            </h3>
+            <p class="manual-pane-subtitle">
+              Spendorio is your personal daily habit manager and automated cost tracker. It links your daily routines directly to your expenses so you never have to enter transactions twice.
+            </p>
+
+            <div class="manual-step-grid">
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num">1</div>
+                  <h4 class="manual-step-title">Enter Account or Guest</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Log in with your username (e.g., <strong>mukilanviswa</strong>) or tap <strong>"Continue as Guest User"</strong> to safely test all features without modifying authentic records.
+                </p>
+                <div>
+                  <span class="manual-pill-example"><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> 100% Offline &amp; Private</span>
+                </div>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num">2</div>
+                  <h4 class="manual-step-title">Check Off Daily Routines</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Open the <strong>Daily Routines</strong> tab or Dashboard. As you finish routines (gym, breakfast, study, PG chores), check the circle to build your consistency streak.
+                </p>
+                <div>
+                  <span class="manual-pill-example"><i class="fa-solid fa-fire" style="color: #f59e0b;"></i> Daily Streak Counter</span>
+                </div>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num">3</div>
+                  <h4 class="manual-step-title">Automated Cost Tracking</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Any routine that has a daily cost (e.g. <em>Eggs &amp; Curd: ₹80</em>) automatically logs the expense when checked! No manual math required.
+                </p>
+                <div>
+                  <span class="manual-pill-example"><i class="fa-solid fa-bolt" style="color: #8b5cf6;"></i> Zero Double Entry</span>
+                </div>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num">4</div>
+                  <h4 class="manual-step-title">Monitor Budget &amp; Savings</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Check your real-time Daily and Monthly budget meters. Spendorio alerts you with colors: Green (Safe), Yellow (80% Warning), and Red (Limit Exceeded).
+                </p>
+                <div>
+                  <span class="manual-pill-example"><i class="fa-solid fa-chart-line" style="color: #06b6d4;"></i> Real-Time KPI Cards</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="manual-tip-banner" style="margin-top: 1rem;">
+              <i class="fa-solid fa-lightbulb"></i>
+              <div>
+                <strong>New User Tip:</strong> You can use this app on both your laptop (<code>http://localhost:3000</code>) and on your phone browser anywhere on mobile data via Cloudflare tunnel.
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: ROUTINES & TASKS -->
+          <div class="manual-tab-pane" id="manual-tab-routines" style="display: none;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-list-check" style="color: #8b5cf6;"></i>
+              Managing Routines &amp; Daily Tasks
+            </h3>
+            <p class="manual-pane-subtitle">
+              Learn how routines, priority levels, time blocks, and automatic cost links work together.
+            </p>
+
+            <div class="manual-step-grid">
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fa-solid fa-repeat"></i></div>
+                  <h4 class="manual-step-title">Routine vs One-Time Task</h4>
+                </div>
+                <p class="manual-step-desc">
+                  <strong>Routine Task:</strong> Recurring habits (Gym, Milk, Tech Training, Dinner). Repeats automatically every day.<br>
+                  <strong>One-Time Task:</strong> Specific single-day item (Doctor visit, Book purchase, Pay college fee).
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                  <h4 class="manual-step-title">Setting Linked Task Cost</h4>
+                </div>
+                <p class="manual-step-desc">
+                  When adding/editing a task, set the <strong>Cost (₹)</strong> field (e.g. <em>₹80</em> for breakfast). Completing this task automatically creates a matching expense entry tagged <em>"Routine Linked"</em>.
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);"><i class="fa-solid fa-clock"></i></div>
+                  <h4 class="manual-step-title">Time Blocks &amp; Priority</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Organize tasks by Time Blocks: <strong>Morning (6am–12pm)</strong>, <strong>Afternoon (12pm–5pm)</strong>, <strong>Evening (5pm–9pm)</strong>, and <strong>Night (9pm+)</strong>. Filter by High, Medium, or Low priority.
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #ec4899, #be185d);"><i class="fa-solid fa-pen-to-square"></i></div>
+                  <h4 class="manual-step-title">Editing &amp; Deleting Tasks</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Click on any task to view its detail modal. Click <strong>Edit Task</strong> to update the title or time, or <strong>Delete</strong> to remove the task and its linked expense cleanly.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: EXPENSES & INCOMES -->
+          <div class="manual-tab-pane" id="manual-tab-expenses" style="display: none;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-wallet" style="color: #ec4899;"></i>
+              Tracking Expenses &amp; Incomes
+            </h3>
+            <p class="manual-pane-subtitle">
+              Record standalone purchases, track monthly salary/incomes, and manage your records with instant deletion.
+            </p>
+
+            <div class="manual-step-grid">
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #ef4444, #dc2626);"><i class="fa-solid fa-plus"></i></div>
+                  <h4 class="manual-step-title">Adding a Standalone Cost</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Click the <strong>"Log Cost"</strong> button in the header or Expenses tab. Enter Title, Amount, Category (Food, Bills, Shopping, etc.), Date, and Payment Method (UPI, Cash, Card, Net Banking).
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #10b981, #047857);"><i class="fa-solid fa-money-bill-wave"></i></div>
+                  <h4 class="manual-step-title">Logging Incomes &amp; Salary</h4>
+                </div>
+                <p class="manual-step-desc">
+                  In the <strong>Cost &amp; Expenses</strong> tab, click <strong>"Log Income"</strong> to record monthly salary, freelancing, or allowances. Net Balance updates immediately: <em>(Income − Expense)</em>.
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #f59e0b, #b45309);"><i class="fa-solid fa-trash-can"></i></div>
+                  <h4 class="manual-step-title">Deleting Records Permanently</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Click the red <strong>🗑️ Delete</strong> icon next to any expense or income record. Click OK to confirm. The item is permanently removed and will never reappear upon refresh or server sync.
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #6366f1, #4338ca);"><i class="fa-solid fa-filter"></i></div>
+                  <h4 class="manual-step-title">Filtering &amp; Searching</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Use the Search bar to instantly filter by expense title (e.g. <em>"Cylinder"</em>, <em>"PG"</em>, <em>"Snacks"</em>), or filter by Category and Routine-Linked status.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: BUDGET & LIMITS -->
+          <div class="manual-tab-pane" id="manual-tab-budget" style="display: none;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-bullseye" style="color: #f59e0b;"></i>
+              Budget Limits &amp; Overspend Warnings
+            </h3>
+            <p class="manual-pane-subtitle">
+              Set spending boundaries so you never run out of money before month-end.
+            </p>
+
+            <div class="manual-step-grid">
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: #10b981;">₹</div>
+                  <h4 class="manual-step-title">Daily &amp; Monthly Budgets</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Go to <strong>Settings &amp; Backup</strong> to set your target <strong>Daily Budget</strong> (e.g. ₹1,500) and <strong>Monthly Budget</strong> (e.g. ₹40,000).
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: #e11d48;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                  <h4 class="manual-step-title">Real-Time Alert Indicators</h4>
+                </div>
+                <p class="manual-step-desc">
+                  🟢 <strong>Green</strong>: Spending safely within budget.<br>
+                  🟡 <strong>Yellow</strong>: Spent 80%+ of today's budget (Warning).<br>
+                  🔴 <strong>Red</strong>: Budget exceeded! Review unnecessary expenses.
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: #8b5cf6;"><i class="fa-solid fa-tags"></i></div>
+                  <h4 class="manual-step-title">Category Budgets</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Set individual monthly limits for Food &amp; Dining, Groceries, Transportation, and Shopping to prevent overspending in any single category.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: REPORTS & CHARTS -->
+          <div class="manual-tab-pane" id="manual-tab-analytics" style="display: none;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-chart-pie" style="color: #06b6d4;"></i>
+              Analytics, Charts &amp; Data Exports
+            </h3>
+            <p class="manual-pane-subtitle">
+              Gain deep visual insights into your lifestyle spending and habit streaks.
+            </p>
+
+            <div class="manual-step-grid">
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: #3b82f6;"><i class="fa-solid fa-chart-simple"></i></div>
+                  <h4 class="manual-step-title">Daily Spending Bar Chart</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Shows your day-by-day expense totals across the active month. Hover over any bar to see total amount and transaction count.
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: #ec4899;"><i class="fa-solid fa-chart-pie"></i></div>
+                  <h4 class="manual-step-title">Category Spending Donut</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Breaks down where every rupee went: Food, Transportation, Bills, Learning, and PG Fees with exact percentages.
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: #10b981;"><i class="fa-solid fa-file-csv"></i></div>
+                  <h4 class="manual-step-title">Export CSV &amp; JSON Backup</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Download your data as an Excel-ready <strong>CSV Spreadsheet</strong> or export a <strong>Full JSON Backup</strong> in Settings &amp; Backup anytime for offline preservation.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 6: MOBILE 4G/5G SYNC -->
+          <div class="manual-tab-pane" id="manual-tab-sync" style="display: none;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-mobile-screen" style="color: #3b82f6;"></i>
+              Access from Mobile Phone (4G / 5G Anywhere)
+            </h3>
+            <p class="manual-pane-subtitle">
+              Use Spendorio on your phone while traveling, shopping, or in class.
+            </p>
+
+            <div class="manual-step-grid">
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                  <h4 class="manual-step-title">100% Offline Mobile App (PWA)</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Tap <strong>"Install App"</strong> on your phone to add Spendorio directly to your Home Screen. It launches in full-screen mode and works completely offline even when your laptop is turned off or you are in Airplane mode!
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #f97316, #ea580c);"><i class="fa-solid fa-globe"></i></div>
+                  <h4 class="manual-step-title">Cloudflare Mobile Tunnel</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Open the colorful <strong>"Spendorio Mobile Tunnel"</strong> shortcut on your laptop desktop. It outputs a secure <code>trycloudflare.com</code> URL that works on your phone's mobile data anywhere in the world!
+                </p>
+              </div>
+
+              <div class="manual-step-card">
+                <div class="manual-step-header">
+                  <div class="manual-step-num" style="background: linear-gradient(135deg, #06b6d4, #0284c7);"><i class="fa-solid fa-arrows-rotate"></i></div>
+                  <h4 class="manual-step-title">Instant Cross-Device Sync</h4>
+                </div>
+                <p class="manual-step-desc">
+                  Log an expense on your phone at a tea shop or grocery store—it instantly saves to your laptop's central database (<code>data/backup.json</code>).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 7: FAQ & PRO TIPS -->
+          <div class="manual-tab-pane" id="manual-tab-faq" style="display: none;">
+            <h3 class="manual-pane-title">
+              <i class="fa-solid fa-circle-question" style="color: #10b981;"></i>
+              Pro Tips &amp; Frequently Asked Questions
+            </h3>
+            <p class="manual-pane-subtitle">
+              Quick answers to common questions about using Spendorio.
+            </p>
+
+            <div class="manual-step-card" style="margin-bottom: 0.75rem;">
+              <h4 class="manual-step-title" style="color: #6366f1;">Q: Do I need Antigravity open to use Spendorio?</h4>
+              <p class="manual-step-desc">
+                <strong>No!</strong> Spendorio runs independently as a Windows background server and starts automatically whenever your laptop powers on.
+              </p>
+            </div>
+
+            <div class="manual-step-card" style="margin-bottom: 0.75rem;">
+              <h4 class="manual-step-title" style="color: #6366f1;">Q: How do I start or stop Spendorio manually?</h4>
+              <p class="manual-step-desc">
+                Use the colorful desktop shortcuts: double-click <strong>Spendorio &amp; SpendTracker</strong> to launch, or double-click <strong>Stop Spendorio</strong> to cleanly shut down.
+              </p>
+            </div>
+
+            <div class="manual-step-card">
+              <h4 class="manual-step-title" style="color: #6366f1;">Q: How do I switch between Dark and Light mode?</h4>
+              <p class="manual-step-desc">
+                Click the moon/sun icon in the top header bar (or in Settings) to toggle between modern Instagram Dark mode and clean Light mode.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer user-manual-footer">
+        <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-circle-info" style="color: #6366f1;"></i>
+          <span>Re-open this guide anytime from the top-right header or sidebar!</span>
+        </div>
+        <button type="button" class="action-btn btn-primary" onclick="window.auth.closeUserManual()" style="background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); border: none; font-weight: 700; padding: 9px 22px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(220, 39, 67, 0.35);">
+          <span>Got It! Let's Get Started</span>
+          <i class="fa-solid fa-arrow-right" style="margin-left: 6px;"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENTLE 1-MINUTE LOGOUT REMINDER (Non-disturbing floating card) -->
+  <div id="logout-gentle-reminder" class="gentle-logout-reminder" style="display: none;">
+    <div class="reminder-content">
+      <div class="reminder-icon-bubble">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div class="reminder-text-wrap">
+        <div class="reminder-title">Security Reminder</div>
+        <div class="reminder-desc">Please don't forget to <strong>Log Out</strong> when you finish to keep your routine tasks &amp; costs secure.</div>
+      </div>
+      <div class="reminder-actions">
+        <button type="button" class="reminder-btn-logout" onclick="window.auth.logout()" title="Logout now">
+          <i class="fa-solid fa-right-from-bracket"></i> Log Out
+        </button>
+        <button type="button" class="reminder-btn-dismiss" onclick="window.auth.dismissLogoutReminder(true)" title="Dismiss reminder">
+          Got it
+        </button>
+      </div>
+      <button type="button" class="reminder-close-x" onclick="window.auth.dismissLogoutReminder(true)" aria-label="Close">&times;</button>
+    </div>
+  </div>
+
+  <!-- PWA INSTALL BANNER (Floating Mobile Action) -->
+  <div id="pwa-install-banner" class="pwa-install-banner" style="display: none;">
+    <div class="pwa-banner-card">
+      <img src="icons/icon-192.png" alt="Spendorio Logo" class="pwa-banner-icon">
+      <div class="pwa-banner-info">
+        <div class="pwa-banner-title">Install Spendorio App</div>
+        <div class="pwa-banner-sub">100% Offline • Works anytime on your phone</div>
+      </div>
+      <div class="pwa-banner-actions">
+        <button type="button" class="btn-pwa-install" onclick="window.SpendorioPWA.promptInstall()">
+          <i class="fa-solid fa-download"></i> Install
+        </button>
+        <button type="button" class="btn-pwa-dismiss" onclick="window.SpendorioPWA.dismissBanner()" aria-label="Dismiss">
+          &times;
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA iOS SAFARI INSTALL INSTRUCTIONS MODAL -->
+  <div id="pwa-ios-modal" class="pwa-modal-overlay" style="display: none;">
+    <div class="pwa-modal-card">
+      <div class="pwa-modal-header">
+        <div class="pwa-modal-title">
+          <img src="icons/icon-192.png" alt="Spendorio Logo" style="width: 30px; height: 30px; border-radius: 8px;">
+          <span>Install Spendorio on iPhone</span>
+        </div>
+        <button type="button" class="btn-pwa-dismiss" onclick="window.SpendorioPWA.closeIosInstallModal()">&times;</button>
+      </div>
+      <div class="pwa-modal-body">
+        <p style="margin: 0 0 1rem; font-size: 0.85rem; color: var(--text-muted);">Install Spendorio on your iPhone home screen to use it full-screen and 100% offline!</p>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">1</div>
+          <div class="pwa-step-text">Tap the <strong>Share</strong> button (<i class="fa-solid fa-arrow-up-from-bracket" style="color: #6366f1;"></i>) in Safari bottom navigation bar.</div>
+        </div>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">2</div>
+          <div class="pwa-step-text">Scroll down and tap <strong>Add to Home Screen</strong> (<i class="fa-regular fa-square-plus" style="color: #6366f1;"></i>).</div>
+        </div>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">3</div>
+          <div class="pwa-step-text">Tap <strong>Add</strong> in the top-right corner. Spendorio is now installed!</div>
+        </div>
+      </div>
+      <div class="pwa-modal-footer">
+        <button type="button" class="btn-pwa-install" onclick="window.SpendorioPWA.closeIosInstallModal()">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA DESKTOP / CHROME MANUAL INSTALL MODAL -->
+  <div id="pwa-generic-modal" class="pwa-modal-overlay" style="display: none;">
+    <div class="pwa-modal-card">
+      <div class="pwa-modal-header">
+        <div class="pwa-modal-title">
+          <img src="icons/icon-192.png" alt="Spendorio Logo" style="width: 30px; height: 30px; border-radius: 8px;">
+          <span>Install Spendorio App</span>
+        </div>
+        <button type="button" class="btn-pwa-dismiss" onclick="window.SpendorioPWA.closeGenericInstallModal()">&times;</button>
+      </div>
+      <div class="pwa-modal-body">
+        <p style="margin: 0 0 1rem; font-size: 0.85rem; color: var(--text-muted);">Spendorio can be installed directly from your browser menu:</p>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">1</div>
+          <div class="pwa-step-text">Tap the browser <strong>Three Dots (⋮)</strong> menu in Chrome or edge of your screen.</div>
+        </div>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">2</div>
+          <div class="pwa-step-text">Select <strong>"Install app"</strong> or <strong>"Add to Home Screen"</strong>.</div>
+        </div>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">3</div>
+          <div class="pwa-step-text">Launch Spendorio directly like any native Android/iOS mobile application!</div>
+        </div>
+      </div>
+      <div class="pwa-modal-footer">
+        <button type="button" class="btn-pwa-install" onclick="window.SpendorioPWA.closeGenericInstallModal()">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/pwa.js?v=20261024_pwa_fix_v3"></script>
+  <script src="js/auth.js?v=20261023_speed_fast"></script>
+  <script src="js/storage.js?v=20261024_live_sync"></script>
+  <script src="js/tasks.js?v=20261023_speed_fast"></script>
+  <script src="js/expenses.js?v=20261023_speed_fast"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="js/reports.js?v=20261023_speed_fast"></script>
+  <script src="js/charts.js?v=20261023_speed_fast"></script>
+  <script src="js/app.js?v=20261023_speed_fast"></script>
+</body>
+</html>

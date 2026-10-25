@@ -1,0 +1,73 @@
+{
+  "userId": "user-demo",
+  "updatedAt": 1729850000000,
+  "settings": {
+    "currency": "₹",
+    "currencyCode": "INR",
+    "theme": "light",
+    "dailyBudget": 2000,
+    "monthlyBudget": 50000,
+    "categoryBudgets": {
+      "Food & Dining": 10000,
+      "Transportation": 5000,
+      "Groceries & Household": 5000,
+      "Bills & Utilities": 15000,
+      "Fitness & Health": 3000,
+      "Learning & Work": 45000,
+      "Entertainment & Leisure": 3000,
+      "Shopping & Others": 5000
+    }
+  },
+  "tasks": [
+    {
+      "id": "task-sample-1",
+      "title": "Morning Exercise & Fresh Up",
+      "timeBlock": "morning",
+      "time": "06:30",
+      "category": "Fitness & Health",
+      "priority": "high",
+      "isRoutine": true,
+      "cost": 0,
+      "completed": true,
+      "date": "2026-10-25"
+    },
+    {
+      "id": "task-sample-2",
+      "title": "Java Spring Boot Practice",
+      "timeBlock": "afternoon",
+      "time": "11:00",
+      "category": "Learning & Work",
+      "priority": "high",
+      "isRoutine": true,
+      "cost": 0,
+      "completed": true,
+      "date": "2026-10-25"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp-sample-1",
+      "date": "2026-10-25",
+      "title": "Morning Breakfast & Coffee",
+      "category": "Food & Dining",
+      "amount": 80,
+      "paymentMethod": "UPI",
+      "notes": "Sample expense"
+    },
+    {
+      "id": "exp-sample-2",
+      "date": "2026-10-24",
+      "title": "Tech Books & Stationery",
+      "category": "Learning & Work",
+      "amount": 350,
+      "paymentMethod": "UPI",
+      "notes": "Sample expense"
+    }
+  ],
+  "incomes": [],
+  "streaks": {
+    "currentStreak": 1,
+    "bestStreak": 5,
+    "lastActiveDate": "2026-10-25"
+  }
+}

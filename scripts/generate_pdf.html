@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spendorio - Technology Stack & Architecture Specification</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.55;
+      font-size: 13.5px;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      border-bottom: 3px solid #2563eb;
+      padding-bottom: 14px;
+      margin-bottom: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .meta-badge {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: right;
+    }
+    h2 {
+      font-size: 16px;
+      color: #0f172a;
+      border-left: 4px solid #2563eb;
+      padding-left: 10px;
+      margin-top: 24px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    h3 {
+      font-size: 14px;
+      color: #1e40af;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    p {
+      margin: 0 0 10px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px 0;
+      font-size: 12.5px;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td {
+      background: #fcfcfd;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-java { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-js { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
+    .badge-spring { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-pwa { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .badge-cloud { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .diagram-box {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 11.5px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      line-height: 1.45;
+      margin: 14px 0;
+      white-space: pre;
+    }
+    ul {
+      margin: 4px 0 10px 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 4px;
+    }
+    .footer {
+      margin-top: 30px;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 10px;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1 class="title">SPENDORIO</h1>
+      <div class="subtitle">Full-Stack Offline-First Routine & Cost Management Platform</div>
+    </div>
+    <div class="meta-badge">
+      Author: <strong>Mukilan Viswa</strong><br>
+      Architecture Specification v2.0<br>
+      Generated: October 2026
+    </div>
+  </div>
+
+  <!-- SECTION 1: EXECUTIVE SUMMARY -->
+  <h2>1. Project Overview & System Purpose</h2>
+  <p>
+    <strong>Spendorio</strong> is a production-grade, full-stack personal finance and daily routine management platform designed with an <strong>Offline-First Progressive Web App (PWA)</strong> architecture. Unlike traditional web applications that fail when internet connectivity drops, Spendorio provides native mobile app performance, sub-second launch times (<0.5s), and complete offline autonomy, backed by an enterprise Java Spring Boot RESTful API backend.
+  </p>
+
+  <!-- SECTION 2: PROGRAMMING LANGUAGES -->
+  <h2>2. Programming Languages Used</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Language</th>
+        <th style="width: 28%;">Where It Is Used</th>
+        <th>Role & Key Responsibilities</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Java (JDK 25 LTS)</strong></td>
+        <td>Backend Application & REST Controllers</td>
+        <td>Enterprise business logic, multi-tenant partitioning, thread-safe memory management with <code>ReentrantLock</code>, and atomic JSON persistence.</td>
+      </tr>
+      <tr>
+        <td><strong>JavaScript (ES6+)</strong></td>
+        <td>Frontend UI, Service Worker, Client Sync</td>
+        <td>Dynamic client-side calculations, interactive charts, event listeners, IndexedDB/localStorage data layer, and Service Worker caching engine.</td>
+      </tr>
+      <tr>
+        <td><strong>HTML5</strong></td>
+        <td>Frontend Structure & Metadata</td>
+        <td>Semantic document structure, Progressive Web App manifest declarations, responsive viewport metadata, and Open Graph previews.</td>
+      </tr>
+      <tr>
+        <td><strong>CSS3</strong></td>
+        <td>User Interface & Design System</td>
+        <td>Custom dark/light glassmorphism styling, responsive flexbox/grid layouts, mobile touch ergonomics, and hardware-accelerated animations.</td>
+      </tr>
+      <tr>
+        <td><strong>JSON</strong></td>
+        <td>Data Interchange & Database Persistence</td>
+        <td>Format for all client-server REST communication, user profile schemas, and human-readable, portable disk storage (<code>data/backup.json</code>).</td>
+      </tr>
+      <tr>
+        <td><strong>XML</strong></td>
+        <td>Maven Build Configuration</td>
+        <td>Dependency declarations, build plugins, and project metadata in <code>pom.xml</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Batch (.bat) / VBScript</strong></td>
+        <td>Windows Orchestration & Automation</td>
+        <td>One-click automated boot scripts for embedded Tomcat and background Cloudflare tunnels.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 3: ARCHITECTURE DIAGRAM -->
+  <h2>3. High-Level System Architecture</h2>
+  <div class="diagram-box">
++-----------------------------------------------------------------------------------+
+|                           CLIENT LAYER (Mobile & Desktop)                         |
+|  - Modern Browser / WebAPK Installed Home Screen App                              |
+|  - Service Worker (sw.js) [Cache-First Engine: Instant Launch & 100% Offline]     |
+|  - Client State: HTML5 localStorage / IndexedDB [Zero-Latency Local Writes]       |
++-----------------------------------------------------------------------------------+
+                                         │
+                   Secure HTTPS (TLS 1.3 / HTTP/2) via Cloudflare Edge
+                                         ▼
++-----------------------------------------------------------------------------------+
+|                         NETWORKING & SECURITY LAYER                               |
+|  - Cloudflare Edge Tunnel (cloudflared) -> Outbound Encrypted Bridge              |
+|  - Automatic DDoS Shielding, Green Padlock SSL Certificate, Zero Port-Forwarding  |
++-----------------------------------------------------------------------------------+
+                                         │
+                           Local Port 3000 (Loopback)
+                                         ▼
++-----------------------------------------------------------------------------------+
+|                     BACKEND LAYER (Java Spring Boot 3.3.4)                         |
+|  - Embedded Apache Tomcat Server (Port 3000)                                      |
+|  - WebMvcConfigurer: Global CORS & Static PWA Asset Handler                       |
+|  - REST Controllers: AuthController, SyncController, HealthController            |
+|  - Service Layer: DataService (ReentrantLock Thread Safety & Atomic File I/O)      |
+|  - Golden Safeguard Engine (Preserves Primary Owner Records)                      |
++-----------------------------------------------------------------------------------+
+                                         │
+                               File System I/O
+                                         ▼
++-----------------------------------------------------------------------------------+
+|                       DATA PERSISTENCE LAYER (data/)                              |
+|  - users.json / users_backup.json: User profiles & credential hashes              |
+|  - backup.json / backup_safe.json: Primary Owner Data (91 expenses, routines)    |
+|  - backup_{userId}.json: Partitioned Multi-Tenant Storage for Friends & Family   |
++-----------------------------------------------------------------------------------+
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 4: DETAILED TECHNOLOGY BREAKDOWN -->
+  <h2>4. Detailed Technology Stack & Tooling</h2>
+
+  <div class="card">
+    <h3>A. Backend Architecture (Spring Boot & Enterprise Java)</h3>
+    <ul>
+      <li><span class="badge badge-spring">Spring Boot 3.3.4</span> Provides the core enterprise framework, dependency injection, and autoconfiguration.</li>
+      <li><span class="badge badge-spring">Spring Web MVC</span> Dispatches RESTful endpoints using <code>@RestController</code>, <code>@GetMapping</code>, <code>@PostMapping</code>, and <code>@PutMapping</code>.</li>
+      <li><span class="badge badge-spring">Embedded Apache Tomcat</span> High-throughput web server handling parallel HTTP connections on port 3000 without requiring standalone server installations.</li>
+      <li><span class="badge badge-java">Jackson Databind</span> High-performance JSON serializer and deserializer mapping HTTP payloads into strongly typed Java POJOs (<code>User.java</code>).</li>
+      <li><span class="badge badge-java">Java Concurrency (ReentrantLock)</span> Thread synchronization ensuring that simultaneous requests from multiple users never collide or produce dirty writes.</li>
+      <li><span class="badge badge-java">Atomic File I/O Engine</span> Writes updates to randomized temporary files (<code>.tmp</code>) before executing an atomic OS rename, guaranteeing zero database corruption during sudden power losses.</li>
+      <li><span class="badge badge-java">Golden Safeguard Protection</span> Algorithmic security layer in <code>DataService</code> that rejects any sync payload containing fewer than 50 records for the owner, preventing data loss.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>B. Frontend & Progressive Web App (PWA) Technologies</h3>
+    <ul>
+      <li><span class="badge badge-pwa">Service Worker (sw.js)</span> A background worker script that intercepts all network requests. Implements a <strong>Cache-First</strong> strategy for static assets (HTML, CSS, JS, icons) and a <strong>Network-First</strong> strategy for API calls.</li>
+      <li><span class="badge badge-pwa">Web App Manifest (manifest.json)</span> JSON specification declaring application branding, theme colors (<code>#0f172a</code>), high-resolution icons (192px, 512px), and <code>"display": "standalone"</code> mode to eliminate browser address bars.</li>
+      <li><span class="badge badge-pwa">WebAPK Technology</span> Android's native packaging mechanism that compiles the installed PWA directly into the Android OS app drawer alongside native Play Store apps.</li>
+      <li><span class="badge badge-js">Offline-First Client Sync Engine</span> Asynchronous background reconciliation engine in <code>storage.js</code> that persists mutations instantly to <code>localStorage</code> and syncs with the Spring Boot server whenever online.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>C. Cloud Networking & Security</h3>
+    <ul>
+      <li><span class="badge badge-cloud">Cloudflare Tunnel (cloudflared)</span> Creates an outbound-only encrypted tunnel between the laptop's port 3000 and Cloudflare's nearest edge server (Chennai - <code>maa03</code>).</li>
+      <li><span class="badge badge-cloud">HTTP/2 TCP Protocol</span> Low-latency, multiplexed transport eliminating Indian ISP UDP/QUIC socket drops.</li>
+      <li><span class="badge badge-cloud">End-to-End SSL/TLS Encryption</span> Delivers bank-grade HTTPS encryption, fulfilling strict mobile OS requirements for PWA installation.</li>
+      <li><span class="badge badge-cloud">Zero Port-Forwarding Security</span> The host laptop's public IP remains completely hidden; external access to Windows OS, drives, or camera is physically impossible.</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 5: RESUME SUMMARY -->
+  <h2>5. Resume Summary & Interview Highlights</h2>
+  <p>
+    When discussing this project in technical interviews or presenting it on a resume, highlight these three architectural achievements:
+  </p>
+  <ul>
+    <li><strong>Full-Stack Mastery:</strong> Seamless integration of modern client-side JavaScript PWA standards with enterprise Java Spring Boot REST controllers.</li>
+    <li><strong>Resilient Offline-First Architecture:</strong> Service Worker caching and optimistic client storage guarantee full usability without network connectivity.</li>
+    <li><strong>Data Concurrency & Integrity:</strong> Implementation of thread-safe locks, atomic file swap techniques, and owner safeguards to eliminate race conditions.</li>
+  </ul>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Spendorio &copy; 2026 Mukilan Viswa. Built with Java Spring Boot, PWA, and Cloudflare Edge. All Rights Reserved.
+  </div>
+
+</body>
+</html>

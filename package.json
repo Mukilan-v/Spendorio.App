@@ -1,0 +1,25 @@
+{
+  "name": "daily-task-cost-manager",
+  "version": "1.0.0",
+  "description": "Daily Routine Task & Cost Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "task-management",
+    "cost-management",
+    "daily-routine",
+    "expense-tracker",
+    "budget-planner"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "compression": "^1.8.2",
+    "cors": "^2.8.6",
+    "express": "^4.22.2"
+  },
+  "type": "commonjs"
+}

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Java & Maven Build Artifacts
+**/target/
+*.class
+maven/
+.mvn/
+*.jar
+*.war
+
+# Eclipse / STS / IDE Artifacts
+.project
+.classpath
+.settings/
+.idea/
+*.iml
+
+# Personal & User Data (Keep Private)
+data/*.json
+!data/seed.json
+extracted_profile.json
+
+# Temporary Recovery & Dump Files (500MB+)
+decompressed_block_*.txt
+*.tmp
+*.log
+tunnel.log
+server_output.log
+debug.log
+
+# Binaries & Executables
+cloudflared.exe
+maven.zip
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
