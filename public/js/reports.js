@@ -337,12 +337,7 @@ class ReportManager {
     } else {
       // If popup blocker blocked it, offer as downloadable HTML statement file
       const blob = new Blob([printHtml], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `expense-statement-${period}-${nowStr.replace(/[^a-zA-Z0-9]/g, '_')}.html`;
-      a.click();
-      URL.revokeObjectURL(url);
+      this.triggerBlobDownload(blob, `expense-statement-${period}-${nowStr.replace(/[^a-zA-Z0-9]/g, '_')}.html`);
       if (window.app && window.app.showToast) {
         window.app.showToast('Popup was blocked: Statement downloaded as HTML! Open and print to PDF.', 'info');
       }
@@ -452,12 +447,7 @@ class ReportManager {
 </html>`;
 
     const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `expense-statement-${today}.xls`;
-    a.click();
-    URL.revokeObjectURL(url);
+    this.triggerBlobDownload(blob, `expense-statement-${today}.xls`);
 
     if (window.app && window.app.showToast) {
       window.app.showToast('Excel spreadsheet (.xls) downloaded successfully!', 'success');
@@ -566,12 +556,7 @@ class ReportManager {
 </html>`;
 
     const blob = new Blob([html], { type: 'application/msword;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `expense-statement-${today}.doc`;
-    a.click();
-    URL.revokeObjectURL(url);
+    this.triggerBlobDownload(blob, `expense-statement-${today}.doc`);
 
     if (window.app && window.app.showToast) {
       window.app.showToast('Word Document (.doc) downloaded successfully!', 'success');
@@ -601,12 +586,7 @@ class ReportManager {
     // Prepend UTF-8 BOM so Excel opens Rupee symbols and UTF-8 characters properly
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `expenses-export-${today}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    this.triggerBlobDownload(blob, `expenses-export-${today}.csv`);
 
     if (window.app && window.app.showToast) {
       window.app.showToast('Expenses CSV exported successfully!', 'success');
@@ -653,16 +633,25 @@ class ReportManager {
     text += `========================================================\n`;
 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `expense-statement-${today}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    this.triggerBlobDownload(blob, `expense-statement-${today}.txt`);
 
     if (window.app && window.app.showToast) {
       window.app.showToast('Text summary statement (.txt) downloaded!', 'success');
     }
+  }
+
+  triggerBlobDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1200);
   }
 
   escapeHtml(str) {

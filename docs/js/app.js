@@ -980,8 +980,13 @@ class Application {
     const a = document.createElement('a');
     a.href = url;
     a.download = `daily-routine-cost-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1200);
     this.showToast('Backup JSON exported successfully!', 'success');
   }
 
