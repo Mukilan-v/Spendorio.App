@@ -60,9 +60,9 @@ async function updatePhoneLink() {
           `  - View analytics and charts.\n` +
           `- Whenever your phone reconnects, Spendorio automatically syncs all changes!\n\n` +
           `============================================================\n` +
-          `DOES THIS RUN WITHOUT ANTIGRAVITY?\n` +
+          `DOES THIS RUN AS A STANDALONE APP?\n` +
           `============================================================\n` +
-          `YES! Spendorio has zero dependency on Antigravity. It is a full standalone\n` +
+          `YES! Spendorio has zero external dependencies. It is a full standalone\n` +
           `offline-capable mobile application.\n` +
           `============================================================\n`;
 
