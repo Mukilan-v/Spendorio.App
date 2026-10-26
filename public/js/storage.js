@@ -1393,6 +1393,7 @@ class StorageManager {
     const isGuest = this.isCurrentGuest();
     const key = this.getUserStorageKey(STORAGE_KEYS.TASKS);
     localStorage.setItem(key, JSON.stringify(tasks));
+    if (this._isSyncingFromCloud) return;
     
     // CRITICAL: A guest MUST NEVER push to server
     if (isGuest) {
@@ -1583,6 +1584,7 @@ class StorageManager {
     const isGuest = this.isCurrentGuest();
     const key = this.getUserStorageKey(STORAGE_KEYS.EXPENSES);
     localStorage.setItem(key, JSON.stringify(expenses));
+    if (this._isSyncingFromCloud) return;
 
     // CRITICAL: A guest MUST NEVER push to server
     if (isGuest) {
@@ -1662,6 +1664,7 @@ class StorageManager {
     const isGuest = this.isCurrentGuest();
     const key = this.getUserStorageKey(STORAGE_KEYS.INCOMES);
     localStorage.setItem(key, JSON.stringify(incomes));
+    if (this._isSyncingFromCloud) return;
 
     // CRITICAL: A guest MUST NEVER push to server
     if (isGuest) {

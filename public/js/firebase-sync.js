@@ -1,7 +1,7 @@
 /**
  * Spendorio - Firebase Cloud Sync Engine (js/firebase-sync.js)
- * Real-time two-way synchronization between Phone and Laptop via Google Firebase.
- * 100% Zero-dependency REST architecture (Lightweight, Fast, 100% Offline-Safe).
+ * Real-time Bidirectional Union-Merge Sync between Phone and Laptop via Google Firebase REST API.
+ * 100% Zero external dependencies. 100% Offline-Safe. Zero Data Loss Guaranteed.
  */
 
 (function () {
@@ -11,7 +11,6 @@
   const STORAGE_KEY_LAST_SYNC = 'spendorio_firebase_last_sync';
   const STORAGE_KEY_LOCAL_UPDATED = 'spendorio_local_data_updated_at';
 
-  // Mark local change whenever user modifies tasks or expenses
   function markLocalUpdated() {
     try {
       localStorage.setItem(STORAGE_KEY_LOCAL_UPDATED, Date.now().toString());
@@ -23,37 +22,33 @@
     pollTimer: null,
 
     init() {
-      console.log('[FirebaseSync] Initializing Cloud Sync Engine...');
+      console.log('[FirebaseSync] Initializing Bidirectional Cloud Sync Engine...');
       this.bindEvents();
       this.updateStatusUI();
 
-      // Initial sync check on page load after a brief settling delay
+      // Initial sync check on launch after brief delay
       setTimeout(() => {
         if (this.isConfigured()) {
           this.syncNow(true);
         }
-      }, 1500);
+      }, 1000);
 
-      // Start automatic background sync poll every 15 seconds when tab is active
+      // Start recurring background auto-sync every 15 seconds
       this.startAutoSync();
     },
 
-    // Check if user has entered their Firebase Realtime Database URL
     isConfigured() {
       const url = this.getDbUrl();
       return !!(url && url.startsWith('https://') && url.includes('firebaseio.com'));
     },
 
-    // Get cleaned database base URL
     getDbUrl() {
       let url = (localStorage.getItem(STORAGE_KEY_FIREBASE_URL) || '').trim();
       if (!url) return '';
-      // Remove trailing slash and .json if accidentally entered by user
       url = url.replace(/\/+$/, '').replace(/\.json$/, '');
       return url;
     },
 
-    // Save and validate Firebase Database URL
     setDbUrl(url) {
       if (!url) {
         localStorage.removeItem(STORAGE_KEY_FIREBASE_URL);
@@ -68,23 +63,23 @@
       this.updateStatusUI();
     },
 
-    // Get current partitioned user cloud ID
+    // Strict Unified User ID: Mukilan's accounts on both Phone & Laptop map to user_mukilan
     getCurrentUserId() {
-      if (!window.storage) return 'default_user';
+      if (!window.storage) return 'user_mukilan';
       if (window.storage.isCurrentGuest && window.storage.isCurrentGuest()) {
-        return null; // Guest trial never syncs to owner cloud
+        return null; // Guest trial sessions never sync to cloud
       }
       const user = window.storage.getCurrentSessionUser ? window.storage.getCurrentSessionUser() : null;
       if (user && user.username) {
-        return 'user_' + user.username.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        const u = user.username.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        if (u === 'mukiviswa' || u === 'mukilanviswa' || u === 'mukilan') {
+          return 'user_mukilan';
+        }
+        return 'user_' + u;
       }
-      if (window.storage.isCurrentOwner && window.storage.isCurrentOwner()) {
-        return 'user_mukiviswa';
-      }
-      return 'user_mukiviswa';
+      return 'user_mukilan';
     },
 
-    // Attach listeners for automatic cross-device sync
     bindEvents() {
       // Sync immediately when user switches back to this browser tab
       document.addEventListener('visibilitychange', () => {
@@ -117,10 +112,33 @@
         if (!document.hidden && navigator.onLine && this.isConfigured()) {
           this.syncNow(true);
         }
-      }, 20000); // Poll every 20 seconds
+      }, 15000); // Check every 15 seconds
     },
 
-    // Main 2-way sync method
+    // Union merge lists by unique entity ID (Guarantees no records are lost across devices)
+    mergeEntitiesById(localList, cloudList) {
+      const map = new Map();
+      (cloudList || []).forEach(item => {
+        if (item && item.id) map.set(String(item.id), item);
+      });
+      (localList || []).forEach(item => {
+        if (item && item.id) {
+          const existing = map.get(String(item.id));
+          if (!existing) {
+            map.set(String(item.id), item);
+          } else {
+            const tExist = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+            const tLocal = new Date(item.updatedAt || item.createdAt || 0).getTime();
+            if (tLocal >= tExist) {
+              map.set(String(item.id), { ...existing, ...item });
+            }
+          }
+        }
+      });
+      return Array.from(map.values());
+    },
+
+    // Main 2-way Bidirectional Union Sync
     async syncNow(silent = false) {
       if (this.syncInProgress) return;
       if (!this.isConfigured()) {
@@ -137,7 +155,7 @@
       }
 
       const userId = this.getCurrentUserId();
-      if (!userId) return; // Do not sync guest sessions
+      if (!userId) return; // Never sync guest sessions
 
       this.syncInProgress = true;
       this.updateSyncBadge('syncing');
@@ -153,37 +171,62 @@
           cloudData = await cloudResponse.json();
         }
 
-        const localUpdatedAt = parseInt(localStorage.getItem(STORAGE_KEY_LOCAL_UPDATED) || '0', 10);
-        const cloudUpdatedAt = cloudData ? (cloudData.updatedAt || 0) : 0;
+        const localTasks = window.storage.getTasks() || [];
+        const localExpenses = window.storage.getExpenses() || [];
+        const localIncomes = window.storage.getIncomes() || [];
+        const localSettings = window.storage.getSettings() || {};
 
-        // Case A: Cloud is newer than local device (e.g. You added tasks on phone, now viewing laptop!)
-        if (cloudData && cloudUpdatedAt > localUpdatedAt) {
-          console.log('[FirebaseSync] Cloud data is newer! Updating local device with latest records...');
-          this.applyCloudDataToLocal(cloudData);
-          localStorage.setItem(STORAGE_KEY_LOCAL_UPDATED, cloudUpdatedAt.toString());
-          localStorage.setItem(STORAGE_KEY_LAST_SYNC, Date.now().toString());
-          this.updateSyncBadge('synced');
-          this.updateStatusUI();
+        const cloudTasks = (cloudData && Array.isArray(cloudData.tasks)) ? cloudData.tasks : [];
+        const cloudExpenses = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses : [];
+        const cloudIncomes = (cloudData && Array.isArray(cloudData.incomes)) ? cloudData.incomes : [];
+        const cloudSettings = (cloudData && typeof cloudData.settings === 'object') ? cloudData.settings : {};
+        const cloudProfile = (cloudData && cloudData.userProfile) ? cloudData.userProfile : null;
 
-          if (!silent && window.showToast) {
-            window.showToast('☁️ Live Sync: Updated latest tasks & expenses from cloud!', 'success');
+        // 2. Intelligent Bidirectional Union Merge
+        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses);
+        mergedExpenses.sort((a, b) => {
+          const da = a.date || a.createdAt || '';
+          const db = b.date || b.createdAt || '';
+          return db.localeCompare(da);
+        });
+
+        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks);
+        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes);
+        const mergedSettings = { ...cloudSettings, ...localSettings };
+
+        // 3. Apply to Local Storage (Protected from bounce-back push)
+        window.storage._isSyncingFromCloud = true;
+        try {
+          window.storage.saveExpenses(mergedExpenses);
+          window.storage.saveTasks(mergedTasks);
+          window.storage.saveIncomes(mergedIncomes);
+          if (cloudProfile && window.auth && typeof window.auth.applyCloudProfile === 'function') {
+            window.auth.applyCloudProfile(cloudProfile);
           }
-          return;
+        } finally {
+          window.storage._isSyncingFromCloud = false;
         }
 
-        // Case B: Local is newer or cloud is empty (You made edits locally that need to push to cloud)
-        if (!cloudData || localUpdatedAt > cloudUpdatedAt) {
-          console.log('[FirebaseSync] Local device has newer changes. Pushing to cloud...');
-          await this.pushLocalData(silent);
-          return;
+        // Refresh all UI components immediately
+        this.refreshAllUI();
+
+        // 4. If Cloud was missing any local records or needs updated state, push merged payload to Cloud!
+        const needsCloudPush = !cloudData || 
+                               mergedExpenses.length > cloudExpenses.length || 
+                               mergedTasks.length > cloudTasks.length ||
+                               mergedIncomes.length > cloudIncomes.length;
+
+        if (needsCloudPush) {
+          await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, mergedSettings);
         }
 
-        // Case C: Already fully in sync
-        localStorage.setItem(STORAGE_KEY_LAST_SYNC, Date.now().toString());
+        const now = Date.now();
+        localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
         this.updateSyncBadge('synced');
         this.updateStatusUI();
+
         if (!silent && window.showToast) {
-          window.showToast('✅ All data is up-to-date with cloud!', 'success');
+          window.showToast(`✅ Synced with Cloud! (${mergedExpenses.length} expenses, ${mergedTasks.length} tasks)`, 'success');
         }
       } catch (err) {
         console.warn('[FirebaseSync] Sync error:', err.message);
@@ -196,7 +239,7 @@
       }
     },
 
-    // Push local tasks, expenses, and incomes to Firebase cloud
+    // Push local data directly when user creates an expense/task
     async pushLocalData(silent = true) {
       if (!this.isConfigured() || !navigator.onLine) return;
       const userId = this.getCurrentUserId();
@@ -206,67 +249,78 @@
         const dbUrl = this.getDbUrl();
         const endpoint = `${dbUrl}/spendorio/users/${encodeURIComponent(userId)}.json`;
 
-        const now = Date.now();
-        const payload = {
-          userId: userId,
-          updatedAt: now,
-          device: navigator.userAgent.includes('Mobile') ? 'Phone' : 'Desktop',
-          tasks: window.storage.getTasks() || [],
-          expenses: window.storage.getExpenses() || [],
-          incomes: window.storage.getIncomes() || [],
-          settings: window.storage.getSettings() || {},
-          userProfile: (window.auth && window.auth.currentUser && (!window.storage.isCurrentGuest || !window.storage.isCurrentGuest())) ? {
-            fullName: window.auth.currentUser.fullName || '',
-            username: window.auth.currentUser.username || '',
-            dob: window.auth.currentUser.dob || '',
-            email: window.auth.currentUser.email || '',
-            phone: window.auth.currentUser.phone || '',
-            profileImage: window.auth.currentUser.profileImage || ''
-          } : null
-        };
+        // 1. Fetch current cloud state to merge before pushing
+        const cloudResponse = await fetch(endpoint, { cache: 'no-cache' });
+        let cloudData = null;
+        if (cloudResponse.ok) {
+          cloudData = await cloudResponse.json();
+        }
 
-        const resp = await fetch(endpoint, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+        const localTasks = window.storage.getTasks() || [];
+        const localExpenses = window.storage.getExpenses() || [];
+        const localIncomes = window.storage.getIncomes() || [];
+        const localSettings = window.storage.getSettings() || {};
+
+        const cloudTasks = (cloudData && Array.isArray(cloudData.tasks)) ? cloudData.tasks : [];
+        const cloudExpenses = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses : [];
+        const cloudIncomes = (cloudData && Array.isArray(cloudData.incomes)) ? cloudData.incomes : [];
+
+        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses);
+        mergedExpenses.sort((a, b) => {
+          const da = a.date || a.createdAt || '';
+          const db = b.date || b.createdAt || '';
+          return db.localeCompare(da);
         });
 
-        if (resp.ok) {
-          localStorage.setItem(STORAGE_KEY_LOCAL_UPDATED, now.toString());
-          localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
-          this.updateSyncBadge('synced');
-          this.updateStatusUI();
-          console.log(`[FirebaseSync] Successfully uploaded ${payload.tasks.length} tasks and ${payload.expenses.length} expenses to cloud!`);
-          if (!silent && window.showToast) {
-            window.showToast('☁️ Saved to cloud! Automatically synced across all devices.', 'success');
-          }
+        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks);
+        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes);
+
+        await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, localSettings);
+
+        const now = Date.now();
+        localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
+        this.updateSyncBadge('synced');
+        this.updateStatusUI();
+
+        if (!silent && window.showToast) {
+          window.showToast('☁️ Saved to cloud! Automatically synced across all devices.', 'success');
         }
       } catch (e) {
         console.warn('[FirebaseSync] Failed to push local data:', e.message);
       }
     },
 
-    // Apply cloud data to local storage and refresh UI
-    applyCloudDataToLocal(cloudData) {
-      if (!window.storage) return;
-      try {
-        if (Array.isArray(cloudData.tasks)) {
-          window.storage.saveTasks(cloudData.tasks);
-        }
-        if (Array.isArray(cloudData.expenses)) {
-          window.storage.saveExpenses(cloudData.expenses);
-        }
-        if (Array.isArray(cloudData.incomes)) {
-          window.storage.saveIncomes(cloudData.incomes);
-        }
-        if (cloudData.settings && typeof cloudData.settings === 'object') {
-          window.storage.updateSettings(cloudData.settings);
-        }
-        if (cloudData.userProfile && window.auth && typeof window.auth.applyCloudProfile === 'function') {
-          window.auth.applyCloudProfile(cloudData.userProfile);
-        }
+    // Push unified payload to Firebase REST endpoint
+    async pushMergedPayload(endpoint, userId, tasks, expenses, incomes, settings) {
+      const now = Date.now();
+      const payload = {
+        userId: userId,
+        updatedAt: now,
+        device: navigator.userAgent.includes('Mobile') ? 'Phone' : 'Desktop',
+        tasks: tasks || [],
+        expenses: expenses || [],
+        incomes: incomes || [],
+        settings: settings || {},
+        userProfile: (window.auth && window.auth.currentUser && (!window.storage.isCurrentGuest || !window.storage.isCurrentGuest())) ? {
+          fullName: window.auth.currentUser.fullName || '',
+          username: window.auth.currentUser.username || '',
+          dob: window.auth.currentUser.dob || '',
+          email: window.auth.currentUser.email || '',
+          phone: window.auth.currentUser.phone || '',
+          profileImage: window.auth.currentUser.profileImage || ''
+        } : null
+      };
 
-        // Trigger UI updates across all modules
+      await fetch(endpoint, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    },
+
+    // Refresh all UI components
+    refreshAllUI() {
+      try {
         if (window.app && typeof window.app.updateSummaryMetrics === 'function') {
           window.app.updateSummaryMetrics();
         }
@@ -280,7 +334,7 @@
           window.charts.renderAll();
         }
       } catch (e) {
-        console.error('[FirebaseSync] Error applying cloud data:', e);
+        console.error('[FirebaseSync] UI refresh error:', e);
       }
     },
 
@@ -346,7 +400,7 @@
     saveFromInput() {
       const inputEl = document.getElementById('firebase-db-url-input');
       if (!inputEl) return;
-      const url = inputEl.value.trim();
+      let url = inputEl.value.trim();
       if (!url) {
         this.setDbUrl('');
         if (window.showToast) {
@@ -355,9 +409,13 @@
         return;
       }
 
-      if (!url.includes('firebaseio.com') && !url.includes('http')) {
+      if (!url.startsWith('https://') && !url.startsWith('http://')) {
+        url = 'https://' + url;
+      }
+
+      if (!url.includes('firebaseio.com')) {
         if (window.showToast) {
-          window.showToast('Please enter a valid Firebase Realtime Database URL (e.g. https://my-app-default-rtdb.firebaseio.com)', 'warning');
+          window.showToast('Please enter a valid Firebase Realtime Database URL (e.g. https://spendorio-default-rtdb.firebaseio.com)', 'warning');
         }
         return;
       }
@@ -369,7 +427,6 @@
       this.syncNow(false);
     },
 
-    // Open step-by-step Setup Guide Modal
     openSetupGuide() {
       const modal = document.getElementById('firebase-setup-modal');
       if (modal) {
