@@ -1,15 +1,12 @@
 /**
  * Spendorio - Progressive Web App Service Worker (sw.js)
- * Enables 100% Offline Capability, Instant (<0.05s) App Launch, and Asset Caching.
+ * 100% Offline Capability, Instant (<0.05s) App Launch, and Resilient Asset Caching.
  */
 
-const CACHE_NAME = 'spendorio-v2.0.8';
+const CACHE_NAME = 'spendorio-v2.1.0';
 
 // Core assets required to run Spendorio completely offline
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
   './',
   './index.html',
   './manifest.json',
@@ -48,20 +45,26 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('[Spendorio SW] Pre-caching App Shell assets...');
-      // Use individual caching so any single asset 404 does not fail the entire installation
+      console.log('[Spendorio SW] Pre-caching App Shell assets for 100% offline access...');
       const cachePromises = STATIC_ASSETS.map(async (asset) => {
         try {
           const response = await fetch(asset, { cache: 'no-cache' });
-          if (response.ok) {
-            await cache.put(asset, response);
+          if (response && response.ok) {
+            await cache.put(asset, response.clone());
+            if (asset === './' || asset === './index.html') {
+              try {
+                await cache.put(self.registration.scope, response.clone());
+                await cache.put(new URL('./', self.registration.scope).href, response.clone());
+                await cache.put(new URL('./index.html', self.registration.scope).href, response);
+              } catch (e) {}
+            }
           }
         } catch (err) {
           console.warn(`[Spendorio SW] Pre-cache skipped for ${asset}:`, err.message);
         }
       });
       await Promise.all(cachePromises);
-      console.log('[Spendorio SW] Pre-caching complete! Spendorio is ready offline.');
+      console.log('[Spendorio SW] App shell pre-cached successfully! Spendorio is ready offline.');
     })
   );
   self.skipWaiting();
@@ -73,7 +76,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
+          if (name !== CACHE_NAME && name.startsWith('spendorio-')) {
             console.log(`[Spendorio SW] Purging old cache: ${name}`);
             return caches.delete(name);
           }
@@ -83,7 +86,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event: Cache-First for static assets; Network-First for API calls
+// Fetch Event: Cache-First for static assets; Network-First with guaranteed offline fallback for navigation
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -92,11 +95,10 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request).catch(() => {
-        // Return structured offline JSON response
         return new Response(JSON.stringify({
           offline: true,
           success: false,
-          message: 'Spendorio is running offline. Changes saved locally in phone storage.'
+          message: 'Spendorio is running offline. Changes saved locally in storage.'
         }), {
           headers: { 'Content-Type': 'application/json' },
           status: 503
@@ -109,43 +111,61 @@ self.addEventListener('fetch', (event) => {
   // 2. Navigation / HTML Document requests: Network-First with instant offline fallback
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.ok) {
+      (async () => {
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, clone.clone());
-              cache.put('/', clone.clone());
-              cache.put('/index.html', clone);
-            });
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, clone.clone());
+            cache.put('./index.html', clone.clone());
+            cache.put('./', clone);
           }
           return networkResponse;
-        })
-        .catch(() => {
-          // If network is offline / unavailable, serve cached app immediately (<0.05s)
-          return caches.match(request)
-            .then(res => res || caches.match('/'))
-            .then(res => res || caches.match('/index.html'))
-            .then(res => res || caches.match('./index.html'));
-        })
+        } catch (networkErr) {
+          // Device is OFFLINE: Return cached index.html immediately (<0.05s)
+          const cache = await caches.open(CACHE_NAME);
+          const cached =
+            (await cache.match(request, { ignoreSearch: true })) ||
+            (await cache.match('./index.html')) ||
+            (await cache.match('./')) ||
+            (await caches.match(request, { ignoreSearch: true })) ||
+            (await caches.match('./index.html')) ||
+            (await caches.match('./')) ||
+            (await caches.match(self.registration.scope));
+
+          if (cached) {
+            return cached;
+          }
+
+          return new Response(
+            `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Spendorio</title><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:2rem;background:#0f172a;color:#fff;"><h2>Spendorio Offline Mode</h2><p>Please connect to the internet once to finish offline installation.</p><button onclick="location.reload()" style="padding:10px 20px;border-radius:8px;border:none;background:#6366f1;color:#fff;font-size:1rem;cursor:pointer;">Refresh</button></body></html>`,
+            { headers: { 'Content-Type': 'text/html' } }
+          );
+        }
+      })()
     );
     return;
   }
 
-  // 3. Scripts and Stylesheets: Network-First Strategy to ensure users always receive latest code
+  // 3. Scripts and Stylesheets: Network-First with instant cached fallback
   if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
     event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.ok) {
+      (async () => {
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, clone);
           }
           return networkResponse;
-        })
-        .catch(() => {
-          return caches.match(request).then(cached => cached || caches.match(request, { ignoreSearch: true }));
-        })
+        } catch (e) {
+          const cached = (await caches.match(request, { ignoreSearch: true })) ||
+                         (await caches.match(url.pathname, { ignoreSearch: true }));
+          return cached || new Response('', { status: 408, statusText: 'Offline' });
+        }
+      })()
     );
     return;
   }
@@ -157,7 +177,7 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(request).then((networkResponse) => {
-        if (!networkResponse || !networkResponse.ok || networkResponse.type !== 'basic') {
+        if (!networkResponse || !networkResponse.ok) {
           return networkResponse;
         }
         const responseClone = networkResponse.clone();
@@ -165,9 +185,8 @@ self.addEventListener('fetch', (event) => {
           cache.put(request, responseClone);
         });
         return networkResponse;
-      }).catch((err) => {
-        console.warn(`[Spendorio SW] Asset fetch failed offline: ${url.pathname}`, err.message);
-        return new Response('', { status: 408, statusText: 'Request timed out / offline' });
+      }).catch(() => {
+        return new Response('', { status: 408, statusText: 'Offline' });
       });
     })
   );
