@@ -8,7 +8,8 @@ const STORAGE_KEYS = {
   INCOMES: 'taskcost_incomes',
   BUDGET: 'taskcost_budget',
   SETTINGS: 'taskcost_settings',
-  STREAKS: 'taskcost_streaks'
+  STREAKS: 'taskcost_streaks',
+  DELETED_IDS: 'taskcost_deleted_ids'
 };
 
 const DEFAULT_SETTINGS = {
@@ -337,6 +338,72 @@ class StorageManager {
     }
   }
 
+  // --- TOMBSTONE / DELETION TRACKING (Guarantees deleted items never resurrect via cloud sync) ---
+  getDeletedIds() {
+    try {
+      const key = this.getUserStorageKey(STORAGE_KEYS.DELETED_IDS);
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return new Set(parsed.map(id => String(id).trim()).filter(Boolean));
+        }
+      }
+      return new Set();
+    } catch {
+      return new Set();
+    }
+  }
+
+  markIdDeleted(id) {
+    if (!id) return;
+    const cleanId = String(id).trim();
+    if (!cleanId || cleanId === 'undefined' || cleanId === 'null') return;
+
+    try {
+      const set = this.getDeletedIds();
+      set.add(cleanId);
+      const key = this.getUserStorageKey(STORAGE_KEYS.DELETED_IDS);
+      const arr = Array.from(set).slice(-1000); // Retain last 1000 tombstones
+      localStorage.setItem(key, JSON.stringify(arr));
+
+      const user = this.getCurrentSessionUser();
+      const isOwner = this.isCurrentOwner();
+      const userId = isOwner ? 'user-mukiviswa' : (user ? (user.id || user.username) : 'user-mukiviswa');
+      localStorage.setItem('taskcost_last_updated_' + userId, String(Date.now()));
+    } catch (e) {
+      console.warn('[Storage] markIdDeleted error:', e);
+    }
+  }
+
+  addDeletedIds(ids) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return;
+    try {
+      const set = this.getDeletedIds();
+      let changed = false;
+      ids.forEach(id => {
+        if (!id) return;
+        const cleanId = String(id).trim();
+        if (cleanId && cleanId !== 'undefined' && cleanId !== 'null' && !set.has(cleanId)) {
+          set.add(cleanId);
+          changed = true;
+        }
+      });
+      if (changed) {
+        const key = this.getUserStorageKey(STORAGE_KEYS.DELETED_IDS);
+        const arr = Array.from(set).slice(-1000);
+        localStorage.setItem(key, JSON.stringify(arr));
+      }
+    } catch (e) {
+      console.warn('[Storage] addDeletedIds error:', e);
+    }
+  }
+
+  isIdDeleted(id) {
+    if (!id) return false;
+    return this.getDeletedIds().has(String(id).trim());
+  }
+
   // --- SETTINGS ---
   getSettings() {
     try {
@@ -487,13 +554,22 @@ class StorageManager {
   }
 
   deleteTask(taskId) {
+    if (!taskId) return false;
+    const targetId = String(taskId).trim();
+    this.markIdDeleted(targetId);
+
     let tasks = this.getTasks();
-    tasks = tasks.filter(t => t.id !== taskId);
+    tasks = tasks.filter(t => t && String(t.id).trim() !== targetId);
     this.saveTasks(tasks);
 
     // Also delete linked expense
-    const expenses = this.getExpenses().filter(e => e.taskId !== taskId);
-    this.saveExpenses(expenses);
+    const expenses = this.getExpenses();
+    const linked = expenses.find(e => e && String(e.taskId).trim() === targetId);
+    if (linked && linked.id) {
+      this.markIdDeleted(String(linked.id).trim());
+    }
+    const remainingExpenses = expenses.filter(e => !e || String(e.taskId).trim() !== targetId);
+    this.saveExpenses(remainingExpenses);
     return true;
   }
 
@@ -584,11 +660,12 @@ class StorageManager {
 
   addExpense(expense) {
     const expenses = this.getExpenses();
+    const generatedId = 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const newExpense = {
-      id: 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       createdAt: new Date().toISOString(),
-      amount: parseFloat(expense.amount) || 0,
-      ...expense
+      ...expense,
+      amount: parseFloat(expense ? expense.amount : 0) || 0,
+      id: (expense && expense.id && String(expense.id).trim() !== '' && String(expense.id) !== 'undefined') ? String(expense.id).trim() : generatedId
     };
     expenses.unshift(newExpense);
     this.saveExpenses(expenses);
@@ -607,8 +684,12 @@ class StorageManager {
   }
 
   deleteExpense(expenseId) {
+    if (!expenseId) return false;
+    const targetId = String(expenseId).trim();
+    this.markIdDeleted(targetId);
+
     let expenses = this.getExpenses();
-    expenses = expenses.filter(e => String(e.id) !== String(expenseId));
+    expenses = expenses.filter(e => e && String(e.id).trim() !== targetId);
     this.saveExpenses(expenses);
     return true;
   }
@@ -619,8 +700,23 @@ class StorageManager {
       const key = this.getUserStorageKey(STORAGE_KEYS.INCOMES);
       const data = localStorage.getItem(key);
       if (data !== null) {
-        const parsed = JSON.parse(data);
-        if (Array.isArray(parsed)) return parsed;
+        let parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          let updated = false;
+          parsed = parsed.map((item, idx) => {
+            if (!item || typeof item !== 'object') return null;
+            if (!item.id || String(item.id).trim() === '' || String(item.id) === 'undefined') {
+              item.id = 'inc-' + (Date.parse(item.createdAt || item.date || 0) || (Date.now() - idx * 1000)) + '-' + idx;
+              updated = true;
+            }
+            return item;
+          }).filter(Boolean);
+
+          if (updated) {
+            localStorage.setItem(key, JSON.stringify(parsed));
+          }
+          return parsed;
+        }
       }
       
       localStorage.setItem(key, JSON.stringify([]));
@@ -650,19 +746,24 @@ class StorageManager {
   }
 
   deleteIncome(incomeId) {
+    if (!incomeId) return false;
+    const targetId = String(incomeId).trim();
+    this.markIdDeleted(targetId);
+
     let incomes = this.getIncomes();
-    incomes = incomes.filter(i => String(i.id) !== String(incomeId));
+    incomes = incomes.filter(i => i && String(i.id).trim() !== targetId);
     this.saveIncomes(incomes);
     return true;
   }
 
   addIncome(income) {
     const incomes = this.getIncomes();
+    const generatedId = 'inc-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const newIncome = {
-      id: 'inc-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       createdAt: new Date().toISOString(),
-      amount: parseFloat(income.amount) || 0,
-      ...income
+      ...income,
+      amount: parseFloat(income ? income.amount : 0) || 0,
+      id: (income && income.id && String(income.id).trim() !== '' && String(income.id) !== 'undefined') ? String(income.id).trim() : generatedId
     };
     incomes.unshift(newIncome);
     this.saveIncomes(incomes);
@@ -877,10 +978,15 @@ class StorageManager {
                                 (serverUpdated > 0 && serverUpdated > localUpdated);
 
       if (shouldAdoptServer) {
-        const diffCount = serverData.expenses.length - localExpenses.length;
-        localStorage.setItem(expKey, JSON.stringify(serverData.expenses));
-        if (serverData.tasks) localStorage.setItem(tasksKey, JSON.stringify(serverData.tasks));
-        if (serverData.incomes) localStorage.setItem(incomesKey, JSON.stringify(serverData.incomes));
+        const deletedSet = this.getDeletedIds();
+        const cleanServerExpenses = (serverData.expenses || []).filter(e => e && !deletedSet.has(String(e.id).trim()));
+        const cleanServerTasks = (serverData.tasks || []).filter(t => t && !deletedSet.has(String(t.id).trim()));
+        const cleanServerIncomes = (serverData.incomes || []).filter(i => i && !deletedSet.has(String(i.id).trim()));
+
+        const diffCount = cleanServerExpenses.length - localExpenses.length;
+        localStorage.setItem(expKey, JSON.stringify(cleanServerExpenses));
+        if (serverData.tasks) localStorage.setItem(tasksKey, JSON.stringify(cleanServerTasks));
+        if (serverData.incomes) localStorage.setItem(incomesKey, JSON.stringify(cleanServerIncomes));
         if (serverData.settings) localStorage.setItem(settingsKey, JSON.stringify(serverData.settings));
         if (serverData.streaks) localStorage.setItem(streaksKey, JSON.stringify(serverData.streaks));
         if (serverUpdated > 0) localStorage.setItem('taskcost_last_updated_' + userId, String(serverUpdated));

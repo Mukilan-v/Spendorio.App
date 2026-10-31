@@ -284,6 +284,8 @@ class ExpenseManager {
     this.renderIncomeList();
     this.renderPersonCostPanel();
     this.renderDashboardPersonSummary();
+    this.renderPocketGiverPanel();
+    this.renderDashboardPocketGiversSummary();
   }
 
   renderTable() {
@@ -1038,26 +1040,46 @@ class ExpenseManager {
   }
 
   handleDeleteExpense(expenseId) {
+    if (!expenseId) return;
     if (confirm('Delete this expense record?')) {
       window.storage.deleteExpense(expenseId);
       this.render();
-      if (window.app && window.app.showToast) {
-        window.app.showToast('Expense removed', 'info');
+      if (window.app) {
+        if (window.app.showToast) {
+          window.app.showToast('Expense removed', 'info');
+        }
+        if (window.app.updateSummaryMetrics) {
+          window.app.updateSummaryMetrics();
+        }
+        if (window.app.activeStatType && window.app.renderStatDetailsModal) {
+          window.app.renderStatDetailsModal(window.app.activeStatType);
+        }
       }
-      if (window.app) window.app.updateSummaryMetrics();
-      if (window.charts) window.charts.renderAll();
+      if (window.charts && window.charts.renderAll) {
+        window.charts.renderAll();
+      }
     }
   }
 
   handleDeleteIncome(incomeId) {
+    if (!incomeId) return;
     if (confirm('Delete this income record?')) {
       window.storage.deleteIncome(incomeId);
       this.render();
-      if (window.app && window.app.showToast) {
-        window.app.showToast('Income removed', 'info');
+      if (window.app) {
+        if (window.app.showToast) {
+          window.app.showToast('Income record deleted successfully', 'info');
+        }
+        if (window.app.updateSummaryMetrics) {
+          window.app.updateSummaryMetrics();
+        }
+        if (window.app.activeStatType && window.app.renderStatDetailsModal) {
+          window.app.renderStatDetailsModal(window.app.activeStatType);
+        }
       }
-      if (window.app) window.app.updateSummaryMetrics();
-      if (window.charts) window.charts.renderAll();
+      if (window.charts && window.charts.renderAll) {
+        window.charts.renderAll();
+      }
     }
   }
 

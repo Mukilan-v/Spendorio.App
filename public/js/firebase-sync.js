@@ -115,23 +115,33 @@
       }, 15000); // Check every 15 seconds
     },
 
-    // Union merge lists by unique entity ID (Guarantees no records are lost across devices)
-    mergeEntitiesById(localList, cloudList) {
+    // Union merge lists by unique entity ID (respects tombstones to guarantee deleted items never resurrect)
+    mergeEntitiesById(localList, cloudList, deletedIdsSet) {
       const map = new Map();
+      const deleted = deletedIdsSet || (window.storage && window.storage.getDeletedIds ? window.storage.getDeletedIds() : new Set());
+
+      // 1. Process cloud items (strictly discard deleted tombstones)
       (cloudList || []).forEach(item => {
-        if (item && item.id) map.set(String(item.id), item);
+        if (!item || !item.id) return;
+        const idStr = String(item.id).trim();
+        if (deleted.has(idStr)) return;
+        map.set(idStr, item);
       });
+
+      // 2. Process local items (strictly discard deleted tombstones)
       (localList || []).forEach(item => {
-        if (item && item.id) {
-          const existing = map.get(String(item.id));
-          if (!existing) {
-            map.set(String(item.id), item);
-          } else {
-            const tExist = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
-            const tLocal = new Date(item.updatedAt || item.createdAt || 0).getTime();
-            if (tLocal >= tExist) {
-              map.set(String(item.id), { ...existing, ...item });
-            }
+        if (!item || !item.id) return;
+        const idStr = String(item.id).trim();
+        if (deleted.has(idStr)) return;
+
+        const existing = map.get(idStr);
+        if (!existing) {
+          map.set(idStr, item);
+        } else {
+          const tExist = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+          const tLocal = new Date(item.updatedAt || item.createdAt || 0).getTime();
+          if (tLocal >= tExist) {
+            map.set(idStr, { ...existing, ...item });
           }
         }
       });
@@ -179,19 +189,26 @@
         const cloudTasks = (cloudData && Array.isArray(cloudData.tasks)) ? cloudData.tasks : [];
         const cloudExpenses = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses : [];
         const cloudIncomes = (cloudData && Array.isArray(cloudData.incomes)) ? cloudData.incomes : [];
+        const cloudDeletedIds = (cloudData && Array.isArray(cloudData.deletedIds)) ? cloudData.deletedIds : [];
         const cloudSettings = (cloudData && typeof cloudData.settings === 'object') ? cloudData.settings : {};
         const cloudProfile = (cloudData && cloudData.userProfile) ? cloudData.userProfile : null;
 
-        // 2. Intelligent Bidirectional Union Merge
-        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses);
+        // Merge any deletions recorded in cloud into our local deletion set
+        if (cloudDeletedIds.length > 0 && window.storage && typeof window.storage.addDeletedIds === 'function') {
+          window.storage.addDeletedIds(cloudDeletedIds);
+        }
+        const activeDeletedIds = (window.storage && typeof window.storage.getDeletedIds === 'function') ? window.storage.getDeletedIds() : new Set();
+
+        // 2. Intelligent Bidirectional Union Merge (respecting tombstones)
+        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses, activeDeletedIds);
         mergedExpenses.sort((a, b) => {
           const da = a.date || a.createdAt || '';
           const db = b.date || b.createdAt || '';
           return db.localeCompare(da);
         });
 
-        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks);
-        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes);
+        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks, activeDeletedIds);
+        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes, activeDeletedIds);
         const mergedSettings = { ...cloudSettings, ...localSettings };
 
         // 3. Apply to Local Storage (Protected from bounce-back push)
@@ -210,15 +227,8 @@
         // Refresh all UI components immediately
         this.refreshAllUI();
 
-        // 4. If Cloud was missing any local records or needs updated state, push merged payload to Cloud!
-        const needsCloudPush = !cloudData || 
-                               mergedExpenses.length > cloudExpenses.length || 
-                               mergedTasks.length > cloudTasks.length ||
-                               mergedIncomes.length > cloudIncomes.length;
-
-        if (needsCloudPush) {
-          await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, mergedSettings);
-        }
+        // 4. Ensure cloud has the clean synchronized state
+        await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, mergedSettings, Array.from(activeDeletedIds));
 
         const now = Date.now();
         localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
@@ -264,18 +274,24 @@
         const cloudTasks = (cloudData && Array.isArray(cloudData.tasks)) ? cloudData.tasks : [];
         const cloudExpenses = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses : [];
         const cloudIncomes = (cloudData && Array.isArray(cloudData.incomes)) ? cloudData.incomes : [];
+        const cloudDeletedIds = (cloudData && Array.isArray(cloudData.deletedIds)) ? cloudData.deletedIds : [];
 
-        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses);
+        if (cloudDeletedIds.length > 0 && window.storage && typeof window.storage.addDeletedIds === 'function') {
+          window.storage.addDeletedIds(cloudDeletedIds);
+        }
+        const activeDeletedIds = (window.storage && typeof window.storage.getDeletedIds === 'function') ? window.storage.getDeletedIds() : new Set();
+
+        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses, activeDeletedIds);
         mergedExpenses.sort((a, b) => {
           const da = a.date || a.createdAt || '';
           const db = b.date || b.createdAt || '';
           return db.localeCompare(da);
         });
 
-        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks);
-        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes);
+        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks, activeDeletedIds);
+        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes, activeDeletedIds);
 
-        await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, localSettings);
+        await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, localSettings, Array.from(activeDeletedIds));
 
         const now = Date.now();
         localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
@@ -291,7 +307,7 @@
     },
 
     // Push unified payload to Firebase REST endpoint
-    async pushMergedPayload(endpoint, userId, tasks, expenses, incomes, settings) {
+    async pushMergedPayload(endpoint, userId, tasks, expenses, incomes, settings, deletedIds = []) {
       const now = Date.now();
       const payload = {
         userId: userId,
@@ -301,6 +317,7 @@
         expenses: expenses || [],
         incomes: incomes || [],
         settings: settings || {},
+        deletedIds: deletedIds || [],
         userProfile: (window.auth && window.auth.currentUser && (!window.storage.isCurrentGuest || !window.storage.isCurrentGuest())) ? {
           fullName: window.auth.currentUser.fullName || '',
           username: window.auth.currentUser.username || '',

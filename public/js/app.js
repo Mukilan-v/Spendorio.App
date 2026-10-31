@@ -754,10 +754,13 @@ class Application {
                 </div>
               </div>
             </div>
-            <div style="text-align: right; flex-shrink: 0; margin-left: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 8px;">
               <div style="font-weight: 700; font-size: 0.96rem; color: var(--success);">
                 +${currency}${parseFloat(inc.amount || 0).toLocaleString()}
               </div>
+              <button type="button" class="task-action-btn delete" style="padding: 3px 6px; font-size: 0.75rem;" onclick="if (window.expenses) window.expenses.handleDeleteIncome('${inc.id}');" title="Delete income record">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
             </div>
           </div>
         `).join('');
@@ -869,8 +872,13 @@ class Application {
                 ${i.notes ? `<span><i class="fa-regular fa-comment"></i> ${this.escapeHtml(i.notes)}</span>` : ''}
               </div>
             </div>
-            <div style="font-weight: 800; font-size: 1.05rem; color: #8b5cf6; white-space: nowrap;">
-              +${currency}${parseFloat(i.amount).toLocaleString()}
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 8px;">
+              <div style="font-weight: 800; font-size: 1.05rem; color: #8b5cf6; white-space: nowrap;">
+                +${currency}${parseFloat(i.amount).toLocaleString()}
+              </div>
+              <button type="button" class="task-action-btn delete" style="padding: 3px 6px; font-size: 0.75rem;" onclick="if (window.expenses) window.expenses.handleDeleteIncome('${i.id}');" title="Delete pocket money record">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
             </div>
           </div>
         `).join('');
