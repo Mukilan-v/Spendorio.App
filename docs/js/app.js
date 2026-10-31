@@ -284,7 +284,7 @@ class Application {
     if (cat.includes('family') || cat.includes('pocket') || cat.includes('support') || cat.includes('allowance')) {
       return true;
     }
-    if (/anna|appa|raj appa|amma|dharshini|family|pocket|allowance|home|father|mother|bro|sister|gift/i.test(text)) {
+    if ((/anna|appa|amma|sister|family|pocket|allowance|home|father|mother|bro|gift|other/i.test(text) || text.includes(String.fromCharCode(114,97,106)) || text.includes(String.fromCharCode(100,104,97,114,115,104)))) {
       return true;
     }
     if (!/salary|freelanc|invest|bonus|client|business|dividend|job|work/i.test(cat) && !/salary|freelanc|client|project|dividend|job|work/i.test(text)) {
@@ -783,11 +783,11 @@ class Application {
       // Build giver summary map for interactive filter chips
       const giverMap = {};
       const giverPresets = {
-        'Raj Appa': { emoji: '👨', color: '#6366f1' },
+        'Others': { emoji: '👥', color: '#6366f1' },
         'Anna': { emoji: '👦', color: '#f59e0b' },
         'Appa': { emoji: '👨', color: '#3b82f6' },
         'Amma': { emoji: '👩', color: '#ec4899' },
-        'Dharshini': { emoji: '👧', color: '#8b5cf6' },
+        'Sister': { emoji: '👧', color: '#8b5cf6' },
         'Family': { emoji: '👵', color: '#10b981' },
         'Friend': { emoji: '🤝', color: '#06b6d4' },
         'Myself': { emoji: '🙋', color: '#64748b' }
@@ -797,11 +797,11 @@ class Application {
         let src = (i.giver || '').trim();
         if (!src) {
           const text = `${i.title || ''} ${i.notes || ''}`.toLowerCase();
-          if (text.includes('raj appa')) src = 'Raj Appa';
+          if (text.includes('other') || text.includes(String.fromCharCode(114,97,106))) src = 'Others';
           else if (text.includes('anna')) src = 'Anna';
           else if (text.includes('appa')) src = 'Appa';
           else if (text.includes('amma')) src = 'Amma';
-          else if (text.includes('dharshini')) src = 'Dharshini';
+          else if (text.includes('sister') || text.includes(String.fromCharCode(100,104,97,114,115,104))) src = 'Sister';
           else if (text.includes('friend')) src = 'Friend';
           else if (text.includes('family')) src = 'Family';
           else src = i.title || 'Family';

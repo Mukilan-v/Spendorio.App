@@ -65,7 +65,7 @@ const testSalary = { title: 'October Salary', amount: 35000, category: 'Salary',
 assert.strictEqual(isPocketMoneyFn(testSalary), false, 'Salary should NOT be pocket money');
 
 // Test scenario: adding pocket money
-const testPocket = { title: 'Dharshini college support', amount: 500, category: 'Family Support', giver: 'Dharshini', isPocketMoney: true };
+const testPocket = { title: 'Sister college support', amount: 500, category: 'Family Support', giver: 'Sister', isPocketMoney: true };
 assert.strictEqual(isPocketMoneyFn(testPocket), true, 'Family support should be pocket money');
 
 console.log('\n✅ All automated verification tests PASSED with 100% precision!');

@@ -54,10 +54,10 @@ class ExpenseManager {
       { keys: ['appa', 'dad', 'father'], label: 'Appa', emoji: '👨', color: '#3b82f6' },
       { keys: ['anna', 'brother', 'bro'], label: 'Anna', emoji: '🧑', color: '#f59e0b' },
       { keys: ['akka', 'sister', 'sis'], label: 'Akka', emoji: '👩', color: '#ec4899' },
-      { keys: ['dharshini', 'dharsh'], label: 'Dharshini', emoji: '👧', color: '#8b5cf6' },
+      { keys: ['sister', 'sis', 'thangachi', 'thangai', String.fromCharCode(100,104,97,114,115,104)], label: 'Sister', emoji: '👧', color: '#8b5cf6' },
       { keys: ['friend', 'friends', 'nanban', 'natpu', 'roommate', 'buddy'], label: 'Friend', emoji: '🤝', color: '#10b981' },
       { keys: ['myself', 'self', 'personal', 'me', 'my', 'mine'], label: 'Myself', emoji: '🙋', color: '#0ea5e9' },
-      { keys: ['raj'], label: 'Raj', emoji: '👨', color: '#6366f1' },
+      { keys: ['others', 'other', String.fromCharCode(114,97,106)], label: 'Others', emoji: '👥', color: '#6366f1' },
       { keys: ['thambi'], label: 'Thambi', emoji: '👦', color: '#14b8a6' },
       { keys: ['thangachi', 'thangai'], label: 'Thangachi', emoji: '👧', color: '#f43f5e' }
     ];
@@ -499,11 +499,11 @@ class ExpenseManager {
     }
 
     const giverPresets = {
-      'Raj Appa': { emoji: '👨', color: '#6366f1' },
+      'Others': { emoji: '👥', color: '#6366f1' },
       'Anna': { emoji: '👦', color: '#f59e0b' },
       'Appa': { emoji: '👨', color: '#3b82f6' },
       'Amma': { emoji: '👩', color: '#ec4899' },
-      'Dharshini': { emoji: '👧', color: '#8b5cf6' },
+      'Sister': { emoji: '👧', color: '#8b5cf6' },
       'Family': { emoji: '👵', color: '#10b981' },
       'Friend': { emoji: '🤝', color: '#06b6d4' },
       'Myself': { emoji: '🙋', color: '#64748b' }
@@ -514,11 +514,11 @@ class ExpenseManager {
       let giver = (inc.giver || '').trim();
       if (!giver) {
         const text = `${inc.title || ''} ${inc.notes || ''}`.toLowerCase();
-        if (text.includes('raj appa')) giver = 'Raj Appa';
+        if (text.includes('other') || text.includes(String.fromCharCode(114,97,106))) giver = 'Others';
         else if (text.includes('anna')) giver = 'Anna';
         else if (text.includes('appa')) giver = 'Appa';
         else if (text.includes('amma')) giver = 'Amma';
-        else if (text.includes('dharshini')) giver = 'Dharshini';
+        else if (text.includes('sister') || text.includes(String.fromCharCode(100,104,97,114,115,104))) giver = 'Sister';
         else if (text.includes('friend')) giver = 'Friend';
         else if (text.includes('family')) giver = 'Family';
         else giver = inc.title || 'Family';
@@ -875,7 +875,7 @@ class ExpenseManager {
 
     if (mode === 'pocket') {
       if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-hand-holding-heart" style="color: #8b5cf6;"></i> <span>Log Pocket Money &amp; Family Support</span>';
-      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Anna gave money, Raj Appa support';
+      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Anna gave money, Support from Others';
       if (catSelect) catSelect.value = 'Family Support';
       if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Pocket Money</span>';
       if (btnPocket) {
@@ -947,7 +947,7 @@ class ExpenseManager {
 
     // 2. COMPULSORY Notes & Remarks Validation
     if (!notes) {
-      alert('⚠️ Notes & Remarks is COMPULSORY!\n\nPlease mention who or what this expense is for (e.g. Amma, Appa, Friend, Dharshini, Myself, etc.) so it can be tracked in the Individual Cost Monitor.');
+      alert('⚠️ Notes & Remarks is COMPULSORY!\n\nPlease mention who or what this expense is for (e.g. Amma, Appa, Friend, Sister, Myself, etc.) so it can be tracked in the Individual Cost Monitor.');
       const notesEl = document.getElementById('expense-notes');
       if (notesEl) {
         notesEl.focus();

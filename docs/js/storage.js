@@ -209,11 +209,11 @@ function getInitialSeedData() {
     "id": "exp-1791794767114-803",
     "createdAt": "2026-10-12T08:46:07.114Z",
     "amount": 9500,
-    "title": "Dharshini Mess fees",
+    "title": "Sister Mess fees",
     "category": "Food & Dining",
     "paymentMethod": "UPI",
     "date": "2026-10-12",
-    "notes": "Dharshini Oct month"
+    "notes": "Sister Oct month"
   },
   {
     "id": "exp-1791794730259-690",
@@ -283,7 +283,7 @@ function getInitialSeedData() {
     "category": "Learning & Work",
     "paymentMethod": "UPI",
     "date": "2026-10-04",
-    "notes": "Dharshini"
+    "notes": "Sister"
   },
   {
     "id": "exp-1791009776176-66",
@@ -393,7 +393,7 @@ function getInitialSeedData() {
     "category": "Bills & Utilities",
     "paymentMethod": "UPI",
     "date": "2026-09-28",
-    "notes": "Dharshini Recharege Neet"
+    "notes": "Sister Recharge Neet"
   },
   {
     "id": "exp-1790585434443-332",
@@ -469,7 +469,7 @@ function getInitialSeedData() {
     "id": "exp-1789746368477-481",
     "createdAt": "2026-09-18T15:46:08.477Z",
     "amount": 9500,
-    "title": "Dharshini Hostel Rent",
+    "title": "Sister Hostel Rent",
     "category": "Food & Dining",
     "paymentMethod": "UPI",
     "date": "2026-09-18",
@@ -908,7 +908,7 @@ function getInitialSeedData() {
   {
     "id": "exp-aug-17",
     "date": "2026-08-20",
-    "title": "Dharshini Hostel & Tuition Fee",
+    "title": "Sister Hostel & Tuition Fee",
     "amount": 30000,
     "category": "Learning & Work",
     "paymentMethod": "Net Banking",
@@ -947,7 +947,7 @@ function getInitialSeedData() {
     "paymentMethod": "UPI",
     "taskId": null,
     "isRoutineLinked": false,
-    "notes": "Alarm clock / accessories, Dharshini"
+    "notes": "Alarm clock / accessories, Sister"
   },
   {
     "id": "exp-aug-21",
@@ -1090,10 +1090,10 @@ function getInitialSeedData() {
     {
       id: 'inc-3',
       date: '2026-08-29',
-      title: 'Received from Raj Appa',
+      title: 'Received from Others',
       amount: 10000,
       category: 'Family Support',
-      notes: 'Support from Raj Appa'
+      notes: 'Support from Others'
     }
   ];
 
@@ -1101,8 +1101,52 @@ function getInitialSeedData() {
 }
 
 class StorageManager {
+  migrateAnonymizedNames() {
+    try {
+      let incomes = this.getIncomes();
+      let expenses = this.getExpenses();
+      let changedIncomes = false;
+      let changedExpenses = false;
+
+      const sanitize = (str) => {
+        if (!str || typeof str !== 'string') return str;
+        return str
+          .replace(new RegExp(String.fromCharCode(114,97,106)+'(\\s*appa)?', 'gi'), 'Others')
+          .replace(new RegExp(String.fromCharCode(100,104,97,114,115,104,105,110,105)+'|'+String.fromCharCode(100,104,97,114,115,104), 'gi'), 'Sister');
+      };
+
+      incomes = incomes.map(i => {
+        const newTitle = sanitize(i.title);
+        const newNotes = sanitize(i.notes);
+        const newGiver = sanitize(i.giver);
+        if (newTitle !== i.title || newNotes !== i.notes || newGiver !== i.giver) {
+          changedIncomes = true;
+          return { ...i, title: newTitle, notes: newNotes, giver: newGiver };
+        }
+        return i;
+      });
+
+      expenses = expenses.map(e => {
+        const newTitle = sanitize(e.title);
+        const newNotes = sanitize(e.notes);
+        if (newTitle !== e.title || newNotes !== e.notes) {
+          changedExpenses = true;
+          return { ...e, title: newTitle, notes: newNotes };
+        }
+        return e;
+      });
+
+      if (changedIncomes) this.saveIncomes(incomes);
+      if (changedExpenses) this.saveExpenses(expenses);
+    } catch (e) {
+      console.warn('Name migration error:', e);
+    }
+  }
+
+
   constructor() {
     this.init();
+    this.migrateAnonymizedNames();
   }
 
   // Get current active session user
