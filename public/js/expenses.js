@@ -69,7 +69,7 @@ class ExpenseManager {
       'hotel','hostel','rent','room','bus','auto','train','metro','cab','travel','ticket',
       'petrol','fuel','diesel','soap','paste','shampoo','cloth','dress','shirt','pant',
       'tshirt','innerwear','tablet','medicine','doctor','hospital','clinic','fees','fee',
-      'tuition','course','college','school','exam','books','loan','emi','grameen','besant',
+      'tuition','course','college','school','exam','books','loan','emi',
       'advance','deposit','electric','power','water','cable','wifi','internet','pack','plan',
       'sim','mobile','phone','gpay','phonepe','paytm','cash','card','bank','atm','rupees',
       'rs','inr','spent','paid','gave','given','bought','buy','purchase','item','items',

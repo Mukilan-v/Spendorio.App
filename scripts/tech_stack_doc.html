@@ -256,7 +256,7 @@
     <ul>
       <li><strong><code>ReentrantLock</code>:</strong> Prevents race conditions when multiple users or devices push data simultaneously.</li>
       <li><strong>Atomic File I/O:</strong> Writes updates to temporary files before executing an atomic OS rename, preventing file corruption if the laptop loses power.</li>
-      <li><strong>Golden Safeguard:</strong> Rejects any overwrite of the primary owner's database containing fewer than 50 records, ensuring Mukilan's 91 records (₹1,16,326) are never wiped.</li>
+      <li><strong>Golden Safeguard:</strong> Rejects any overwrite of the primary database with empty or invalid payload data.</li>
     </ul>
   </div>
 

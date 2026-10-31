@@ -28,11 +28,14 @@ const isPocketMoneyFn = new Function('inc', isPocketMoneyMatch[1]);
 
 // Test Mukilan's seed incomes
 // Extract seed incomes from storage.js
-const seedIncomesMatch = storageCode.match(/const incomes = (\[[\s\S]*?\]);/);
-assert(seedIncomesMatch, 'Seed incomes array not found in storage.js!');
-const seedIncomes = eval(seedIncomesMatch[1]);
-
-console.log(`\nEvaluating ${seedIncomes.length} seed incomes from Mukilan:`);
+const mockTestIncomes = [
+  { title: 'Anna allowance', category: 'Family Support', amount: 1000 },
+  { title: 'Support from Others', category: 'Family Support', amount: 10000 },
+  { title: 'Sister college fee', category: 'Family Support', amount: 2000, giver: 'Sister' },
+  { title: 'Family gift', category: 'Family Support', amount: 1000 }
+];
+const seedIncomes = mockTestIncomes;
+console.log(`\nEvaluating ${seedIncomes.length} test sample incomes:`);
 let totalPocket = 0;
 let totalEarned = 0;
 let pocketCount = 0;
