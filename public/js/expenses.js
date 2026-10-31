@@ -609,7 +609,10 @@ class ExpenseManager {
       <div class="task-card" style="align-items: center; justify-content: space-between; padding: 0.65rem 0.85rem;">
         <div>
           <div style="font-weight: 600; font-size: 0.875rem;">${this.escapeHtml(inc.title)}</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">${inc.category || 'Income'} • ${inc.date}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+            <span>${inc.category || 'Income'} • ${inc.date}</span>
+            ${inc.giver ? `<span style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 99px; padding: 1px 7px; font-size: 0.7rem; font-weight: 700;">👤 ${this.escapeHtml(inc.giver)}</span>` : ''}
+          </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span class="cost-cell cost-income">+${currency}${parseFloat(inc.amount).toLocaleString()}</span>
@@ -661,14 +664,95 @@ class ExpenseManager {
     modal.classList.add('active');
   }
 
-  openIncomeModal() {
+  openPocketMoneyModal(giverName = '') {
+    this.openIncomeModal('pocket', giverName);
+  }
+
+  openIncomeModal(mode = 'pocket', giverName = '') {
     const modal = document.getElementById('income-modal');
     const form = document.getElementById('income-form');
     if (!modal || !form) return;
 
     form.reset();
     document.getElementById('income-date').value = this.currentDate;
+    this.selectedGiver = null;
+
+    const previewEl = document.getElementById('income-giver-selected');
+    if (previewEl) {
+      previewEl.innerHTML = '<span style="color: var(--text-muted); font-weight: normal;">No individual selected yet (click a person above)</span>';
+    }
+
+    this.setIncomeModalMode(mode);
+
+    if (giverName) {
+      this.selectPocketMoneyGiver(giverName);
+    }
+
     modal.classList.add('active');
+  }
+
+  setIncomeModalMode(mode) {
+    const titleEl = document.getElementById('income-modal-title');
+    const titleInput = document.getElementById('income-title');
+    const catSelect = document.getElementById('income-category');
+    const submitBtn = document.getElementById('income-submit-btn');
+    const btnPocket = document.getElementById('btn-mode-pocket');
+    const btnIncome = document.getElementById('btn-mode-income');
+
+    if (mode === 'pocket') {
+      if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-hand-holding-heart" style="color: #8b5cf6;"></i> <span>Log Pocket Money &amp; Family Support</span>';
+      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Anna gave money, Raj Appa support';
+      if (catSelect) catSelect.value = 'Family Support';
+      if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Pocket Money</span>';
+      if (btnPocket) {
+        btnPocket.style.background = '#8b5cf6';
+        btnPocket.style.color = '#fff';
+      }
+      if (btnIncome) {
+        btnIncome.style.background = 'transparent';
+        btnIncome.style.color = 'var(--text-secondary)';
+      }
+    } else {
+      if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-wallet" style="color: var(--success);"></i> <span>Log Salary / Other Income</span>';
+      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Monthly Salary, Freelancing, Dividend';
+      if (catSelect) catSelect.value = 'Salary';
+      if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Income</span>';
+      if (btnPocket) {
+        btnPocket.style.background = 'transparent';
+        btnPocket.style.color = 'var(--text-secondary)';
+      }
+      if (btnIncome) {
+        btnIncome.style.background = 'var(--success)';
+        btnIncome.style.color = '#fff';
+      }
+    }
+  }
+
+  selectPocketMoneyGiver(name, emoji = '👤', color = '#8b5cf6') {
+    this.selectedGiver = { name, emoji, color };
+    const previewEl = document.getElementById('income-giver-selected');
+    if (previewEl) {
+      previewEl.innerHTML = `
+        <span style="display:inline-flex; align-items:center; gap:5px; background:${color}20; color:${color}; border:1px solid ${color}50; border-radius:99px; padding:3px 12px; font-size:0.8rem; font-weight:700;">
+          ${emoji} Selected Giver: ${name}
+        </span>
+      `;
+    }
+
+    const titleInput = document.getElementById('income-title');
+    if (titleInput && (!titleInput.value.trim() || titleInput.value.startsWith('Received from') || titleInput.value.includes('pocket money') || titleInput.value.includes('support'))) {
+      titleInput.value = `Received from ${name}`;
+    }
+
+    const notesInput = document.getElementById('income-notes');
+    if (notesInput && !notesInput.value.includes(name)) {
+      notesInput.value = notesInput.value ? `${notesInput.value}, ${name}` : `Pocket money from ${name}`;
+    }
+
+    const catSelect = document.getElementById('income-category');
+    if (catSelect) {
+      catSelect.value = 'Family Support';
+    }
   }
 
   // ── Compulsory Notes & Remarks Validation & Saving ─────────────────
@@ -734,23 +818,37 @@ class ExpenseManager {
   }
 
   handleSaveIncome(formData) {
-    const incomeData = {
-      title: formData.get('title').trim(),
-      amount: parseFloat(formData.get('amount')) || 0,
-      category: formData.get('category'),
-      date: formData.get('date') || this.currentDate,
-      notes: formData.get('notes').trim()
-    };
+    const title = (formData.get('title') || '').trim();
+    const amount = parseFloat(formData.get('amount')) || 0;
+    const category = formData.get('category');
+    const paymentMethod = formData.get('paymentMethod') || 'UPI';
+    const date = formData.get('date') || this.currentDate;
+    const notes = (formData.get('notes') || '').trim();
 
-    if (!incomeData.title || incomeData.amount <= 0) {
-      alert('Please provide a valid income source and amount');
+    if (!title || amount <= 0) {
+      alert('Please provide a valid Title and Amount greater than 0.');
       return false;
     }
 
+    const incomeData = {
+      title: title,
+      amount: amount,
+      category: category,
+      paymentMethod: paymentMethod,
+      date: date,
+      notes: notes,
+      giver: this.selectedGiver ? this.selectedGiver.name : ''
+    };
+
     window.storage.addIncome(incomeData);
+
+    const isPocket = (category === 'Family Support' || category === 'Pocket Money' || (this.selectedGiver && this.selectedGiver.name));
     if (window.app && window.app.showToast) {
-      window.app.showToast('Income entry logged!', 'success');
+      window.app.showToast(isPocket ? '💜 Pocket Money entry saved successfully!' : 'Income entry logged!', 'success');
     }
+
+    const modal = document.getElementById('income-modal');
+    if (modal) modal.classList.remove('active');
 
     this.render();
     if (window.app) window.app.updateSummaryMetrics();
