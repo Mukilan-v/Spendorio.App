@@ -409,6 +409,7 @@ class Application {
     // Update Dashboard Individual Cost Summary
     if (window.expenses && typeof window.expenses.renderDashboardPersonSummary === 'function') {
       window.expenses.renderDashboardPersonSummary();
+      if (typeof window.expenses.renderDashboardPocketGiversSummary === 'function') window.expenses.renderDashboardPocketGiversSummary();
     }
   }
 
@@ -764,26 +765,11 @@ class Application {
 
     } else if (type === 'pocket_money') {
       const allIncomes = window.storage.getIncomes() || [];
-      const isFamilyOrPocketMoney = (inc) => {
-        const cat = (inc.category || '').toLowerCase();
-        const text = `${inc.title || ''} ${inc.notes || ''}`.toLowerCase();
-        if (cat.includes('family') || cat.includes('pocket') || cat.includes('support') || cat.includes('allowance')) {
-          return true;
-        }
-        if (/anna|appa|amma|family|pocket|allowance|home|father|mother|bro|sister|gift/i.test(text)) {
-          return true;
-        }
-        if (!/salary|freelanc|invest|bonus|client|business/i.test(cat) && !/salary|client|project|dividend/i.test(text)) {
-          return true;
-        }
-        return false;
-      };
-
-      const pocketIncomes = allIncomes.filter(isFamilyOrPocketMoney);
+      const pocketIncomes = allIncomes.filter(i => this.isPocketMoney(i));
       const totalPocketMoney = pocketIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
 
-      if (titleEl) titleEl.textContent = 'Family Support & Pocket Money Details';
-      if (badgeEl) badgeEl.textContent = `${pocketIncomes.length} records • Family & Pocket Money`;
+      if (titleEl) titleEl.textContent = 'Family Support & Pocket Money (Who Gave Money)';
+      if (badgeEl) badgeEl.textContent = `${pocketIncomes.length} records • Separate list by individual giver`;
       if (iconWrapEl) {
         iconWrapEl.style.background = 'rgba(139, 92, 246, 0.12)';
         iconWrapEl.style.color = '#8b5cf6';
@@ -794,18 +780,51 @@ class Application {
         heroValEl.textContent = `${currency}${totalPocketMoney.toLocaleString()}`;
       }
 
+      // Build giver summary map for interactive filter chips
+      const giverMap = {};
+      const giverPresets = {
+        'Raj Appa': { emoji: '👨', color: '#6366f1' },
+        'Anna': { emoji: '👦', color: '#f59e0b' },
+        'Appa': { emoji: '👨', color: '#3b82f6' },
+        'Amma': { emoji: '👩', color: '#ec4899' },
+        'Dharshini': { emoji: '👧', color: '#8b5cf6' },
+        'Family': { emoji: '👵', color: '#10b981' },
+        'Friend': { emoji: '🤝', color: '#06b6d4' },
+        'Myself': { emoji: '🙋', color: '#64748b' }
+      };
+
+      pocketIncomes.forEach(i => {
+        let src = (i.giver || '').trim();
+        if (!src) {
+          const text = `${i.title || ''} ${i.notes || ''}`.toLowerCase();
+          if (text.includes('raj appa')) src = 'Raj Appa';
+          else if (text.includes('anna')) src = 'Anna';
+          else if (text.includes('appa')) src = 'Appa';
+          else if (text.includes('amma')) src = 'Amma';
+          else if (text.includes('dharshini')) src = 'Dharshini';
+          else if (text.includes('friend')) src = 'Friend';
+          else if (text.includes('family')) src = 'Family';
+          else src = i.title || 'Family';
+        }
+        const meta = giverPresets[src] || { emoji: '💜', color: '#8b5cf6' };
+        if (!giverMap[src]) giverMap[src] = { name: src, emoji: meta.emoji, color: meta.color, total: 0, count: 0 };
+        giverMap[src].total += parseFloat(i.amount) || 0;
+        giverMap[src].count += 1;
+      });
+
+      const topGivers = Object.values(giverMap).sort((a, b) => b.total - a.total);
+
       if (heroBreakdownEl) {
-        const sourceMap = {};
-        pocketIncomes.forEach(i => {
-          let src = i.title || i.source || i.category || 'Family';
-          sourceMap[src] = (sourceMap[src] || 0) + (parseFloat(i.amount) || 0);
-        });
-        const topSources = Object.entries(sourceMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
-        heroBreakdownEl.innerHTML = topSources.map(([src, amt]) => `
-          <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 99px; padding: 3px 9px; font-size: 0.73rem; font-weight: 600;">
-            ${this.escapeHtml(src)}: ${currency}${amt.toLocaleString()}
+        heroBreakdownEl.innerHTML = `
+          <span onclick="window.app.filterStatDetailsList('')" style="cursor:pointer; background:rgba(139, 92, 246, 0.15); color:#8b5cf6; border:1px solid rgba(139, 92, 246, 0.4); border-radius:99px; padding:3px 10px; font-size:0.75rem; font-weight:700;" title="Show all pocket money entries">
+            All Givers (${pocketIncomes.length})
           </span>
-        `).join('');
+          ${topGivers.map(g => `
+            <span onclick="window.app.filterStatDetailsList('${this.escapeHtml(g.name).toLowerCase()}')" style="cursor:pointer; background:${g.color}15; color:${g.color}; border:1px solid ${g.color}45; border-radius:99px; padding:3px 10px; font-size:0.75rem; font-weight:700;" title="Filter by ${g.name}">
+              ${g.emoji} ${this.escapeHtml(g.name)}: ${currency}${g.total.toLocaleString()} (${g.count})
+            </span>
+          `).join('')}
+        `;
       }
 
       if (quickActionBtn && quickActionText) {

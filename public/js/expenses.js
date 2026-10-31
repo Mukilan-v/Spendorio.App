@@ -43,6 +43,7 @@ class ExpenseManager {
       btnEl.style.color = '#fff';
     }
     this.renderPersonCostPanel();
+    this.renderPocketGiverPanel();
   }
 
   // ── Person Name Extraction & Mapping ──────────────────────────────
@@ -476,6 +477,174 @@ class ExpenseManager {
   }
 
   togglePersonDetail(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+  }
+
+  // ── Pocket Money by Giver Helper & Panels ──────────────────────────
+  buildPocketGiverMap(period = 'all') {
+    let incomes = window.storage.getIncomes() || [];
+    const isPocket = (inc) => window.app && window.app.isPocketMoney ? window.app.isPocketMoney(inc) : (inc.category === 'Family Support' || inc.category === 'Pocket Money' || inc.giver);
+    const pocketIncomes = incomes.filter(isPocket);
+
+    const today = this.currentDate;
+    const currentMonth = today.substring(0, 7);
+
+    let filtered = pocketIncomes;
+    if (period === 'today') {
+      filtered = pocketIncomes.filter(i => i.date === today);
+    } else if (period === 'month') {
+      filtered = pocketIncomes.filter(i => i.date && i.date.startsWith(currentMonth));
+    }
+
+    const giverPresets = {
+      'Raj Appa': { emoji: '👨', color: '#6366f1' },
+      'Anna': { emoji: '👦', color: '#f59e0b' },
+      'Appa': { emoji: '👨', color: '#3b82f6' },
+      'Amma': { emoji: '👩', color: '#ec4899' },
+      'Dharshini': { emoji: '👧', color: '#8b5cf6' },
+      'Family': { emoji: '👵', color: '#10b981' },
+      'Friend': { emoji: '🤝', color: '#06b6d4' },
+      'Myself': { emoji: '🙋', color: '#64748b' }
+    };
+
+    const map = {};
+    filtered.forEach(inc => {
+      let giver = (inc.giver || '').trim();
+      if (!giver) {
+        const text = `${inc.title || ''} ${inc.notes || ''}`.toLowerCase();
+        if (text.includes('raj appa')) giver = 'Raj Appa';
+        else if (text.includes('anna')) giver = 'Anna';
+        else if (text.includes('appa')) giver = 'Appa';
+        else if (text.includes('amma')) giver = 'Amma';
+        else if (text.includes('dharshini')) giver = 'Dharshini';
+        else if (text.includes('friend')) giver = 'Friend';
+        else if (text.includes('family')) giver = 'Family';
+        else giver = inc.title || 'Family';
+      }
+
+      const meta = giverPresets[giver] || { emoji: '💜', color: '#8b5cf6' };
+      if (!map[giver]) {
+        map[giver] = {
+          name: giver,
+          emoji: meta.emoji,
+          color: meta.color,
+          total: 0,
+          count: 0,
+          items: []
+        };
+      }
+      map[giver].total += parseFloat(inc.amount) || 0;
+      map[giver].count += 1;
+      map[giver].items.push(inc);
+    });
+
+    return map;
+  }
+
+  renderDashboardPocketGiversSummary() {
+    const listEl = document.getElementById('dash-pocket-givers-list');
+    if (!listEl) return;
+    const currency = window.storage.getCurrencySymbol();
+    const giverMap = this.buildPocketGiverMap('all');
+    const entries = Object.values(giverMap).sort((a, b) => b.total - a.total);
+
+    if (entries.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:0.75rem 0;">
+          No pocket money logged yet.<br>
+          <span style="font-size:0.72rem;">Click "+ Add Pocket Money" to record family support!</span>
+        </div>`;
+      return;
+    }
+
+    const totalPocket = entries.reduce((s, g) => s + g.total, 0) || 1;
+
+    listEl.innerHTML = entries.map(g => {
+      const pct = Math.round((g.total / totalPocket) * 100);
+      return `
+        <div style="display:flex; flex-direction:column; gap:2px; padding:4px 0; cursor:pointer;" onclick="window.app.openStatDetails('pocket_money')" title="View ${g.name}'s pocket money entries">
+          <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+            <span style="font-weight:600; color:var(--text-primary);"><span style="color:${g.color};">${g.emoji}</span> ${g.name} (${g.count}x)</span>
+            <span style="font-weight:700; color:${g.color};">+${currency}${g.total.toLocaleString()}</span>
+          </div>
+          <div style="height:4px; background:#e2e8f0; border-radius:99px; overflow:hidden;">
+            <div style="height:100%; width:${pct}%; background:${g.color}; border-radius:99px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderPocketGiverPanel() {
+    const listEl = document.getElementById('pocket-givers-list');
+    if (!listEl) return;
+    const currency = window.storage.getCurrencySymbol();
+    const giverMap = this.buildPocketGiverMap('all');
+    const entries = Object.values(giverMap).sort((a, b) => b.total - a.total);
+
+    if (entries.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align:center; color:var(--text-muted); font-size:0.82rem; padding:1rem 0.5rem;">
+          <i class="fa-solid fa-hand-holding-heart" style="font-size:1.6rem; opacity:0.35; display:block; margin-bottom:0.4rem; color:#8b5cf6;"></i>
+          No pocket money records found.<br>
+          <span style="font-size:0.75rem;">Tap <strong>+ Add Pocket Money</strong> to log family support!</span>
+        </div>`;
+      return;
+    }
+
+    const totalPocket = entries.reduce((s, g) => s + g.total, 0) || 1;
+
+    listEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(139,92,246,0.06); padding:0.4rem 0.6rem; border-radius:6px; font-size:0.75rem; margin-bottom:0.25rem;">
+        <span style="color:var(--text-secondary); font-weight:600;">Givers: <strong>${entries.length}</strong></span>
+        <span style="color:#8b5cf6; font-weight:800;">Total: +${currency}${totalPocket.toLocaleString()}</span>
+      </div>
+      ${entries.map((g, i) => {
+        const pct = Math.round((g.total / totalPocket) * 100);
+        return `
+          <div style="background:${g.color}0a; border:1px solid ${g.color}35; border-radius:10px; padding:0.7rem 0.8rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <span style="font-weight:700; font-size:0.9rem; color:${g.color};">
+                ${g.emoji} ${g.name}
+              </span>
+              <span style="font-weight:800; font-size:1rem; color:${g.color};">
+                +${currency}${g.total.toLocaleString()}
+              </span>
+            </div>
+            <div style="height:5px; background:#e2e8f0; border-radius:99px; overflow:hidden; margin-bottom:0.4rem;">
+              <div style="height:100%; width:${pct}%; background:${g.color}; border-radius:99px;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:var(--text-muted); margin-bottom:0.35rem;">
+              <span>${g.count} contribution${g.count !== 1 ? 's' : ''} • ${pct}%</span>
+              <button type="button" class="action-btn" onclick="window.expenses.togglePocketGiverDetail('pocket-giver-detail-${i}')" style="padding:2px 7px; font-size:0.7rem; border-radius:4px; background:var(--bg-surface); color:var(--text-secondary); border:1px solid var(--border-color); cursor:pointer;">
+                <i class="fa-solid fa-list-ul"></i> Details (${g.count})
+              </button>
+            </div>
+            <div id="pocket-giver-detail-${i}" style="display:none; margin-top:0.5rem; border-top:1px dashed ${g.color}30; padding-top:0.4rem;">
+              ${g.items.map(item => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:0.76rem; border-bottom:1px dashed var(--border-color);">
+                  <div style="flex:1; min-width:0; padding-right:6px;">
+                    <div style="font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${this.escapeHtml(item.title)}</div>
+                    <div style="font-size:0.68rem; color:var(--text-muted);"><i class="fa-regular fa-calendar"></i> ${item.date} ${item.notes ? '• ' + this.escapeHtml(item.notes) : ''}</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:${g.color}; font-weight:800; white-space:nowrap;">+${currency}${parseFloat(item.amount).toLocaleString()}</span>
+                    <button class="task-action-btn delete" style="padding:2px; font-size:0.7rem;" onclick="window.expenses.handleDeleteIncome('${item.id}')" title="Delete">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  }
+
+  togglePocketGiverDetail(id) {
     const el = document.getElementById(id);
     if (!el) return;
     el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';

@@ -849,6 +849,21 @@
                 </div>
               </div>
 
+              <!-- Dashboard Pocket Money by Giver Card -->
+              <div class="budget-card" id="dash-pocket-givers-card" style="border: 1px solid rgba(139, 92, 246, 0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700;">
+                    <i class="fa-solid fa-hand-holding-heart" style="color: #8b5cf6;"></i> Who Gave Pocket Money
+                  </h3>
+                  <button class="action-btn" style="padding: 0.2rem 0.6rem; font-size: 0.72rem; background: rgba(139, 92, 246, 0.12); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3);" onclick="window.app.openStatDetails('pocket_money')">
+                    View Details <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                </div>
+                <div id="dash-pocket-givers-list" style="display: flex; flex-direction: column; gap: 0.45rem;">
+                  <!-- Populated dynamically via expenses.js -->
+                </div>
+              </div>
+
               <!-- Dashboard Individual Cost Summary Card -->
               <div class="budget-card" id="dash-person-summary-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
@@ -2886,15 +2901,15 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261031_v21_separate_incomes"></script>
-  <script src="js/firebase-sync.js?v=20261031_v21_separate_incomes"></script>
-  <script src="js/auth.js?v=20261031_v21_separate_incomes"></script>
-  <script src="js/storage.js?v=20261031_v21_separate_incomes"></script>
-  <script src="js/tasks.js?v=20261031_v21_separate_incomes"></script>
-  <script src="js/expenses.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/pwa.js?v=20261031_v22_pocket_givers_list"></script>
+  <script src="js/firebase-sync.js?v=20261031_v22_pocket_givers_list"></script>
+  <script src="js/auth.js?v=20261031_v22_pocket_givers_list"></script>
+  <script src="js/storage.js?v=20261031_v22_pocket_givers_list"></script>
+  <script src="js/tasks.js?v=20261031_v22_pocket_givers_list"></script>
+  <script src="js/expenses.js?v=20261031_v22_pocket_givers_list"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261031_v21_separate_incomes"></script>
-  <script src="js/charts.js?v=20261031_v21_separate_incomes"></script>
-  <script src="js/app.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/reports.js?v=20261031_v22_pocket_givers_list"></script>
+  <script src="js/charts.js?v=20261031_v22_pocket_givers_list"></script>
+  <script src="js/app.js?v=20261031_v22_pocket_givers_list"></script>
 </body>
 </html>
