@@ -743,7 +743,7 @@
               <div class="stat-info">
                 <span class="stat-label">Total Incomes Received <i class="fa-solid fa-arrow-up-right-from-square stat-shortcut-icon"></i></span>
                 <span class="stat-value" id="stat-total-income" style="color: var(--success);">₹0</span>
-                <span class="stat-sub" id="stat-income-count">0 income sources</span>
+                <span class="stat-sub" id="stat-income-count">0 earned records (excl. pocket)</span>
               </div>
               <div class="stat-icon-wrap" style="background: var(--success-light); color: var(--success);" title="Click to view income details">
                 <i class="fa-solid fa-hand-holding-dollar"></i>
@@ -1059,7 +1059,7 @@
                   <button class="action-btn" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.35); font-weight: 700; display: inline-flex; align-items: center; gap: 6px;" onclick="window.expenses.openPocketMoneyModal()" title="Log Pocket Money / Family Support">
                     <i class="fa-solid fa-hand-holding-heart"></i> Add Pocket Money
                   </button>
-                  <button class="action-btn btn-secondary" onclick="window.expenses.openIncomeModal()">
+                  <button class="action-btn btn-secondary" onclick="window.expenses.openIncomeModal('income')" title="Log Salary / Other Income">
                     <i class="fa-solid fa-hand-holding-dollar"></i> Add Income
                   </button>
 
@@ -2886,15 +2886,15 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261031_v20_sidebyside_pocketmoney"></script>
-  <script src="js/firebase-sync.js?v=20261031_v20_sidebyside_pocketmoney"></script>
-  <script src="js/auth.js?v=20261031_v20_sidebyside_pocketmoney"></script>
-  <script src="js/storage.js?v=20261031_v20_sidebyside_pocketmoney"></script>
-  <script src="js/tasks.js?v=20261031_v20_sidebyside_pocketmoney"></script>
-  <script src="js/expenses.js?v=20261031_v20_sidebyside_pocketmoney"></script>
+  <script src="js/pwa.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/firebase-sync.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/auth.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/storage.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/tasks.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/expenses.js?v=20261031_v21_separate_incomes"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261031_v20_sidebyside_pocketmoney"></script>
-  <script src="js/charts.js?v=20261031_v20_sidebyside_pocketmoney"></script>
-  <script src="js/app.js?v=20261031_v20_sidebyside_pocketmoney"></script>
+  <script src="js/reports.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/charts.js?v=20261031_v21_separate_incomes"></script>
+  <script src="js/app.js?v=20261031_v21_separate_incomes"></script>
 </body>
 </html>

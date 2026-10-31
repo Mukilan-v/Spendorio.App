@@ -605,13 +605,15 @@ class ExpenseManager {
       return;
     }
 
-    incomeListEl.innerHTML = incomes.map(inc => `
+        incomeListEl.innerHTML = incomes.map(inc => {
+      const isPocketEntry = (inc.isPocketMoney === true || inc.category === 'Family Support' || inc.category === 'Pocket Money' || inc.giver || (window.app && window.app.isPocketMoney && window.app.isPocketMoney(inc)));
+      return `
       <div class="task-card" style="align-items: center; justify-content: space-between; padding: 0.65rem 0.85rem;">
         <div>
           <div style="font-weight: 600; font-size: 0.875rem;">${this.escapeHtml(inc.title)}</div>
           <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
             <span>${inc.category || 'Income'} • ${inc.date}</span>
-            ${inc.giver ? `<span style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 99px; padding: 1px 7px; font-size: 0.7rem; font-weight: 700;">👤 ${this.escapeHtml(inc.giver)}</span>` : ''}
+            ${isPocketEntry ? `<span style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 99px; padding: 1px 7px; font-size: 0.7rem; font-weight: 700;">💜 Pocket Money${inc.giver ? ` • ${this.escapeHtml(inc.giver)}` : ''}</span>` : `<span style="background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 99px; padding: 1px 7px; font-size: 0.7rem; font-weight: 700;">💼 Earned</span>`}
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -621,7 +623,8 @@ class ExpenseManager {
           </button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   openAddModal() {
@@ -668,7 +671,7 @@ class ExpenseManager {
     this.openIncomeModal('pocket', giverName);
   }
 
-  openIncomeModal(mode = 'pocket', giverName = '') {
+  openIncomeModal(mode = 'income', giverName = '') {
     const modal = document.getElementById('income-modal');
     const form = document.getElementById('income-form');
     if (!modal || !form) return;
@@ -676,6 +679,7 @@ class ExpenseManager {
     form.reset();
     document.getElementById('income-date').value = this.currentDate;
     this.selectedGiver = null;
+    this.currentIncomeMode = mode;
 
     const previewEl = document.getElementById('income-giver-selected');
     if (previewEl) {
@@ -692,6 +696,7 @@ class ExpenseManager {
   }
 
   setIncomeModalMode(mode) {
+    this.currentIncomeMode = mode;
     const titleEl = document.getElementById('income-modal-title');
     const titleInput = document.getElementById('income-title');
     const catSelect = document.getElementById('income-category');
@@ -830,6 +835,13 @@ class ExpenseManager {
       return false;
     }
 
+    const isPocket = (
+      this.currentIncomeMode === 'pocket' ||
+      category === 'Family Support' ||
+      category === 'Pocket Money' ||
+      Boolean(this.selectedGiver && this.selectedGiver.name)
+    );
+
     const incomeData = {
       title: title,
       amount: amount,
@@ -837,14 +849,14 @@ class ExpenseManager {
       paymentMethod: paymentMethod,
       date: date,
       notes: notes,
-      giver: this.selectedGiver ? this.selectedGiver.name : ''
+      giver: this.selectedGiver ? this.selectedGiver.name : '',
+      isPocketMoney: isPocket
     };
 
     window.storage.addIncome(incomeData);
 
-    const isPocket = (category === 'Family Support' || category === 'Pocket Money' || (this.selectedGiver && this.selectedGiver.name));
     if (window.app && window.app.showToast) {
-      window.app.showToast(isPocket ? '💜 Pocket Money entry saved successfully!' : 'Income entry logged!', 'success');
+      window.app.showToast(isPocket ? '💜 Pocket Money entry saved! Tracked in Card 6 (Pocket Money).' : '💼 Earned Income logged! Tracked in Card 3.', 'success');
     }
 
     const modal = document.getElementById('income-modal');

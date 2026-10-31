@@ -274,14 +274,44 @@ class Application {
     this.setDate(new Date().toISOString().split('T')[0]);
   }
 
+  isPocketMoney(inc) {
+    if (!inc) return false;
+    if (inc.isPocketMoney === true) return true;
+    if (inc.isPocketMoney === false) return false;
+    if (inc.giver && String(inc.giver).trim()) return true;
+    const cat = (inc.category || '').toLowerCase();
+    const text = ((inc.title || '') + ' ' + (inc.notes || '') + ' ' + (inc.giver || '') + ' ' + (inc.source || '')).toLowerCase();
+    if (cat.includes('family') || cat.includes('pocket') || cat.includes('support') || cat.includes('allowance')) {
+      return true;
+    }
+    if (/anna|appa|raj appa|amma|dharshini|family|pocket|allowance|home|father|mother|bro|sister|gift/i.test(text)) {
+      return true;
+    }
+    if (!/salary|freelanc|invest|bonus|client|business|dividend|job|work/i.test(cat) && !/salary|freelanc|client|project|dividend|job|work/i.test(text)) {
+      return true;
+    }
+    return false;
+  }
+
+
   updateSummaryMetrics() {
     const summary = window.storage.getDaySummary(this.currentDate);
     const monthSummary = window.storage.getMonthSummary(this.currentDate.substring(0, 7));
     const allIncomes = window.storage.getIncomes();
     const allExpenses = window.storage.getExpenses();
-    const totalAllIncomes = allIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+
+    // Separate Earned Incomes from Family Support & Pocket Money
+    const pocketIncomes = allIncomes.filter(i => this.isPocketMoney(i));
+    const earnedIncomes = allIncomes.filter(i => !this.isPocketMoney(i));
+
+    const totalPocketMoney = pocketIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+    const totalEarnedIncomes = earnedIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
     const totalAllExpenses = allExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-    const netOverallBalance = totalAllIncomes - totalAllExpenses;
+
+    // Total available funds = Earned Incomes + Pocket Money
+    const totalAllFunds = totalEarnedIncomes + totalPocketMoney;
+    // Net overall balance = Total Funds - Total Expenses
+    const netOverallBalance = totalAllFunds - totalAllExpenses;
 
     const streaks = window.storage.getStreakCount();
     const currency = window.storage.getCurrencySymbol();
@@ -306,17 +336,17 @@ class Application {
       allExpenseSubEl.textContent = `${allExpenses.length} records • All-time total`;
     }
 
-    // Summary Card 3: Total Incomes Received
+    // Summary Card 3: Total Incomes Received (Strictly Earned Income, Salary & Freelance - Excludes Pocket Money)
     const incomeValEl = document.getElementById('stat-total-income');
     const incomeSubEl = document.getElementById('stat-income-count');
     if (incomeValEl) {
-      incomeValEl.textContent = `${currency}${totalAllIncomes.toLocaleString()}`;
+      incomeValEl.textContent = `${currency}${totalEarnedIncomes.toLocaleString()}`;
     }
     if (incomeSubEl) {
-      incomeSubEl.textContent = `${allIncomes.length} total income records`;
+      incomeSubEl.textContent = `${earnedIncomes.length} earned records (excl. pocket money)`;
     }
 
-    // Summary Card 4: Net Balance (Incomes - Total Costs)
+    // Summary Card 4: Net Balance (Income & Pocket Money - Total Costs)
     const balanceValEl = document.getElementById('stat-net-balance');
     const balanceSubEl = document.getElementById('stat-net-balance-sub');
     if (balanceValEl) {
@@ -324,7 +354,7 @@ class Application {
       balanceValEl.style.color = netOverallBalance >= 0 ? 'var(--success)' : 'var(--danger)';
     }
     if (balanceSubEl) {
-      balanceSubEl.textContent = `Total Income: ${currency}${totalAllIncomes.toLocaleString()} | Spent: ${currency}${totalAllExpenses.toLocaleString()}`;
+      balanceSubEl.textContent = `Earned: ${currency}${totalEarnedIncomes.toLocaleString()} | Pocket: ${currency}${totalPocketMoney.toLocaleString()} | Spent: ${currency}${totalAllExpenses.toLocaleString()}`;
     }
 
     // Summary Card 5: Tasks Completed
@@ -338,24 +368,6 @@ class Application {
     }
 
     // Summary Card 6: Family Support & Pocket Money
-    const isFamilyOrPocketMoney = (inc) => {
-      const cat = (inc.category || '').toLowerCase();
-      const text = `${inc.title || ''} ${inc.notes || ''}`.toLowerCase();
-      if (cat.includes('family') || cat.includes('pocket') || cat.includes('support') || cat.includes('allowance')) {
-        return true;
-      }
-      if (/anna|appa|amma|family|pocket|allowance|home|father|mother|bro|sister|gift/i.test(text)) {
-        return true;
-      }
-      if (!/salary|freelanc|invest|bonus|client|business/i.test(cat) && !/salary|client|project|dividend/i.test(text)) {
-        return true;
-      }
-      return false;
-    };
-
-    const pocketIncomes = allIncomes.filter(isFamilyOrPocketMoney);
-    const totalPocketMoney = pocketIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
-
     const pocketValEl = document.getElementById('stat-pocket-money');
     const pocketSubEl = document.getElementById('stat-pocket-money-sub');
     if (pocketValEl) {
@@ -643,10 +655,13 @@ class Application {
 
     } else if (type === 'incomes') {
       const allIncomes = window.storage.getIncomes() || [];
-      const totalAllIncomes = allIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+      const earnedIncomes = allIncomes.filter(i => !this.isPocketMoney(i));
+      const pocketIncomes = allIncomes.filter(i => this.isPocketMoney(i));
+      const totalEarnedIncomes = earnedIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+      const totalPocketMoney = pocketIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
 
-      if (titleEl) titleEl.textContent = 'Total Incomes Received Details';
-      if (badgeEl) badgeEl.textContent = `${allIncomes.length} records • Total earned`;
+      if (titleEl) titleEl.textContent = 'Earned Incomes Received Details';
+      if (badgeEl) badgeEl.textContent = `${earnedIncomes.length} records • Earned/Salary (excl. pocket money)`;
       if (iconWrapEl) {
         iconWrapEl.style.background = 'rgba(16, 185, 129, 0.12)';
         iconWrapEl.style.color = 'var(--success)';
@@ -654,28 +669,36 @@ class Application {
       }
       if (heroValEl) {
         heroValEl.style.color = 'var(--success)';
-        heroValEl.textContent = `${currency}${totalAllIncomes.toLocaleString()}`;
+        heroValEl.textContent = `${currency}${totalEarnedIncomes.toLocaleString()}`;
       }
 
       if (heroBreakdownEl) {
-        const catMap = {};
-        allIncomes.forEach(i => {
-          const cat = i.category || i.source || 'General';
-          catMap[cat] = (catMap[cat] || 0) + (parseFloat(i.amount) || 0);
-        });
-        const topCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
-        heroBreakdownEl.innerHTML = topCats.map(([cat, amt]) => `
-          <span style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 99px; padding: 3px 9px; font-size: 0.73rem; font-weight: 600;">
-            ${this.escapeHtml(cat)}: ${currency}${amt.toLocaleString()}
-          </span>
-        `).join('');
+        if (earnedIncomes.length === 0) {
+          heroBreakdownEl.innerHTML = `
+            <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 99px; padding: 3px 9px; font-size: 0.73rem; font-weight: 600;">
+              Family Support &amp; Pocket Money: ${currency}${totalPocketMoney.toLocaleString()} (Card 6)
+            </span>
+          `;
+        } else {
+          const catMap = {};
+          earnedIncomes.forEach(i => {
+            const cat = i.category || i.source || 'Salary';
+            catMap[cat] = (catMap[cat] || 0) + (parseFloat(i.amount) || 0);
+          });
+          const topCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+          heroBreakdownEl.innerHTML = topCats.map(([cat, amt]) => `
+            <span style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 99px; padding: 3px 9px; font-size: 0.73rem; font-weight: 600;">
+              ${this.escapeHtml(cat)}: ${currency}${amt.toLocaleString()}
+            </span>
+          `).join('');
+        }
       }
 
       if (quickActionBtn && quickActionText) {
-        quickActionText.textContent = 'Add Income Entry';
+        quickActionText.textContent = 'Log Salary / Earned Income';
         quickActionBtn.onclick = () => {
           this.closeStatDetailsModal();
-          if (window.expenses) window.expenses.openIncomeModal();
+          if (window.expenses) window.expenses.openIncomeModal('income');
         };
       }
       if (jumpBtn && jumpText) {
@@ -686,10 +709,11 @@ class Application {
         };
       }
 
-      let filtered = allIncomes.filter(i => {
+      let filtered = earnedIncomes.filter(i => {
         if (!q) return true;
         return (
           (i.source && i.source.toLowerCase().includes(q)) ||
+          (i.title && i.title.toLowerCase().includes(q)) ||
           (i.category && i.category.toLowerCase().includes(q)) ||
           (i.notes && i.notes.toLowerCase().includes(q)) ||
           (i.date && i.date.toLowerCase().includes(q)) ||
@@ -703,7 +727,10 @@ class Application {
         listEl.innerHTML = `
           <div style="text-align: center; padding: 2.2rem 1rem; color: var(--text-muted); font-size: 0.85rem;">
             <i class="fa-solid fa-hand-holding-dollar" style="font-size: 1.8rem; margin-bottom: 8px; opacity: 0.4; display: block;"></i>
-            ${q ? `No income records matching "${this.escapeHtml(query)}".` : 'No income records added yet.'}
+            ${q ? `No earned income records matching "${this.escapeHtml(query)}".` : 'No earned income (salary/freelance) records logged yet.'}
+            <div style="font-size: 0.78rem; color: #8b5cf6; margin-top: 8px;">
+              💜 Family support &amp; pocket money (${currency}${totalPocketMoney.toLocaleString()}) are tracked separately in <strong>Card 6: Family Support &amp; Pocket Money</strong>.
+            </div>
           </div>
         `;
       } else {
@@ -715,12 +742,12 @@ class Application {
               </div>
               <div style="min-width: 0; flex: 1;">
                 <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                  ${this.escapeHtml(inc.source || 'Income Entry')}
+                  ${this.escapeHtml(inc.title || inc.source || 'Earned Income Entry')}
                 </div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
                   <span><i class="fa-regular fa-calendar" style="font-size: 0.68rem;"></i> ${inc.date || ''}</span>
                   <span class="badge" style="font-size: 0.68rem; padding: 1px 7px; border-radius: 99px; background: rgba(16, 185, 129, 0.1); color: var(--success); font-weight: 600;">
-                    ${this.escapeHtml(inc.category || 'Income')}
+                    ${this.escapeHtml(inc.category || 'Salary')}
                   </span>
                   ${inc.notes ? `<span style="font-size: 0.7rem; color: var(--text-secondary);">${this.escapeHtml(inc.notes)}</span>` : ''}
                 </div>
@@ -782,10 +809,10 @@ class Application {
       }
 
       if (quickActionBtn && quickActionText) {
-        quickActionText.textContent = 'Add Pocket Money / Support';
+        quickActionText.textContent = '+ Add Pocket Money';
         quickActionBtn.onclick = () => {
           this.closeStatDetailsModal();
-          if (window.expenses) window.expenses.openIncomeModal();
+          if (window.expenses) window.expenses.openPocketMoneyModal();
         };
       }
       if (jumpBtn && jumpText) {
@@ -833,12 +860,16 @@ class Application {
     } else if (type === 'net_balance') {
       const allIncomes = window.storage.getIncomes() || [];
       const allExpenses = window.storage.getExpenses() || [];
-      const totalAllIncomes = allIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+      const pocketIncomes = allIncomes.filter(i => this.isPocketMoney(i));
+      const earnedIncomes = allIncomes.filter(i => !this.isPocketMoney(i));
+      const totalPocketMoney = pocketIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+      const totalEarnedIncomes = earnedIncomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
       const totalAllExpenses = allExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-      const netOverallBalance = totalAllIncomes - totalAllExpenses;
+      const totalAllFunds = totalEarnedIncomes + totalPocketMoney;
+      const netOverallBalance = totalAllFunds - totalAllExpenses;
 
       if (titleEl) titleEl.textContent = 'Net Balance Breakdown';
-      if (badgeEl) badgeEl.textContent = `Total Income vs Pure All-Time Spend`;
+      if (badgeEl) badgeEl.textContent = `Total Funds (Earned + Pocket) vs Pure All-Time Spend`;
       if (iconWrapEl) {
         iconWrapEl.style.background = 'rgba(245, 158, 11, 0.12)';
         iconWrapEl.style.color = 'var(--warning)';
@@ -852,7 +883,10 @@ class Application {
       if (heroBreakdownEl) {
         heroBreakdownEl.innerHTML = `
           <span style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 99px; padding: 3px 9px; font-size: 0.73rem; font-weight: 600;">
-            Income: +${currency}${totalAllIncomes.toLocaleString()}
+            Earned: +${currency}${totalEarnedIncomes.toLocaleString()}
+          </span>
+          <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 99px; padding: 3px 9px; font-size: 0.73rem; font-weight: 600;">
+            Pocket: +${currency}${totalPocketMoney.toLocaleString()}
           </span>
           <span style="background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 99px; padding: 3px 9px; font-size: 0.73rem; font-weight: 600;">
             Spent: -${currency}${totalAllExpenses.toLocaleString()}
