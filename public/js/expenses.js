@@ -1,6 +1,6 @@
 /**
  * expenses.js - Cost & Expense Management Module
- * Includes Compulsory Notes Validation & Simultaneous Individual Cost Monitor (Amma, Appa, Friend, etc.)
+ * Includes Compulsory Notes Validation & Simultaneous Individual Cost Monitor (Mom, Dad, Brother, Sister, Friend, etc.)
  */
 
 class ExpenseManager {
@@ -50,16 +50,13 @@ class ExpenseManager {
   // Dictionary of known relations, personas, and nicknames
   getKnownPersonConfig() {
     return [
-      { keys: ['amma', 'mom', 'mother'], label: 'Amma', emoji: '👩', color: '#ec4899' },
-      { keys: ['appa', 'dad', 'father'], label: 'Appa', emoji: '👨', color: '#3b82f6' },
-      { keys: ['anna', 'brother', 'bro'], label: 'Anna', emoji: '🧑', color: '#f59e0b' },
-      { keys: ['akka', 'sister', 'sis'], label: 'Akka', emoji: '👩', color: '#ec4899' },
-      { keys: ['sister', 'sis', 'thangachi', 'thangai', String.fromCharCode(100,104,97,114,115,104)], label: 'Sister', emoji: '👧', color: '#8b5cf6' },
+      { keys: ['mom', 'mother', 'amma'], label: 'Mom', emoji: '👩', color: '#ec4899' },
+      { keys: ['dad', 'father', 'appa'], label: 'Dad', emoji: '👨', color: '#3b82f6' },
+      { keys: ['brother', 'bro', 'anna', 'thambi'], label: 'Brother', emoji: '👦', color: '#f59e0b' },
+      { keys: ['sister', 'sis', 'akka', 'thangachi', 'thangai', String.fromCharCode(100,104,97,114,115,104)], label: 'Sister', emoji: '👧', color: '#8b5cf6' },
       { keys: ['friend', 'friends', 'nanban', 'natpu', 'roommate', 'buddy'], label: 'Friend', emoji: '🤝', color: '#10b981' },
       { keys: ['myself', 'self', 'personal', 'me', 'my', 'mine'], label: 'Myself', emoji: '🙋', color: '#0ea5e9' },
-      { keys: ['others', 'other', String.fromCharCode(114,97,106)], label: 'Others', emoji: '👥', color: '#6366f1' },
-      { keys: ['thambi'], label: 'Thambi', emoji: '👦', color: '#14b8a6' },
-      { keys: ['thangachi', 'thangai'], label: 'Thangachi', emoji: '👧', color: '#f43f5e' }
+      { keys: ['others', 'other', String.fromCharCode(114,97,106)], label: 'Others', emoji: '👥', color: '#6366f1' }
     ];
   }
 
@@ -206,7 +203,7 @@ class ExpenseManager {
     if (persons.length === 0) {
       preview.innerHTML = `
         <span style="font-size:0.75rem; color:var(--text-muted);">
-          <i class="fa-solid fa-circle-check" style="color:var(--success);"></i> Remarks entered. (Tip: Tap a chip above to link to Amma, Appa, Friend, etc.)
+          <i class="fa-solid fa-circle-check" style="color:var(--success);"></i> Remarks entered. (Tip: Tap a chip above to link to Mom, Dad, Brother, Sister, Friend, etc.)
         </span>`;
       return;
     }
@@ -409,7 +406,7 @@ class ExpenseManager {
         <div style="text-align:center; color:var(--text-muted); font-size:0.82rem; padding:1.25rem 0.5rem;">
           <i class="fa-solid fa-user-tag" style="font-size:1.6rem; opacity:0.35; display:block; margin-bottom:0.4rem;"></i>
           No individual costs tracked for this period.<br>
-          <span style="font-size:0.75rem;">Mention <strong>Amma, Appa, Friend</strong> etc. in Notes when logging an expense!</span>
+          <span style="font-size:0.75rem;">Mention <strong>Mom, Dad, Brother, Sister, Friend</strong> etc. in Notes when logging an expense!</span>
         </div>`;
       return;
     }
@@ -502,9 +499,9 @@ class ExpenseManager {
 
     const giverPresets = {
       'Others': { emoji: '👥', color: '#6366f1' },
-      'Anna': { emoji: '👦', color: '#f59e0b' },
-      'Appa': { emoji: '👨', color: '#3b82f6' },
-      'Amma': { emoji: '👩', color: '#ec4899' },
+      'Brother': { emoji: '👦', color: '#f59e0b' },
+      'Dad': { emoji: '👨', color: '#3b82f6' },
+      'Mom': { emoji: '👩', color: '#ec4899' },
       'Sister': { emoji: '👧', color: '#8b5cf6' },
       'Family': { emoji: '👵', color: '#10b981' },
       'Friend': { emoji: '🤝', color: '#06b6d4' },
@@ -514,13 +511,18 @@ class ExpenseManager {
     const map = {};
     filtered.forEach(inc => {
       let giver = (inc.giver || '').trim();
+      if (giver === 'Appa') giver = 'Dad';
+      else if (giver === 'Amma') giver = 'Mom';
+      else if (giver === 'Anna') giver = 'Brother';
+      else if (giver === 'Akka' || giver === 'Thangachi') giver = 'Sister';
+
       if (!giver) {
         const text = `${inc.title || ''} ${inc.notes || ''}`.toLowerCase();
         if (text.includes('other') || text.includes(String.fromCharCode(114,97,106))) giver = 'Others';
-        else if (text.includes('anna')) giver = 'Anna';
-        else if (text.includes('appa')) giver = 'Appa';
-        else if (text.includes('amma')) giver = 'Amma';
-        else if (text.includes('sister') || text.includes(String.fromCharCode(100,104,97,114,115,104))) giver = 'Sister';
+        else if (text.includes('brother') || text.includes('bro') || text.includes('anna') || text.includes('thambi')) giver = 'Brother';
+        else if (text.includes('dad') || text.includes('father') || text.includes('appa')) giver = 'Dad';
+        else if (text.includes('mom') || text.includes('mother') || text.includes('amma')) giver = 'Mom';
+        else if (text.includes('sister') || text.includes('sis') || text.includes('akka') || text.includes('thangachi') || text.includes('thangai') || text.includes(String.fromCharCode(100,104,97,114,115,104))) giver = 'Sister';
         else if (text.includes('friend')) giver = 'Friend';
         else if (text.includes('family')) giver = 'Family';
         else giver = inc.title || 'Family';
@@ -664,7 +666,7 @@ class ExpenseManager {
       dashListEl.innerHTML = `
         <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:0.75rem 0;">
           No individual costs logged yet.<br>
-          <span style="font-size:0.72rem;">Mention names like Amma, Appa in Notes!</span>
+          <span style="font-size:0.72rem;">Mention names like Mom, Dad, Brother, Sister in Notes!</span>
         </div>`;
       return;
     }
@@ -877,7 +879,7 @@ class ExpenseManager {
 
     if (mode === 'pocket') {
       if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-hand-holding-heart" style="color: #8b5cf6;"></i> <span>Log Pocket Money &amp; Family Support</span>';
-      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Anna gave money, Support from Others';
+      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Brother gave money, Support from Dad';
       if (catSelect) catSelect.value = 'Family Support';
       if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Pocket Money</span>';
       if (btnPocket) {
@@ -949,7 +951,7 @@ class ExpenseManager {
 
     // 2. COMPULSORY Notes & Remarks Validation
     if (!notes) {
-      alert('⚠️ Notes & Remarks is COMPULSORY!\n\nPlease mention who or what this expense is for (e.g. Amma, Appa, Friend, Sister, Myself, etc.) so it can be tracked in the Individual Cost Monitor.');
+      alert('⚠️ Notes & Remarks is COMPULSORY!\n\nPlease mention who or what this expense is for (e.g. Mom, Dad, Brother, Sister, Friend, Myself, etc.) so it can be tracked in the Individual Cost Monitor.');
       const notesEl = document.getElementById('expense-notes');
       if (notesEl) {
         notesEl.focus();

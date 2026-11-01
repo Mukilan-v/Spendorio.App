@@ -176,7 +176,7 @@ class ReportManager {
     <div class="kpi-card">
       <div class="kpi-label">Individuals Tracked</div>
       <div class="kpi-value" style="color: #8b5cf6;">${persons.length}</div>
-      <div class="kpi-sub">Amma, Appa, etc.</div>
+      <div class="kpi-sub">Mom, Dad, etc.</div>
     </div>
   </div>
 

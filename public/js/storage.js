@@ -81,13 +81,21 @@ class StorageManager {
         if (!str || typeof str !== 'string') return str;
         return str
           .replace(new RegExp(String.fromCharCode(114,97,106)+'(\\s*appa)?', 'gi'), 'Others')
-          .replace(new RegExp(String.fromCharCode(100,104,97,114,115,104,105,110,105)+'|'+String.fromCharCode(100,104,97,114,115,104), 'gi'), 'Sister');
+          .replace(new RegExp(String.fromCharCode(100,104,97,114,115,104,105,110,105)+'|'+String.fromCharCode(100,104,97,114,115,104), 'gi'), 'Sister')
+          .replace(/\b(thangachi|thangai|akka)\b/gi, 'Sister')
+          .replace(/\bappa\b/gi, 'Dad')
+          .replace(/\bamma\b/gi, 'Mom')
+          .replace(/\banna\b/gi, 'Brother');
       };
 
       incomes = incomes.map(i => {
-        const newTitle = sanitize(i.title);
-        const newNotes = sanitize(i.notes);
-        const newGiver = sanitize(i.giver);
+        let newTitle = sanitize(i.title);
+        let newNotes = sanitize(i.notes);
+        let newGiver = sanitize(i.giver);
+        if (newGiver === 'Appa') newGiver = 'Dad';
+        if (newGiver === 'Amma') newGiver = 'Mom';
+        if (newGiver === 'Anna') newGiver = 'Brother';
+        if (newGiver === 'Akka' || newGiver === 'Thangachi') newGiver = 'Sister';
         if (newTitle !== i.title || newNotes !== i.notes || newGiver !== i.giver) {
           changedIncomes = true;
           return { ...i, title: newTitle, notes: newNotes, giver: newGiver };
