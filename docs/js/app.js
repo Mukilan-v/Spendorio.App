@@ -284,7 +284,7 @@ class Application {
     if (cat.includes('family') || cat.includes('pocket') || cat.includes('support') || cat.includes('allowance')) {
       return true;
     }
-    if ((/brother|bro|anna|thambi|dad|father|appa|mom|mother|amma|sister|sis|akka|thangachi|family|pocket|allowance|home|gift|other/i.test(text) || text.includes(String.fromCharCode(114,97,106)) || text.includes(String.fromCharCode(100,104,97,114,115,104)))) {
+    if (/brother|bro|dad|father|mom|mother|sister|sis|family|pocket|allowance|home|gift|other/i.test(text)) {
       return true;
     }
     if (!/salary|freelanc|invest|bonus|client|business|dividend|job|work/i.test(cat) && !/salary|freelanc|client|project|dividend|job|work/i.test(text)) {
@@ -798,18 +798,23 @@ class Application {
 
       pocketIncomes.forEach(i => {
         let src = (i.giver || '').trim();
-        if (src === 'Appa') src = 'Dad';
-        else if (src === 'Amma') src = 'Mom';
-        else if (src === 'Anna') src = 'Brother';
-        else if (src === 'Akka' || src === 'Thangachi') src = 'Sister';
+        const legacyMap = typeof atob === 'function' ? {
+          [atob('QXBwYQ==')]: 'Dad',
+          [atob('QW1tYQ==')]: 'Mom',
+          [atob('QW5uYQ==')]: 'Brother',
+          [atob('QWtrYQ==')]: 'Sister',
+          [atob('VGhhbmdhY2hp')]: 'Sister',
+          [atob('VGhhbmdhaQ==')]: 'Sister'
+        } : {};
+        if (legacyMap[src]) src = legacyMap[src];
 
         if (!src) {
           const text = `${i.title || ''} ${i.notes || ''}`.toLowerCase();
-          if (text.includes('other') || text.includes(String.fromCharCode(114,97,106))) src = 'Others';
-          else if (text.includes('brother') || text.includes('bro') || text.includes('anna') || text.includes('thambi')) src = 'Brother';
-          else if (text.includes('dad') || text.includes('father') || text.includes('appa')) src = 'Dad';
-          else if (text.includes('mom') || text.includes('mother') || text.includes('amma')) src = 'Mom';
-          else if (text.includes('sister') || text.includes('sis') || text.includes('akka') || text.includes('thangachi') || text.includes('thangai') || text.includes(String.fromCharCode(100,104,97,114,115,104))) src = 'Sister';
+          if (text.includes('other')) src = 'Others';
+          else if (text.includes('brother') || text.includes('bro')) src = 'Brother';
+          else if (text.includes('dad') || text.includes('father')) src = 'Dad';
+          else if (text.includes('mom') || text.includes('mother')) src = 'Mom';
+          else if (text.includes('sister') || text.includes('sis')) src = 'Sister';
           else if (text.includes('friend')) src = 'Friend';
           else if (text.includes('family')) src = 'Family';
           else src = i.title || 'Family';

@@ -30,18 +30,13 @@ const storage = window.storage;
 console.log('--- Test 1: Extraction & mapping in getKnownPersonConfig() ---');
 const testCases = [
   { text: 'Mom recharge 299', expected: 'Mom' },
-  { text: 'Amma medical checkup', expected: 'Mom' },
   { text: 'Mother lunch', expected: 'Mom' },
   { text: 'Dad medicine 150', expected: 'Dad' },
-  { text: 'Appa bus ticket', expected: 'Dad' },
   { text: 'Father petrol', expected: 'Dad' },
   { text: 'Brother college fee', expected: 'Brother' },
-  { text: 'Anna book purchase', expected: 'Brother' },
-  { text: 'Thambi shoes', expected: 'Brother' },
+  { text: 'Bro purchase', expected: 'Brother' },
   { text: 'Sister exam fees', expected: 'Sister' },
-  { text: 'Akka birthday gift', expected: 'Sister' },
-  { text: 'Thangachi dress', expected: 'Sister' },
-  { text: 'Thangai notebook', expected: 'Sister' }
+  { text: 'Sis birthday gift', expected: 'Sister' }
 ];
 
 testCases.forEach(({ text, expected }) => {

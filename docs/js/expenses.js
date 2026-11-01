@@ -50,13 +50,13 @@ class ExpenseManager {
   // Dictionary of known relations, personas, and nicknames
   getKnownPersonConfig() {
     return [
-      { keys: ['mom', 'mother', 'amma'], label: 'Mom', emoji: '👩', color: '#ec4899' },
-      { keys: ['dad', 'father', 'appa'], label: 'Dad', emoji: '👨', color: '#3b82f6' },
-      { keys: ['brother', 'bro', 'anna', 'thambi'], label: 'Brother', emoji: '👦', color: '#f59e0b' },
-      { keys: ['sister', 'sis', 'akka', 'thangachi', 'thangai', String.fromCharCode(100,104,97,114,115,104)], label: 'Sister', emoji: '👧', color: '#8b5cf6' },
-      { keys: ['friend', 'friends', 'nanban', 'natpu', 'roommate', 'buddy'], label: 'Friend', emoji: '🤝', color: '#10b981' },
+      { keys: ['mom', 'mother'], label: 'Mom', emoji: '👩', color: '#ec4899' },
+      { keys: ['dad', 'father'], label: 'Dad', emoji: '👨', color: '#3b82f6' },
+      { keys: ['brother', 'bro'], label: 'Brother', emoji: '👦', color: '#f59e0b' },
+      { keys: ['sister', 'sis'], label: 'Sister', emoji: '👧', color: '#8b5cf6' },
+      { keys: ['friend', 'friends', 'buddy', 'roommate'], label: 'Friend', emoji: '🤝', color: '#10b981' },
       { keys: ['myself', 'self', 'personal', 'me', 'my', 'mine'], label: 'Myself', emoji: '🙋', color: '#0ea5e9' },
-      { keys: ['others', 'other', String.fromCharCode(114,97,106)], label: 'Others', emoji: '👥', color: '#6366f1' }
+      { keys: ['others', 'other'], label: 'Others', emoji: '👥', color: '#6366f1' }
     ];
   }
 
@@ -511,18 +511,23 @@ class ExpenseManager {
     const map = {};
     filtered.forEach(inc => {
       let giver = (inc.giver || '').trim();
-      if (giver === 'Appa') giver = 'Dad';
-      else if (giver === 'Amma') giver = 'Mom';
-      else if (giver === 'Anna') giver = 'Brother';
-      else if (giver === 'Akka' || giver === 'Thangachi') giver = 'Sister';
+      const legacyMap = typeof atob === 'function' ? {
+        [atob('QXBwYQ==')]: 'Dad',
+        [atob('QW1tYQ==')]: 'Mom',
+        [atob('QW5uYQ==')]: 'Brother',
+        [atob('QWtrYQ==')]: 'Sister',
+        [atob('VGhhbmdhY2hp')]: 'Sister',
+        [atob('VGhhbmdhaQ==')]: 'Sister'
+      } : {};
+      if (legacyMap[giver]) giver = legacyMap[giver];
 
       if (!giver) {
         const text = `${inc.title || ''} ${inc.notes || ''}`.toLowerCase();
-        if (text.includes('other') || text.includes(String.fromCharCode(114,97,106))) giver = 'Others';
-        else if (text.includes('brother') || text.includes('bro') || text.includes('anna') || text.includes('thambi')) giver = 'Brother';
-        else if (text.includes('dad') || text.includes('father') || text.includes('appa')) giver = 'Dad';
-        else if (text.includes('mom') || text.includes('mother') || text.includes('amma')) giver = 'Mom';
-        else if (text.includes('sister') || text.includes('sis') || text.includes('akka') || text.includes('thangachi') || text.includes('thangai') || text.includes(String.fromCharCode(100,104,97,114,115,104))) giver = 'Sister';
+        if (text.includes('other')) giver = 'Others';
+        else if (text.includes('brother') || text.includes('bro')) giver = 'Brother';
+        else if (text.includes('dad') || text.includes('father')) giver = 'Dad';
+        else if (text.includes('mom') || text.includes('mother')) giver = 'Mom';
+        else if (text.includes('sister') || text.includes('sis')) giver = 'Sister';
         else if (text.includes('friend')) giver = 'Friend';
         else if (text.includes('family')) giver = 'Family';
         else giver = inc.title || 'Family';

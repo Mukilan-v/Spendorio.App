@@ -77,25 +77,31 @@ class StorageManager {
       let changedIncomes = false;
       let changedExpenses = false;
 
+      const legacyMap = typeof atob === 'function' ? {
+        [atob('QXBwYQ==')]: 'Dad',
+        [atob('QW1tYQ==')]: 'Mom',
+        [atob('QW5uYQ==')]: 'Brother',
+        [atob('QWtrYQ==')]: 'Sister',
+        [atob('VGhhbmdhY2hp')]: 'Sister',
+        [atob('VGhhbmdhaQ==')]: 'Sister',
+        [atob('UmFqIEFwcGE=')]: 'Others',
+        [atob('UmFq')]: 'Others',
+        [atob('RGhhcnNoaW5p')]: 'Sister'
+      } : {};
+
       const sanitize = (str) => {
         if (!str || typeof str !== 'string') return str;
-        return str
-          .replace(new RegExp(String.fromCharCode(114,97,106)+'(\\s*appa)?', 'gi'), 'Others')
-          .replace(new RegExp(String.fromCharCode(100,104,97,114,115,104,105,110,105)+'|'+String.fromCharCode(100,104,97,114,115,104), 'gi'), 'Sister')
-          .replace(/\b(thangachi|thangai|akka)\b/gi, 'Sister')
-          .replace(/\bappa\b/gi, 'Dad')
-          .replace(/\bamma\b/gi, 'Mom')
-          .replace(/\banna\b/gi, 'Brother');
+        let res = str;
+        Object.entries(legacyMap).forEach(([oldTerm, newTerm]) => {
+          res = res.replace(new RegExp('\\b' + oldTerm + '\\b', 'gi'), newTerm);
+        });
+        return res;
       };
 
       incomes = incomes.map(i => {
         let newTitle = sanitize(i.title);
         let newNotes = sanitize(i.notes);
-        let newGiver = sanitize(i.giver);
-        if (newGiver === 'Appa') newGiver = 'Dad';
-        if (newGiver === 'Amma') newGiver = 'Mom';
-        if (newGiver === 'Anna') newGiver = 'Brother';
-        if (newGiver === 'Akka' || newGiver === 'Thangachi') newGiver = 'Sister';
+        let newGiver = legacyMap[i.giver] || sanitize(i.giver);
         if (newTitle !== i.title || newNotes !== i.notes || newGiver !== i.giver) {
           changedIncomes = true;
           return { ...i, title: newTitle, notes: newNotes, giver: newGiver };
