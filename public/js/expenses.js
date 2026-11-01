@@ -767,7 +767,9 @@ class ExpenseManager {
     if (!incomeListEl) return;
 
     const currentMonth = this.currentDate.substring(0, 7);
-    const incomes = window.storage.getIncomes().filter(i => i.date && i.date.startsWith(currentMonth));
+    const isPocket = (inc) => window.app && window.app.isPocketMoney ? window.app.isPocketMoney(inc) : (inc.category === 'Family Support' || inc.category === 'Pocket Money' || inc.giver);
+    // Strictly earned income in Monthly Incomes card (excludes pocket money)
+    const incomes = window.storage.getIncomes().filter(i => i.date && i.date.startsWith(currentMonth) && !isPocket(i));
     const totalIncome = incomes.reduce((acc, cur) => acc + (parseFloat(cur.amount) || 0), 0);
 
     if (incomeTotalEl) {
@@ -777,21 +779,20 @@ class ExpenseManager {
     if (incomes.length === 0) {
       incomeListEl.innerHTML = `
         <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem;">
-          No income records added for this month yet.
+          No earned income records added for this month yet.
         </div>
       `;
       return;
     }
 
-        incomeListEl.innerHTML = incomes.map(inc => {
-      const isPocketEntry = (inc.isPocketMoney === true || inc.category === 'Family Support' || inc.category === 'Pocket Money' || inc.giver || (window.app && window.app.isPocketMoney && window.app.isPocketMoney(inc)));
+    incomeListEl.innerHTML = incomes.map(inc => {
       return `
       <div class="task-card" style="align-items: center; justify-content: space-between; padding: 0.65rem 0.85rem;">
         <div>
           <div style="font-weight: 600; font-size: 0.875rem;">${this.escapeHtml(inc.title)}</div>
           <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
             <span>${inc.category || 'Income'} • ${inc.date}</span>
-            ${isPocketEntry ? `<span style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 99px; padding: 1px 7px; font-size: 0.7rem; font-weight: 700;">💜 Pocket Money${inc.giver ? ` • ${this.escapeHtml(inc.giver)}` : ''}</span>` : `<span style="background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 99px; padding: 1px 7px; font-size: 0.7rem; font-weight: 700;">💼 Earned</span>`}
+            <span style="background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 99px; padding: 1px 7px; font-size: 0.7rem; font-weight: 700;">💼 Earned</span>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -857,7 +858,7 @@ class ExpenseManager {
     form.reset();
     document.getElementById('income-date').value = this.currentDate;
     this.selectedGiver = null;
-    this.currentIncomeMode = mode;
+    this.currentIncomeMode = (mode === 'pocket') ? 'pocket' : 'income';
 
     const previewEl = document.getElementById('income-giver-selected');
     if (previewEl) {
@@ -866,7 +867,7 @@ class ExpenseManager {
 
     this.setIncomeModalMode(mode);
 
-    if (giverName) {
+    if (this.currentIncomeMode === 'pocket' && giverName) {
       this.selectPocketMoneyGiver(giverName);
     }
 
@@ -874,19 +875,39 @@ class ExpenseManager {
   }
 
   setIncomeModalMode(mode) {
-    this.currentIncomeMode = mode;
+    this.currentIncomeMode = (mode === 'pocket') ? 'pocket' : 'income';
     const titleEl = document.getElementById('income-modal-title');
+    const titleLabel = document.getElementById('income-title-label');
     const titleInput = document.getElementById('income-title');
+    const amountInput = document.getElementById('income-amount');
     const catSelect = document.getElementById('income-category');
+    const notesInput = document.getElementById('income-notes');
     const submitBtn = document.getElementById('income-submit-btn');
     const btnPocket = document.getElementById('btn-mode-pocket');
     const btnIncome = document.getElementById('btn-mode-income');
+    const giverSec = document.getElementById('income-giver-section');
+    const previewEl = document.getElementById('income-giver-selected');
 
-    if (mode === 'pocket') {
+    if (this.currentIncomeMode === 'pocket') {
       if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-hand-holding-heart" style="color: #8b5cf6;"></i> <span>Log Pocket Money &amp; Family Support</span>';
-      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Brother gave money, Support from Dad';
-      if (catSelect) catSelect.value = 'Family Support';
-      if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Pocket Money</span>';
+      if (titleLabel) titleLabel.textContent = 'Pocket Money / Source Title *';
+      if (titleInput && (!titleInput.value || titleInput.value.startsWith('Salary') || titleInput.value.startsWith('Freelancing'))) {
+        titleInput.placeholder = 'e.g., Brother gave money, Support from Dad';
+      }
+      if (amountInput) amountInput.style.color = '#8b5cf6';
+      if (catSelect) {
+        catSelect.innerHTML = `
+          <option value="Family Support" selected>Family Support &amp; Pocket Money</option>
+          <option value="Pocket Money">Pocket Money / Allowance</option>
+          <option value="Other">Other Support</option>
+        `;
+      }
+      if (notesInput) notesInput.placeholder = 'e.g., Support for fees, Personal allowance...';
+      if (giverSec) giverSec.style.display = 'block';
+      if (submitBtn) {
+        submitBtn.style.background = '#8b5cf6';
+        submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Pocket Money</span>';
+      }
       if (btnPocket) {
         btnPocket.style.background = '#8b5cf6';
         btnPocket.style.color = '#fff';
@@ -896,10 +917,32 @@ class ExpenseManager {
         btnIncome.style.color = 'var(--text-secondary)';
       }
     } else {
+      // Earned Income (Salary / Other Income) Mode - Hide Pocket Money Givers
       if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-wallet" style="color: var(--success);"></i> <span>Log Salary / Other Income</span>';
-      if (titleInput && !titleInput.value) titleInput.placeholder = 'e.g., Monthly Salary, Freelancing, Dividend';
-      if (catSelect) catSelect.value = 'Salary';
-      if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Income</span>';
+      if (titleLabel) titleLabel.textContent = 'Income Title / Source *';
+      if (titleInput && (!titleInput.value || titleInput.value.startsWith('Received from'))) {
+        titleInput.placeholder = 'e.g., Monthly Salary, Freelancing, Dividend';
+      }
+      if (amountInput) amountInput.style.color = 'var(--success)';
+      if (catSelect) {
+        catSelect.innerHTML = `
+          <option value="Salary" selected>Salary / Wages</option>
+          <option value="Freelancing">Freelancing / Side Gig</option>
+          <option value="Investment">Investment / Dividend</option>
+          <option value="Bonus">Bonus / Incentive</option>
+          <option value="Other">Other Earned Income</option>
+        `;
+      }
+      if (notesInput) notesInput.placeholder = 'e.g., Company name, Project milestone, Client details...';
+      if (giverSec) giverSec.style.display = 'none';
+      this.selectedGiver = null;
+      if (previewEl) {
+        previewEl.innerHTML = '<span style="color: var(--text-muted); font-weight: normal;">No individual selected yet (click a person above)</span>';
+      }
+      if (submitBtn) {
+        submitBtn.style.background = 'var(--success)';
+        submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Income</span>';
+      }
       if (btnPocket) {
         btnPocket.style.background = 'transparent';
         btnPocket.style.color = 'var(--text-secondary)';
@@ -1013,12 +1056,7 @@ class ExpenseManager {
       return false;
     }
 
-    const isPocket = (
-      this.currentIncomeMode === 'pocket' ||
-      category === 'Family Support' ||
-      category === 'Pocket Money' ||
-      Boolean(this.selectedGiver && this.selectedGiver.name)
-    );
+    const isPocket = (this.currentIncomeMode === 'pocket');
 
     const incomeData = {
       title: title,
@@ -1027,7 +1065,7 @@ class ExpenseManager {
       paymentMethod: paymentMethod,
       date: date,
       notes: notes,
-      giver: this.selectedGiver ? this.selectedGiver.name : '',
+      giver: isPocket && this.selectedGiver ? this.selectedGiver.name : '',
       isPocketMoney: isPocket
     };
 

@@ -1766,7 +1766,7 @@
             <button type="button" id="btn-mode-pocket" class="action-btn" style="flex: 1; justify-content: center; background: #8b5cf6; color: #fff; font-weight: 700; border-radius: var(--radius-sm); border: none;" onclick="window.expenses.setIncomeModalMode('pocket')">
               <i class="fa-solid fa-hand-holding-heart"></i> Pocket Money &amp; Family Support
             </button>
-            <button type="button" id="btn-mode-income" class="action-btn" style="flex: 1; justify-content: center; background: transparent; color: var(--text-secondary); font-weight: 600; border-radius: var(--radius-sm); border: none;" onclick="window.expenses.setIncomeModalMode('general')">
+            <button type="button" id="btn-mode-income" class="action-btn" style="flex: 1; justify-content: center; background: transparent; color: var(--text-secondary); font-weight: 600; border-radius: var(--radius-sm); border: none;" onclick="window.expenses.setIncomeModalMode('income')">
               <i class="fa-solid fa-wallet"></i> Salary / Other Income
             </button>
           </div>
@@ -1777,7 +1777,7 @@
             <!-- LEFT COLUMN: Fill Details -->
             <div style="display: flex; flex-direction: column; gap: 0.85rem;">
               <div class="form-group" style="margin: 0;">
-                <label class="form-label" style="font-weight: 700;">Pocket Money / Source Title *</label>
+                <label class="form-label" id="income-title-label" style="font-weight: 700;">Pocket Money / Source Title *</label>
                 <input type="text" class="form-input" id="income-title" name="title" placeholder="e.g., Brother gave money, Support from Dad" required>
               </div>
 
@@ -1819,7 +1819,7 @@
 
             <!-- RIGHT COLUMN: Individual Who Gave Pocket Money & Notes -->
             <div style="display: flex; flex-direction: column; gap: 0.85rem; background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-              <div>
+              <div id="income-giver-section">
                 <label class="form-label" style="font-weight: 700; color: #8b5cf6; display: flex; align-items: center; justify-content: space-between;">
                   <span><i class="fa-solid fa-users"></i> Who Gave This Pocket Money?</span>
                   <span style="font-size: 0.72rem; font-weight: normal; color: var(--text-muted);">(Tap Giver)</span>
@@ -2901,15 +2901,15 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261101_v28_pure_english_relations"></script>
-  <script src="js/firebase-sync.js?v=20261101_v28_pure_english_relations"></script>
-  <script src="js/auth.js?v=20261101_v28_pure_english_relations"></script>
-  <script src="js/storage.js?v=20261101_v28_pure_english_relations"></script>
-  <script src="js/tasks.js?v=20261101_v28_pure_english_relations"></script>
-  <script src="js/expenses.js?v=20261101_v28_pure_english_relations"></script>
+  <script src="js/pwa.js?v=20261101_v29_hide_giver_in_income_mode"></script>
+  <script src="js/firebase-sync.js?v=20261101_v29_hide_giver_in_income_mode"></script>
+  <script src="js/auth.js?v=20261101_v29_hide_giver_in_income_mode"></script>
+  <script src="js/storage.js?v=20261101_v29_hide_giver_in_income_mode"></script>
+  <script src="js/tasks.js?v=20261101_v29_hide_giver_in_income_mode"></script>
+  <script src="js/expenses.js?v=20261101_v29_hide_giver_in_income_mode"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261101_v28_pure_english_relations"></script>
-  <script src="js/charts.js?v=20261101_v28_pure_english_relations"></script>
-  <script src="js/app.js?v=20261101_v28_pure_english_relations"></script>
+  <script src="js/reports.js?v=20261101_v29_hide_giver_in_income_mode"></script>
+  <script src="js/charts.js?v=20261101_v29_hide_giver_in_income_mode"></script>
+  <script src="js/app.js?v=20261101_v29_hide_giver_in_income_mode"></script>
 </body>
 </html>
