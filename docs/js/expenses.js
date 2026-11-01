@@ -640,6 +640,9 @@ class ExpenseManager {
                   </div>
                   <div style="display:flex; align-items:center; gap:6px;">
                     <span style="color:${g.color}; font-weight:800; white-space:nowrap;">+${currency}${parseFloat(item.amount).toLocaleString()}</span>
+                    <button class="task-action-btn edit" style="padding:2px; font-size:0.7rem;" onclick="window.expenses.openEditIncomeModal('${item.id}')" title="Edit Pocket Money">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
                     <button class="task-action-btn delete" style="padding:2px; font-size:0.7rem;" onclick="window.expenses.handleDeleteIncome('${item.id}')" title="Delete">
                       <i class="fa-solid fa-trash-can"></i>
                     </button>
@@ -797,6 +800,9 @@ class ExpenseManager {
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span class="cost-cell cost-income">+${currency}${parseFloat(inc.amount).toLocaleString()}</span>
+          <button class="task-action-btn edit" onclick="window.expenses.openEditIncomeModal('${inc.id}')" title="Edit Income">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
           <button class="task-action-btn delete" onclick="window.expenses.handleDeleteIncome('${inc.id}')" title="Delete">
             <i class="fa-solid fa-trash-can"></i>
           </button>
@@ -846,6 +852,68 @@ class ExpenseManager {
     modal.classList.add('active');
   }
 
+  openEditIncomeModal(incomeId) {
+    if (!incomeId) return;
+    const incomes = window.storage.getIncomes();
+    const inc = incomes.find(i => String(i.id) === String(incomeId));
+    if (!inc) return;
+
+    const modal = document.getElementById('income-modal');
+    const form = document.getElementById('income-form');
+    if (!modal || !form) return;
+
+    form.reset();
+    const idInput = document.getElementById('income-id');
+    if (idInput) idInput.value = inc.id;
+
+    const isPocket = (window.app && window.app.isPocketMoney)
+      ? window.app.isPocketMoney(inc)
+      : (inc.isPocketMoney === true || inc.category === 'Family Support' || inc.category === 'Pocket Money' || Boolean(inc.giver));
+
+    const mode = isPocket ? 'pocket' : 'income';
+    this.currentIncomeMode = mode;
+    this.setIncomeModalMode(mode);
+
+    if (isPocket && inc.giver) {
+      this.selectPocketMoneyGiver(inc.giver);
+    } else {
+      this.selectedGiver = null;
+      const previewEl = document.getElementById('income-giver-selected');
+      if (previewEl) {
+        previewEl.innerHTML = '<span style="color: var(--text-muted); font-weight: normal;">No individual selected yet (click a person above)</span>';
+      }
+    }
+
+    const titleInput = document.getElementById('income-title');
+    if (titleInput) titleInput.value = inc.title || '';
+
+    const amountInput = document.getElementById('income-amount');
+    if (amountInput) amountInput.value = inc.amount || '';
+
+    const catSelect = document.getElementById('income-category');
+    if (catSelect && inc.category) {
+      let exists = Array.from(catSelect.options).some(o => o.value === inc.category);
+      if (!exists) {
+        const opt = document.createElement('option');
+        opt.value = inc.category;
+        opt.textContent = inc.category;
+        catSelect.appendChild(opt);
+      }
+      catSelect.value = inc.category;
+    }
+
+    const dateInput = document.getElementById('income-date');
+    if (dateInput) dateInput.value = inc.date || this.currentDate;
+
+    const paymentSelect = document.getElementById('income-payment-method');
+    if (paymentSelect && inc.paymentMethod) paymentSelect.value = inc.paymentMethod;
+
+    const notesInput = document.getElementById('income-notes');
+    if (notesInput) notesInput.value = inc.notes || '';
+
+    modal.classList.add('active');
+  }
+
   openPocketMoneyModal(giverName = '') {
     this.openIncomeModal('pocket', giverName);
   }
@@ -856,6 +924,8 @@ class ExpenseManager {
     if (!modal || !form) return;
 
     form.reset();
+    const idInput = document.getElementById('income-id');
+    if (idInput) idInput.value = '';
     document.getElementById('income-date').value = this.currentDate;
     this.selectedGiver = null;
     this.currentIncomeMode = (mode === 'pocket') ? 'pocket' : 'income';
@@ -876,6 +946,8 @@ class ExpenseManager {
 
   setIncomeModalMode(mode) {
     this.currentIncomeMode = (mode === 'pocket') ? 'pocket' : 'income';
+    const idInput = document.getElementById('income-id');
+    const isEditing = Boolean(idInput && idInput.value);
     const titleEl = document.getElementById('income-modal-title');
     const titleLabel = document.getElementById('income-title-label');
     const titleInput = document.getElementById('income-title');
@@ -889,13 +961,17 @@ class ExpenseManager {
     const previewEl = document.getElementById('income-giver-selected');
 
     if (this.currentIncomeMode === 'pocket') {
-      if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-hand-holding-heart" style="color: #8b5cf6;"></i> <span>Log Pocket Money &amp; Family Support</span>';
+      if (titleEl) {
+        titleEl.innerHTML = isEditing
+          ? '<i class="fa-solid fa-pen-to-square" style="color: #8b5cf6;"></i> <span>Edit Pocket Money Entry</span>'
+          : '<i class="fa-solid fa-hand-holding-heart" style="color: #8b5cf6;"></i> <span>Log Pocket Money &amp; Family Support</span>';
+      }
       if (titleLabel) titleLabel.textContent = 'Pocket Money / Source Title *';
       if (titleInput && (!titleInput.value || titleInput.value.startsWith('Salary') || titleInput.value.startsWith('Freelancing'))) {
         titleInput.placeholder = 'e.g., Brother gave money, Support from Dad';
       }
       if (amountInput) amountInput.style.color = '#8b5cf6';
-      if (catSelect) {
+      if (catSelect && !isEditing) {
         catSelect.innerHTML = `
           <option value="Family Support" selected>Family Support &amp; Pocket Money</option>
           <option value="Pocket Money">Pocket Money / Allowance</option>
@@ -906,7 +982,9 @@ class ExpenseManager {
       if (giverSec) giverSec.style.display = 'block';
       if (submitBtn) {
         submitBtn.style.background = '#8b5cf6';
-        submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Pocket Money</span>';
+        submitBtn.innerHTML = isEditing
+          ? '<i class="fa-solid fa-check"></i> <span>Update Pocket Money</span>'
+          : '<i class="fa-solid fa-check"></i> <span>Save Pocket Money</span>';
       }
       if (btnPocket) {
         btnPocket.style.background = '#8b5cf6';
@@ -918,13 +996,17 @@ class ExpenseManager {
       }
     } else {
       // Earned Income (Salary / Other Income) Mode - Hide Pocket Money Givers
-      if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-wallet" style="color: var(--success);"></i> <span>Log Salary / Other Income</span>';
+      if (titleEl) {
+        titleEl.innerHTML = isEditing
+          ? '<i class="fa-solid fa-pen-to-square" style="color: var(--success);"></i> <span>Edit Earned Income Entry</span>'
+          : '<i class="fa-solid fa-wallet" style="color: var(--success);"></i> <span>Log Salary / Other Income</span>';
+      }
       if (titleLabel) titleLabel.textContent = 'Income Title / Source *';
       if (titleInput && (!titleInput.value || titleInput.value.startsWith('Received from'))) {
         titleInput.placeholder = 'e.g., Monthly Salary, Freelancing, Dividend';
       }
       if (amountInput) amountInput.style.color = 'var(--success)';
-      if (catSelect) {
+      if (catSelect && !isEditing) {
         catSelect.innerHTML = `
           <option value="Salary" selected>Salary / Wages</option>
           <option value="Freelancing">Freelancing / Side Gig</option>
@@ -941,7 +1023,9 @@ class ExpenseManager {
       }
       if (submitBtn) {
         submitBtn.style.background = 'var(--success)';
-        submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Save Income</span>';
+        submitBtn.innerHTML = isEditing
+          ? '<i class="fa-solid fa-check"></i> <span>Update Income</span>'
+          : '<i class="fa-solid fa-check"></i> <span>Save Income</span>';
       }
       if (btnPocket) {
         btnPocket.style.background = 'transparent';
@@ -1044,6 +1128,7 @@ class ExpenseManager {
   }
 
   handleSaveIncome(formData) {
+    const incomeId = (formData.get('incomeId') || '').trim();
     const title = (formData.get('title') || '').trim();
     const amount = parseFloat(formData.get('amount')) || 0;
     const category = formData.get('category');
@@ -1069,18 +1154,33 @@ class ExpenseManager {
       isPocketMoney: isPocket
     };
 
-    window.storage.addIncome(incomeData);
-
-    if (window.app && window.app.showToast) {
-      window.app.showToast(isPocket ? '💜 Pocket Money entry saved! Tracked in Card 6 (Pocket Money).' : '💼 Earned Income logged! Tracked in Card 3.', 'success');
+    if (incomeId) {
+      window.storage.updateIncome({ id: incomeId, ...incomeData });
+      if (window.app && window.app.showToast) {
+        window.app.showToast(isPocket ? '💜 Pocket Money entry updated!' : '💼 Earned Income entry updated!', 'success');
+      }
+    } else {
+      window.storage.addIncome(incomeData);
+      if (window.app && window.app.showToast) {
+        window.app.showToast(isPocket ? '💜 Pocket Money entry saved! Tracked in Card 6 (Pocket Money).' : '💼 Earned Income logged! Tracked in Card 3.', 'success');
+      }
     }
 
     const modal = document.getElementById('income-modal');
     if (modal) modal.classList.remove('active');
 
     this.render();
-    if (window.app) window.app.updateSummaryMetrics();
-    if (window.charts) window.charts.renderAll();
+    if (window.app) {
+      if (window.app.updateSummaryMetrics) {
+        window.app.updateSummaryMetrics();
+      }
+      if (window.app.activeStatType && window.app.renderStatDetailsModal) {
+        window.app.renderStatDetailsModal(window.app.activeStatType);
+      }
+    }
+    if (window.charts && window.charts.renderAll) {
+      window.charts.renderAll();
+    }
     return true;
   }
 

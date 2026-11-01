@@ -1354,6 +1354,10 @@ body {
   background: var(--bg-card-hover);
 }
 
+.task-action-btn.edit:hover {
+  color: var(--primary);
+}
+
 .task-action-btn.delete:hover {
   color: var(--danger);
 }

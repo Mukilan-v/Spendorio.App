@@ -759,6 +759,24 @@ class StorageManager {
     this.pushDataToServer();
   }
 
+  updateIncome(updatedIncome) {
+    if (!updatedIncome || !updatedIncome.id) return null;
+    const targetId = String(updatedIncome.id).trim();
+    const incomes = this.getIncomes();
+    const index = incomes.findIndex(i => String(i.id).trim() === targetId);
+    if (index !== -1) {
+      incomes[index] = {
+        ...incomes[index],
+        ...updatedIncome,
+        amount: parseFloat(updatedIncome.amount) || 0,
+        updatedAt: new Date().toISOString()
+      };
+      this.saveIncomes(incomes);
+      return incomes[index];
+    }
+    return null;
+  }
+
   deleteIncome(incomeId) {
     if (!incomeId) return false;
     const targetId = String(incomeId).trim();
