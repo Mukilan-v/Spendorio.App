@@ -794,7 +794,7 @@ class Application {
         'Dad': { emoji: '👨', color: '#3b82f6' },
         'Mom': { emoji: '👩', color: '#ec4899' },
         'Sister': { emoji: '👧', color: '#8b5cf6' },
-        'Family': { emoji: '👵', color: '#10b981' },
+        'Family': { emoji: '👨‍👩‍👧‍👦', color: '#10b981' },
         'Friend': { emoji: '🤝', color: '#06b6d4' },
         'Myself': { emoji: '🙋', color: '#64748b' }
       };

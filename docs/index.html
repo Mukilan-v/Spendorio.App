@@ -1716,16 +1716,17 @@
 
             <!-- Quick One-Tap Person Chips -->
             <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Family')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.35); cursor:pointer;">👨‍👩‍👧‍👦 Family</button>
               <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Mom')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(236,72,153,0.1); color:#ec4899; border:1px solid rgba(236,72,153,0.3); cursor:pointer;">👩 Mom</button>
               <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Dad')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); cursor:pointer;">👨 Dad</button>
-              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Friend')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.3); cursor:pointer;">🤝 Friend</button>
+              <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Friend')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(6,182,212,0.1); color:#0891b2; border:1px solid rgba(6,182,212,0.3); cursor:pointer;">🤝 Friend</button>
               <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Brother')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); cursor:pointer;">👦 Brother</button>
               <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Sister')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3); cursor:pointer;">👧 Sister</button>
               <button type="button" class="action-btn" onclick="window.expenses.insertPersonTag('Myself')" style="padding:3px 8px; font-size:0.75rem; border-radius:99px; background:rgba(14,165,233,0.1); color:#0ea5e9; border:1px solid rgba(14,165,233,0.3); cursor:pointer;">🙋 Myself</button>
             </div>
 
             <textarea class="form-textarea" id="expense-notes" name="notes" rows="3" 
-              placeholder="e.g. Mom recharge 299, Dad medicine, Dinner with friend, Sister college..." 
+              placeholder="e.g. Family groceries 1200, Mom recharge 299, Dad medicine, Dinner with friend, Sister college..." 
               required 
               oninput="window.expenses && window.expenses.previewPersonTags(this.value)" 
               style="border-color:var(--primary); font-size:0.9rem;"></textarea>
@@ -1843,8 +1844,8 @@
                   <button type="button" class="person-tag-btn" onclick="window.expenses.selectPocketMoneyGiver('Sister', '👧', '#8b5cf6')" style="border-radius: 99px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.12); color: #6d28d9; cursor: pointer;">
                     👧 Sister
                   </button>
-                  <button type="button" class="person-tag-btn" onclick="window.expenses.selectPocketMoneyGiver('Family', '👵', '#10b981')" style="border-radius: 99px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12); color: #047857; cursor: pointer;">
-                    👵 Family
+                  <button type="button" class="person-tag-btn" onclick="window.expenses.selectPocketMoneyGiver('Family', '👨‍👩‍👧‍👦', '#10b981')" style="border-radius: 99px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12); color: #047857; cursor: pointer;">
+                    👨‍👩‍👧‍👦 Family
                   </button>
                   <button type="button" class="person-tag-btn" onclick="window.expenses.selectPocketMoneyGiver('Friend', '🤝', '#06b6d4')" style="border-radius: 99px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(6, 182, 212, 0.4); background: rgba(6, 182, 212, 0.12); color: #0e7490; cursor: pointer;">
                     🤝 Friend
@@ -2902,15 +2903,15 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261101_v30_income_edit_option"></script>
-  <script src="js/firebase-sync.js?v=20261101_v30_income_edit_option"></script>
-  <script src="js/auth.js?v=20261101_v30_income_edit_option"></script>
-  <script src="js/storage.js?v=20261101_v30_income_edit_option"></script>
-  <script src="js/tasks.js?v=20261101_v30_income_edit_option"></script>
-  <script src="js/expenses.js?v=20261101_v30_income_edit_option"></script>
+  <script src="js/pwa.js?v=20261117_v31_family_common_cost"></script>
+  <script src="js/firebase-sync.js?v=20261117_v31_family_common_cost"></script>
+  <script src="js/auth.js?v=20261117_v31_family_common_cost"></script>
+  <script src="js/storage.js?v=20261117_v31_family_common_cost"></script>
+  <script src="js/tasks.js?v=20261117_v31_family_common_cost"></script>
+  <script src="js/expenses.js?v=20261117_v31_family_common_cost"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261101_v30_income_edit_option"></script>
-  <script src="js/charts.js?v=20261101_v30_income_edit_option"></script>
-  <script src="js/app.js?v=20261101_v30_income_edit_option"></script>
+  <script src="js/reports.js?v=20261117_v31_family_common_cost"></script>
+  <script src="js/charts.js?v=20261117_v31_family_common_cost"></script>
+  <script src="js/app.js?v=20261117_v31_family_common_cost"></script>
 </body>
 </html>

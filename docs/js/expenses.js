@@ -50,11 +50,12 @@ class ExpenseManager {
   // Dictionary of known relations, personas, and nicknames
   getKnownPersonConfig() {
     return [
+      { keys: ['family', 'household', 'common'], label: 'Family', emoji: '👨‍👩‍👧‍👦', color: '#10b981' },
       { keys: ['mom', 'mother'], label: 'Mom', emoji: '👩', color: '#ec4899' },
       { keys: ['dad', 'father'], label: 'Dad', emoji: '👨', color: '#3b82f6' },
       { keys: ['brother', 'bro'], label: 'Brother', emoji: '👦', color: '#f59e0b' },
       { keys: ['sister', 'sis'], label: 'Sister', emoji: '👧', color: '#8b5cf6' },
-      { keys: ['friend', 'friends', 'buddy', 'roommate'], label: 'Friend', emoji: '🤝', color: '#10b981' },
+      { keys: ['friend', 'friends', 'buddy', 'roommate'], label: 'Friend', emoji: '🤝', color: '#06b6d4' },
       { keys: ['myself', 'self', 'personal', 'me', 'my', 'mine'], label: 'Myself', emoji: '🙋', color: '#0ea5e9' },
       { keys: ['others', 'other'], label: 'Others', emoji: '👥', color: '#6366f1' }
     ];
@@ -203,7 +204,7 @@ class ExpenseManager {
     if (persons.length === 0) {
       preview.innerHTML = `
         <span style="font-size:0.75rem; color:var(--text-muted);">
-          <i class="fa-solid fa-circle-check" style="color:var(--success);"></i> Remarks entered. (Tip: Tap a chip above to link to Mom, Dad, Brother, Sister, Friend, etc.)
+          <i class="fa-solid fa-circle-check" style="color:var(--success);"></i> Remarks entered. (Tip: Tap a chip above to link to Family, Mom, Dad, Brother, Sister, Friend, etc.)
         </span>`;
       return;
     }
@@ -258,8 +259,12 @@ class ExpenseManager {
 
     if (this.selectedPersonFilter) {
       const pFilter = this.selectedPersonFilter.toLowerCase();
+      const famSet = new Set(['family', 'mom', 'dad', 'brother', 'sister']);
       expenses = expenses.filter(e => {
         const persons = this.extractPersons(e.notes, e.title);
+        if (pFilter === 'all family' || pFilter === 'family (all)') {
+          return persons.some(p => famSet.has(p.name.toLowerCase()));
+        }
         return persons.some(p => p.name.toLowerCase() === pFilter);
       });
     }
@@ -406,18 +411,32 @@ class ExpenseManager {
         <div style="text-align:center; color:var(--text-muted); font-size:0.82rem; padding:1.25rem 0.5rem;">
           <i class="fa-solid fa-user-tag" style="font-size:1.6rem; opacity:0.35; display:block; margin-bottom:0.4rem;"></i>
           No individual costs tracked for this period.<br>
-          <span style="font-size:0.75rem;">Mention <strong>Mom, Dad, Brother, Sister, Friend</strong> etc. in Notes when logging an expense!</span>
+          <span style="font-size:0.75rem;">Mention <strong>Family, Mom, Dad, Brother, Sister, Friend</strong> etc. in Notes when logging an expense!</span>
         </div>`;
       return;
     }
 
     const totalPersonSpend = entries.reduce((s, p) => s + p.total, 0) || 1;
+    const familyNames = new Set(['Family', 'Mom', 'Dad', 'Brother', 'Sister']);
+    const familySpend = entries.filter(e => familyNames.has(e.name)).reduce((s, p) => s + p.total, 0);
+    const isAllFamilyFilter = this.selectedPersonFilter && this.selectedPersonFilter.toLowerCase() === 'all family';
 
     listEl.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(139,92,246,0.06); padding:0.4rem 0.6rem; border-radius:6px; font-size:0.75rem; margin-bottom:0.25rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(139,92,246,0.06); padding:0.4rem 0.6rem; border-radius:6px; font-size:0.75rem; margin-bottom:0.35rem;">
         <span style="color:var(--text-secondary); font-weight:600;">Tracked Individuals: <strong>${entries.length}</strong></span>
         <span style="color:#8b5cf6; font-weight:800;">Total: ${currency}${totalPersonSpend.toLocaleString()}</span>
       </div>
+      ${familySpend > 0 ? `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); padding:0.4rem 0.6rem; border-radius:8px; font-size:0.75rem; margin-bottom:0.45rem;">
+          <div>
+            <span style="color:#047857; font-weight:700;"><i class="fa-solid fa-people-roof"></i> Overall Family Spend:</span>
+            <span style="color:#047857; font-weight:800; font-size:0.85rem; margin-left:4px;">${currency}${familySpend.toLocaleString()}</span>
+          </div>
+          <button type="button" class="action-btn" onclick="window.expenses.filterByPerson('All Family')" style="padding:2px 8px; font-size:0.68rem; border-radius:4px; background:${isAllFamilyFilter ? "#059669" : "rgba(16,185,129,0.15)"}; color:${isAllFamilyFilter ? "#fff" : "#047857"}; border:1px solid rgba(16,185,129,0.4); cursor:pointer; font-weight:700;">
+            <i class="fa-solid ${isAllFamilyFilter ? "fa-check" : "fa-filter"}"></i> ${isAllFamilyFilter ? "Family Filtered" : "Filter All Family"}
+          </button>
+        </div>
+      ` : ''}
       ${entries.map((p, i) => {
         const pct = Math.round((p.total / totalPersonSpend) * 100);
         const isFilterActive = this.selectedPersonFilter === p.name;
@@ -428,8 +447,9 @@ class ExpenseManager {
         return `
           <div style="background:${p.color}0a; border:1px solid ${isFilterActive ? p.color : p.color + '35'}; ${isFilterActive ? 'box-shadow: 0 0 8px ' + p.color + '40;' : ''} border-radius:10px; padding:0.75rem 0.85rem; transition:var(--transition);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
-              <span style="font-weight:700; font-size:0.92rem; color:${p.color};">
+              <span style="font-weight:700; font-size:0.92rem; color:${p.color}; display:inline-flex; align-items:center;">
                 ${p.emoji} ${p.name}
+                ${p.name === 'Family' ? '<span style="font-size:0.68rem; font-weight:normal; background:rgba(16,185,129,0.15); color:#059669; border:1px solid rgba(16,185,129,0.3); border-radius:4px; padding:1px 6px; margin-left:6px;">Common Cost</span>' : ''}
               </span>
               <span style="font-weight:800; font-size:1.05rem; color:${p.color};">
                 ${currency}${p.total.toLocaleString()}
@@ -503,7 +523,7 @@ class ExpenseManager {
       'Dad': { emoji: '👨', color: '#3b82f6' },
       'Mom': { emoji: '👩', color: '#ec4899' },
       'Sister': { emoji: '👧', color: '#8b5cf6' },
-      'Family': { emoji: '👵', color: '#10b981' },
+      'Family': { emoji: '👨‍👩‍👧‍👦', color: '#10b981' },
       'Friend': { emoji: '🤝', color: '#06b6d4' },
       'Myself': { emoji: '🙋', color: '#64748b' }
     };
