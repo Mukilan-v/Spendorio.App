@@ -17,6 +17,21 @@ class ReportManager {
       expenses = expenses.filter(e => e.date === today);
     } else if (period === 'month') {
       expenses = expenses.filter(e => e.date && e.date.startsWith(currentMonth));
+    } else if (typeof period === 'string' && period.startsWith('date:')) {
+      const targetDate = period.replace('date:', '');
+      expenses = expenses.filter(e => e.date === targetDate);
+    } else if (typeof period === 'string' && period.startsWith('month:')) {
+      const targetMonth = period.replace('month:', '');
+      expenses = expenses.filter(e => e.date && e.date.startsWith(targetMonth));
+    } else if (typeof period === 'string' && period.startsWith('range:')) {
+      const parts = period.replace('range:', '').split(':');
+      const from = parts[0];
+      const to = parts[1] || parts[0];
+      expenses = expenses.filter(e => e.date && e.date >= from && e.date <= to);
+    } else if (typeof period === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(period)) {
+      expenses = expenses.filter(e => e.date === period);
+    } else if (typeof period === 'string' && /^\d{4}-\d{2}$/.test(period)) {
+      expenses = expenses.filter(e => e.date && e.date.startsWith(period));
     }
 
     return expenses.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -31,6 +46,21 @@ class ReportManager {
       incomes = incomes.filter(i => i.date === today);
     } else if (period === 'month') {
       incomes = incomes.filter(i => i.date && i.date.startsWith(currentMonth));
+    } else if (typeof period === 'string' && period.startsWith('date:')) {
+      const targetDate = period.replace('date:', '');
+      incomes = incomes.filter(i => i.date === targetDate);
+    } else if (typeof period === 'string' && period.startsWith('month:')) {
+      const targetMonth = period.replace('month:', '');
+      incomes = incomes.filter(i => i.date && i.date.startsWith(targetMonth));
+    } else if (typeof period === 'string' && period.startsWith('range:')) {
+      const parts = period.replace('range:', '').split(':');
+      const from = parts[0];
+      const to = parts[1] || parts[0];
+      incomes = incomes.filter(i => i.date && i.date >= from && i.date <= to);
+    } else if (typeof period === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(period)) {
+      incomes = incomes.filter(i => i.date === period);
+    } else if (typeof period === 'string' && /^\d{4}-\d{2}$/.test(period)) {
+      incomes = incomes.filter(i => i.date && i.date.startsWith(period));
     }
 
     return incomes.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -77,6 +107,22 @@ class ReportManager {
     const today = new Date().toISOString().split('T')[0];
     if (period === 'today') return `Today (${today})`;
     if (period === 'month') return `This Month (${today.substring(0, 7)})`;
+    if (typeof period === 'string' && period.startsWith('date:')) {
+      return `Date ${period.replace('date:', '')}`;
+    }
+    if (typeof period === 'string' && period.startsWith('month:')) {
+      return `Month ${period.replace('month:', '')}`;
+    }
+    if (typeof period === 'string' && period.startsWith('range:')) {
+      const parts = period.replace('range:', '').split(':');
+      return `Period ${parts[0]} to ${parts[1] || parts[0]}`;
+    }
+    if (typeof period === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(period)) {
+      return `Date ${period}`;
+    }
+    if (typeof period === 'string' && /^\d{4}-\d{2}$/.test(period)) {
+      return `Month ${period}`;
+    }
     return 'All-Time Total';
   }
 
@@ -251,7 +297,15 @@ class ReportManager {
       </tr>
     </thead>
     <tbody>
-      ${expenses.map((e, i) => {
+      ${expenses.length === 0 ? `
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 28px 14px; color: #64748b; font-size: 12px; background: #f8fafc;">
+            <div style="font-size: 20px; margin-bottom: 6px;">📂</div>
+            <strong style="color: #334155;">No expense records found for ${this.escapeHtml(periodLabel)}</strong><br>
+            <span style="font-size: 11px; color: #94a3b8; display: inline-block; margin-top: 4px;">Choose another month/date from the calendar or choose "All-Time" to export all expenses.</span>
+          </td>
+        </tr>
+      ` : expenses.map((e, i) => {
         const person = this.getPersonName(e);
         return `<tr style="page-break-inside: avoid !important; break-inside: avoid !important;">
           <td style="text-align: center; color: #64748b;">${i + 1}</td>
@@ -285,16 +339,12 @@ class ReportManager {
 </body>
 </html>`;
 
-    // DIRECT PDF DOWNLOAD ENGINE (With Anti-Splitting Pagebreak & Multi-Page Precision)
+    // DIRECT PDF DOWNLOAD ENGINE (Clean Capture & Pagebreak Support)
     if (typeof html2pdf !== 'undefined') {
       try {
         const container = document.createElement('div');
-        container.id = 'spendorio-pdf-staging';
-        container.style.position = 'fixed';
-        container.style.left = '-9999px';
-        container.style.top = '0';
         container.style.width = '194mm';
-        container.style.padding = '0';
+        container.style.padding = '12px 16px';
         container.style.background = '#ffffff';
         container.style.color = '#0f172a';
         container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -305,10 +355,8 @@ class ReportManager {
           else if (el.parentNode) el.parentNode.removeChild(el);
         });
 
-        document.body.appendChild(container);
-
         if (window.app && window.app.showToast) {
-          window.app.showToast('Generating direct PDF download...', 'info');
+          window.app.showToast('Generating direct PDF statement...', 'info');
         }
 
         const opt = {
@@ -319,7 +367,6 @@ class ReportManager {
             scale: 2,
             useCORS: true,
             letterRendering: true,
-            scrollY: 0,
             logging: false
           },
           jsPDF: {
@@ -334,12 +381,10 @@ class ReportManager {
         };
 
         html2pdf().set(opt).from(container).save().then(() => {
-          container.remove();
           if (window.app && window.app.showToast) {
-            window.app.showToast('PDF downloaded directly to your device!', 'success');
+            window.app.showToast('PDF statement downloaded to your device!', 'success');
           }
         }).catch(err => {
-          container.remove();
           console.warn('html2pdf fallback to print preview:', err);
           this._fallbackPrintWindow(printHtml, period, nowStr);
         });

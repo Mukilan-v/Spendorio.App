@@ -23,6 +23,33 @@ class ExpenseManager {
     this.render();
   }
 
+  handlePeriodFilterChange(val) {
+    const datePicker = document.getElementById('expense-date-picker-inline');
+    const monthPicker = document.getElementById('expense-month-picker-inline');
+    const today = new Date().toISOString().split('T')[0];
+    const curMonth = today.substring(0, 7);
+
+    if (val === 'custom-date') {
+      if (datePicker) {
+        datePicker.style.display = 'inline-block';
+        if (!datePicker.value) datePicker.value = today;
+        this.setPeriodFilter('date:' + datePicker.value);
+      }
+      if (monthPicker) monthPicker.style.display = 'none';
+    } else if (val === 'custom-month') {
+      if (monthPicker) {
+        monthPicker.style.display = 'inline-block';
+        if (!monthPicker.value) monthPicker.value = curMonth;
+        this.setPeriodFilter('month:' + monthPicker.value);
+      }
+      if (datePicker) datePicker.style.display = 'none';
+    } else {
+      if (datePicker) datePicker.style.display = 'none';
+      if (monthPicker) monthPicker.style.display = 'none';
+      this.setPeriodFilter(val);
+    }
+  }
+
   setFilters({ search, category }) {
     if (search !== undefined) this.searchQuery = search.toLowerCase();
     if (category !== undefined) this.categoryFilter = category;
@@ -259,6 +286,17 @@ class ExpenseManager {
       expenses = expenses.filter(e => e.date === this.currentDate);
     } else if (this.periodFilter === 'month') {
       expenses = expenses.filter(e => e.date && e.date.startsWith(currentMonth));
+    } else if (typeof this.periodFilter === 'string' && this.periodFilter.startsWith('date:')) {
+      const targetDate = this.periodFilter.replace('date:', '');
+      expenses = expenses.filter(e => e.date === targetDate);
+    } else if (typeof this.periodFilter === 'string' && this.periodFilter.startsWith('month:')) {
+      const targetMonth = this.periodFilter.replace('month:', '');
+      expenses = expenses.filter(e => e.date && e.date.startsWith(targetMonth));
+    } else if (typeof this.periodFilter === 'string' && this.periodFilter.startsWith('range:')) {
+      const parts = this.periodFilter.replace('range:', '').split(':');
+      const from = parts[0];
+      const to = parts[1] || parts[0];
+      expenses = expenses.filter(e => e.date && e.date >= from && e.date <= to);
     }
 
     if (this.categoryFilter && this.categoryFilter !== 'all') {

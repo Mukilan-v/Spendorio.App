@@ -1041,11 +1041,15 @@
             <div class="expense-table-card">
               <div class="expense-table-header">
                 <div class="filter-bar">
-                  <select id="expense-period-filter" class="select-filter">
+                  <select id="expense-period-filter" class="select-filter" onchange="window.expenses && window.expenses.handlePeriodFilterChange(this.value)">
                     <option value="today">Today's Costs</option>
                     <option value="month">This Month</option>
+                    <option value="custom-date">📅 Pick Date (Calendar)...</option>
+                    <option value="custom-month">📅 Pick Month...</option>
                     <option value="all">All Time</option>
                   </select>
+                  <input type="date" id="expense-date-picker-inline" class="form-input" style="display:none; padding:4px 8px; font-size:0.8rem; width:auto;" onchange="window.expenses.setPeriodFilter('date:' + this.value)" title="Choose date">
+                  <input type="month" id="expense-month-picker-inline" class="form-input" style="display:none; padding:4px 8px; font-size:0.8rem; width:auto;" onchange="window.expenses.setPeriodFilter('month:' + this.value)" title="Choose month">
 
                   <select id="expense-category-filter" class="select-filter">
                     <option value="all">All Categories</option>
@@ -1427,14 +1431,36 @@
                       Export official expense statements in PDF, Excel Spreadsheet, Word Document, or CSV.
                     </p>
                   </div>
-                  <!-- Period Selector -->
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">Period:</label>
-                    <select id="export-period-select" class="form-select" style="padding:4px 10px; font-size:0.8rem; width:auto;">
+                  <!-- Period & Calendar Date Selector -->
+                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <label style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); display:flex; align-items:center; gap:4px;">
+                      <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i> Period:
+                    </label>
+                    <select id="export-period-select" class="form-select" onchange="window.app && window.app.handleExportPeriodChange(this.value)" style="padding:5px 10px; font-size:0.82rem; width:auto; border-radius:6px; font-weight:600; cursor:pointer;">
                       <option value="all">All-Time Expenses</option>
-                      <option value="month">This Month</option>
+                      <option value="month">This Month (Current)</option>
+                      <option value="custom-month">📅 Choose Specific Month...</option>
+                      <option value="custom-date">📅 Choose Specific Date...</option>
+                      <option value="custom-range">📅 Choose Date Range (From - To)...</option>
                       <option value="today">Today</option>
                     </select>
+
+                    <!-- Specific Month Calendar Picker -->
+                    <div id="export-month-picker-wrap" style="display:none; align-items:center; gap:4px;">
+                      <input type="month" id="export-month-picker" class="form-input" style="padding:4px 8px; font-size:0.8rem; width:auto; cursor:pointer;" title="Pick month">
+                    </div>
+
+                    <!-- Specific Date Calendar Picker -->
+                    <div id="export-date-picker-wrap" style="display:none; align-items:center; gap:4px;">
+                      <input type="date" id="export-date-picker" class="form-input" style="padding:4px 8px; font-size:0.8rem; width:auto; cursor:pointer;" title="Pick exact date">
+                    </div>
+
+                    <!-- Date Range Calendar Pickers -->
+                    <div id="export-range-picker-wrap" style="display:none; align-items:center; gap:4px;">
+                      <input type="date" id="export-range-from" class="form-input" style="padding:4px 8px; font-size:0.8rem; width:auto; cursor:pointer;" title="From date">
+                      <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">to</span>
+                      <input type="date" id="export-range-to" class="form-input" style="padding:4px 8px; font-size:0.8rem; width:auto; cursor:pointer;" title="To date">
+                    </div>
                   </div>
                 </div>
 
@@ -2903,15 +2929,15 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
-  <script src="js/firebase-sync.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
-  <script src="js/auth.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
-  <script src="js/storage.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
-  <script src="js/tasks.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
-  <script src="js/expenses.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
+  <script src="js/pwa.js?v=20261119_v33_pdf_calendar_date_picker"></script>
+  <script src="js/firebase-sync.js?v=20261119_v33_pdf_calendar_date_picker"></script>
+  <script src="js/auth.js?v=20261119_v33_pdf_calendar_date_picker"></script>
+  <script src="js/storage.js?v=20261119_v33_pdf_calendar_date_picker"></script>
+  <script src="js/tasks.js?v=20261119_v33_pdf_calendar_date_picker"></script>
+  <script src="js/expenses.js?v=20261119_v33_pdf_calendar_date_picker"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="js/reports.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
-  <script src="js/charts.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
-  <script src="js/app.js?v=20261119_v32_pdf_pagebreak_dates_inorder"></script>
+  <script src="js/reports.js?v=20261119_v33_pdf_calendar_date_picker"></script>
+  <script src="js/charts.js?v=20261119_v33_pdf_calendar_date_picker"></script>
+  <script src="js/app.js?v=20261119_v33_pdf_calendar_date_picker"></script>
 </body>
 </html>

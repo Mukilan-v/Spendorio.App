@@ -1197,28 +1197,75 @@ class Application {
     this.showToast('Backup JSON exported successfully!', 'success');
   }
 
+  handleExportPeriodChange(val) {
+    const monthWrap = document.getElementById('export-month-picker-wrap');
+    const dateWrap = document.getElementById('export-date-picker-wrap');
+    const rangeWrap = document.getElementById('export-range-picker-wrap');
+    const today = new Date().toISOString().split('T')[0];
+    const curMonth = today.substring(0, 7);
+
+    if (monthWrap) monthWrap.style.display = (val === 'custom-month') ? 'flex' : 'none';
+    if (dateWrap) dateWrap.style.display = (val === 'custom-date') ? 'flex' : 'none';
+    if (rangeWrap) rangeWrap.style.display = (val === 'custom-range') ? 'flex' : 'none';
+
+    const monthInput = document.getElementById('export-month-picker');
+    if (monthInput && !monthInput.value) monthInput.value = curMonth;
+
+    const dateInput = document.getElementById('export-date-picker');
+    if (dateInput && !dateInput.value) dateInput.value = today;
+
+    const fromInput = document.getElementById('export-range-from');
+    const toInput = document.getElementById('export-range-to');
+    if (fromInput && !fromInput.value) fromInput.value = `${curMonth}-01`;
+    if (toInput && !toInput.value) toInput.value = today;
+  }
+
+  getExportSelectedPeriod() {
+    const sel = document.getElementById('export-period-select')?.value || 'all';
+    if (sel === 'custom-month') {
+      const m = document.getElementById('export-month-picker')?.value;
+      return m ? `month:${m}` : 'month';
+    }
+    if (sel === 'custom-date') {
+      const d = document.getElementById('export-date-picker')?.value;
+      return d ? `date:${d}` : 'today';
+    }
+    if (sel === 'custom-range') {
+      const from = document.getElementById('export-range-from')?.value;
+      const to = document.getElementById('export-range-to')?.value || from;
+      return (from && to) ? `range:${from}:${to}` : 'all';
+    }
+    return sel;
+  }
+
   downloadPDFReport(period) {
-    const p = period || document.getElementById('export-period-select')?.value || 'all';
-    if (window.reports) window.reports.downloadPDF(p);
+    const p = period || this.getExportSelectedPeriod();
+    if (window.reports) {
+      const expenses = window.reports.getFilteredExpenses(p);
+      if (expenses.length === 0) {
+        this.showToast(`Notice: No expenses found for "${window.reports.getPeriodLabel(p)}". Pick your target date/month in calendar!`, 'info');
+      }
+      window.reports.downloadPDF(p);
+    }
   }
 
   downloadExcelReport(period) {
-    const p = period || document.getElementById('export-period-select')?.value || 'all';
+    const p = period || this.getExportSelectedPeriod();
     if (window.reports) window.reports.downloadExcel(p);
   }
 
   downloadWordDocReport(period) {
-    const p = period || document.getElementById('export-period-select')?.value || 'all';
+    const p = period || this.getExportSelectedPeriod();
     if (window.reports) window.reports.downloadWord(p);
   }
 
   downloadTextSummary(period) {
-    const p = period || document.getElementById('export-period-select')?.value || 'all';
+    const p = period || this.getExportSelectedPeriod();
     if (window.reports) window.reports.downloadText(p);
   }
 
   downloadCSV(period) {
-    const p = period || document.getElementById('export-period-select')?.value || 'all';
+    const p = period || this.getExportSelectedPeriod();
     if (window.reports) {
       window.reports.downloadCSV(p);
     } else {
@@ -1229,8 +1276,8 @@ class Application {
       a.href = url;
       a.download = `expenses-export-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
-      URL.revokeObjectURL(url);
-      this.showToast('Expenses CSV exported successfully!', 'success');
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.showToast('CSV Exported successfully!', 'success');
     }
   }
 
