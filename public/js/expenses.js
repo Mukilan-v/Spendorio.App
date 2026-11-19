@@ -168,6 +168,14 @@ class ExpenseManager {
       });
     });
 
+    Object.values(map).forEach(p => {
+      p.items.sort((a, b) => {
+        const dateDiff = (b.date || '').localeCompare(a.date || '');
+        if (dateDiff !== 0) return dateDiff;
+        return (b.id || '').localeCompare(a.id || '');
+      });
+    });
+
     return map;
   }
 
@@ -569,6 +577,14 @@ class ExpenseManager {
       map[giver].items.push(inc);
     });
 
+    Object.values(map).forEach(g => {
+      g.items.sort((a, b) => {
+        const dateDiff = (b.date || '').localeCompare(a.date || '');
+        if (dateDiff !== 0) return dateDiff;
+        return (b.id || '').localeCompare(a.id || '');
+      });
+    });
+
     return map;
   }
 
@@ -791,8 +807,14 @@ class ExpenseManager {
 
     const currentMonth = this.currentDate.substring(0, 7);
     const isPocket = (inc) => window.app && window.app.isPocketMoney ? window.app.isPocketMoney(inc) : (inc.category === 'Family Support' || inc.category === 'Pocket Money' || inc.giver);
-    // Strictly earned income in Monthly Incomes card (excludes pocket money)
-    const incomes = window.storage.getIncomes().filter(i => i.date && i.date.startsWith(currentMonth) && !isPocket(i));
+    // Strictly earned income in Monthly Incomes card (excludes pocket money, sorted latest first)
+    const incomes = window.storage.getIncomes()
+      .filter(i => i.date && i.date.startsWith(currentMonth) && !isPocket(i))
+      .sort((a, b) => {
+        const dateDiff = (b.date || '').localeCompare(a.date || '');
+        if (dateDiff !== 0) return dateDiff;
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+      });
     const totalIncome = incomes.reduce((acc, cur) => acc + (parseFloat(cur.amount) || 0), 0);
 
     if (incomeTotalEl) {

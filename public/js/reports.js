@@ -118,18 +118,22 @@ class ReportManager {
     .kpi-sub { font-size: 11px; color: #94a3b8; }
     .section-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 8px; border-left: 4px solid #4f46e5; padding-left: 8px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
-    th { background: #f1f5f9; color: #334155; font-weight: 700; text-align: left; padding: 7px 10px; border-bottom: 2px solid #cbd5e1; }
-    td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11.5px; page-break-inside: auto; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+    tr { page-break-inside: avoid !important; break-inside: avoid !important; page-break-after: auto; }
+    th { background: #f1f5f9; color: #334155; font-weight: 700; text-align: left; padding: 7px 8px; border-bottom: 2px solid #cbd5e1; page-break-inside: avoid !important; break-inside: avoid !important; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; page-break-inside: avoid !important; break-inside: avoid !important; word-wrap: break-word; overflow-wrap: break-word; }
     tr:nth-child(even) td { background: #fafafa; }
     .text-right { text-align: right; }
-    .badge { display: inline-block; padding: 2px 7px; border-radius: 99px; font-size: 11px; font-weight: 600; background: #ede9fe; color: #6d28d9; }
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 99px; font-size: 10.5px; font-weight: 600; background: #ede9fe; color: #6d28d9; white-space: nowrap; }
+    .kpi-grid, .two-col, .section-title, .header, .footer, .kpi-card { page-break-inside: avoid !important; break-inside: avoid !important; }
     .footer { border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 24px; font-size: 11px; color: #94a3b8; text-align: center; }
     @media print {
       .no-print { display: none !important; }
       body { padding: 0; }
       table { page-break-inside: auto; }
-      tr { page-break-inside: avoid; page-break-after: auto; }
+      tr { page-break-inside: avoid !important; break-inside: avoid !important; page-break-after: auto; }
     }
   </style>
 </head>
@@ -236,28 +240,28 @@ class ReportManager {
   <table>
     <thead>
       <tr>
-        <th style="width: 32px;">#</th>
-        <th style="width: 85px;">Date</th>
-        <th>Expense Title</th>
-        <th>Category</th>
-        <th>Beneficiary / Tag</th>
-        <th>Payment</th>
-        <th class="text-right">Amount</th>
+        <th style="width: 28px; text-align: center;">#</th>
+        <th style="width: 78px; white-space: nowrap;">Date</th>
+        <th style="width: 120px;">Expense Title</th>
+        <th style="width: 95px;">Category</th>
+        <th style="width: 85px;">Beneficiary</th>
+        <th style="width: 60px;">Payment</th>
+        <th class="text-right" style="width: 75px; white-space: nowrap;">Amount</th>
         <th>Notes & Remarks</th>
       </tr>
     </thead>
     <tbody>
       ${expenses.map((e, i) => {
         const person = this.getPersonName(e);
-        return `<tr>
-          <td>${i + 1}</td>
-          <td>${e.date || 'N/A'}</td>
-          <td><strong>${this.escapeHtml(e.title)}</strong></td>
-          <td>${this.escapeHtml(e.category || 'Other')}</td>
+        return `<tr style="page-break-inside: avoid !important; break-inside: avoid !important;">
+          <td style="text-align: center; color: #64748b;">${i + 1}</td>
+          <td style="white-space: nowrap; font-size: 11px;">${e.date || 'N/A'}</td>
+          <td><strong style="color: #0f172a;">${this.escapeHtml(e.title)}</strong></td>
+          <td style="font-size: 11px;">${this.escapeHtml(e.category || 'Other')}</td>
           <td>${person !== '-' ? `<span class="badge">${this.escapeHtml(person)}</span>` : '-'}</td>
-          <td>${this.escapeHtml(e.paymentMethod || 'UPI')}</td>
-          <td class="text-right" style="font-weight: 700; color: #dc2626;">${currency}${parseFloat(e.amount).toLocaleString()}</td>
-          <td style="color: #64748b; font-size: 11px;">${this.escapeHtml(e.notes || '')}</td>
+          <td style="font-size: 11px;">${this.escapeHtml(e.paymentMethod || 'UPI')}</td>
+          <td class="text-right" style="font-weight: 700; color: #dc2626; white-space: nowrap;">${currency}${parseFloat(e.amount).toLocaleString()}</td>
+          <td style="color: #475569; font-size: 11px; word-break: break-word; line-height: 1.35;">${this.escapeHtml(e.notes || '-')}</td>
         </tr>`;
       }).join('')}
       <tr style="background: #f1f5f9; font-weight: 800; border-top: 2px solid #cbd5e1;">
@@ -281,11 +285,16 @@ class ReportManager {
 </body>
 </html>`;
 
-    // DIRECT PDF DOWNLOAD ENGINE
+    // DIRECT PDF DOWNLOAD ENGINE (With Anti-Splitting Pagebreak & Multi-Page Precision)
     if (typeof html2pdf !== 'undefined') {
       try {
         const container = document.createElement('div');
-        container.style.padding = '20px';
+        container.id = 'spendorio-pdf-staging';
+        container.style.position = 'fixed';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.width = '194mm';
+        container.style.padding = '0';
         container.style.background = '#ffffff';
         container.style.color = '#0f172a';
         container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -296,23 +305,41 @@ class ReportManager {
           else if (el.parentNode) el.parentNode.removeChild(el);
         });
 
+        document.body.appendChild(container);
+
         if (window.app && window.app.showToast) {
           window.app.showToast('Generating direct PDF download...', 'info');
         }
 
         const opt = {
-          margin: 10,
+          margin: [10, 8, 12, 8],
           filename: `Spendorio_Statement_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            scrollY: 0,
+            logging: false
+          },
+          jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+          },
+          pagebreak: {
+            mode: ['avoid-all', 'css', 'legacy'],
+            avoid: ['tr', 'thead', '.kpi-card', '.section-title', '.header', '.two-col', '.footer']
+          }
         };
 
         html2pdf().set(opt).from(container).save().then(() => {
+          container.remove();
           if (window.app && window.app.showToast) {
             window.app.showToast('PDF downloaded directly to your device!', 'success');
           }
         }).catch(err => {
+          container.remove();
           console.warn('html2pdf fallback to print preview:', err);
           this._fallbackPrintWindow(printHtml, period, nowStr);
         });

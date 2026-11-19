@@ -860,8 +860,15 @@ class Application {
 
       const filtered = pocketIncomes.filter(i => {
         if (!q) return true;
-        const searchStr = `${i.title || ''} ${i.notes || ''} ${i.category || ''} ${i.date || ''} ${i.amount || ''}`.toLowerCase();
+        const searchStr = `${i.title || ''} ${i.notes || ''} ${i.category || ''} ${i.date || ''} ${i.amount || ''} ${i.giver || ''}`.toLowerCase();
         return searchStr.includes(q);
+      });
+
+      // Sort chronologically in descending order (latest date first)
+      filtered.sort((a, b) => {
+        const dateDiff = (b.date || '').localeCompare(a.date || '');
+        if (dateDiff !== 0) return dateDiff;
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
       });
 
       if (filtered.length === 0) {
