@@ -157,12 +157,10 @@ const reportsFile = fs.readFileSync('public/js/reports.js', 'utf8');
 assert.ok(reportsFile.includes('page-break-inside: avoid !important'), 'CSS must specify page-break-inside avoid');
 assert.ok(reportsFile.includes('break-inside: avoid !important'), 'CSS must specify break-inside avoid');
 assert.ok(reportsFile.includes('display: table-header-group'), 'thead must repeat via table-header-group');
-assert.ok(reportsFile.includes('mode: [\'avoid-all\', \'css\', \'legacy\']'), 'html2pdf opt must include avoid-all pagebreak mode');
-assert.ok(reportsFile.includes('avoid: [\'tr\', \'thead\''), 'html2pdf opt must explicitly avoid breaking on tr');
-assert.ok(reportsFile.includes("style.width = '194mm'"), 'PDF container must match printable A4 width to prevent cutoffs');
-assert.ok(!reportsFile.includes("left = '-9999px'"), 'PDF container must NOT be placed off-screen at left -9999px (causes blank PDF)');
+assert.ok(reportsFile.includes('_renderVectorPdf'), 'Must include pure vector PDF generator _renderVectorPdf');
+assert.ok(reportsFile.includes('JsPDFClass'), 'Must include native jsPDF class reference');
 
-console.log('✓ PDF options verified: full page-break anti-split protections active');
+console.log('✓ PDF options verified: pure native vector engine active');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST 4: Bit-for-bit Parity between public/ and docs/

@@ -1415,7 +1415,18 @@ class Application {
     if (window.reports) {
       const expenses = window.reports.getFilteredExpenses(p);
       if (expenses.length === 0) {
-        this.showToast(`Notice: 0 records found for "${window.reports.getPeriodLabel(p)}". Tap "Pick Month" or "All-Time" to select your data!`, 'warning');
+        const allExpenses = window.reports.getFilteredExpenses('all');
+        if (allExpenses.length > 0) {
+          const proceed = confirm(
+            `No expenses found for "${window.reports.getPeriodLabel(p)}".\n\nWould you like to export All-Time expenses (${allExpenses.length} records) instead?`
+          );
+          if (proceed) {
+            this.setExportPeriodMode('all');
+            window.reports.downloadPDF('all');
+            return;
+          }
+        }
+        this.showToast(`Notice: 0 records found for "${window.reports.getPeriodLabel(p)}". Select another month/date from the calendar!`, 'warning');
       }
       window.reports.downloadPDF(p);
     }
