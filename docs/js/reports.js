@@ -726,9 +726,12 @@ class ReportManager {
       <th>Notes & Remarks</th>
     </tr>`;
 
-    expenses.forEach((e, i) => {
-      const person = this.getPersonName(e);
-      html += `<tr>
+    if (expenses.length === 0) {
+      html += `<tr><td colspan="8" style="text-align:center; color:#64748b; padding:12px;">No expense records found for ${this.escapeHtml(periodLabel)}.</td></tr>`;
+    } else {
+      expenses.forEach((e, i) => {
+        const person = this.getPersonName(e);
+        html += `<tr>
         <td>${i + 1}</td>
         <td>${e.date || ''}</td>
         <td>${this.escapeHtml(e.title || '')}</td>
@@ -738,14 +741,15 @@ class ReportManager {
         <td class="currency-cell">${parseFloat(e.amount) || 0}</td>
         <td>${this.escapeHtml(e.notes || '')}</td>
       </tr>`;
-    });
+      });
+    }
 
     const startRow = 8 + maxRows + 4;
     const endRow = startRow + expenses.length - 1;
     html += `
     <tr class="total-row">
       <td colspan="6" style="text-align:right; font-weight:bold; font-size:11pt;">GRAND TOTAL:</td>
-      <td class="currency-cell" style="font-weight:bold; font-size:11pt;">=SUM(G${startRow}:G${endRow})</td>
+      <td class="currency-cell" style="font-weight:bold; font-size:11pt;">${expenses.length > 0 ? `=SUM(G${startRow}:G${endRow})` : '0.00'}</td>
       <td>Pure Sum Total</td>
     </tr>
   </table>
@@ -838,7 +842,7 @@ class ReportManager {
       </tr>
     </thead>
     <tbody>
-      ${expenses.map((e, i) => `<tr>
+      ${expenses.length === 0 ? `<tr><td colspan="7" style="text-align:center; color:#64748b; padding:12px;">No expense records found for ${this.escapeHtml(periodLabel)}.</td></tr>` : expenses.map((e, i) => `<tr>
         <td>${i + 1}</td>
         <td>${e.date || ''}</td>
         <td><strong>${this.escapeHtml(e.title || '')}</strong></td>
@@ -927,12 +931,16 @@ class ReportManager {
     text += `\n--- DETAILED EXPENSE LEDGER ---\n`;
     text += `DATE       | AMOUNT       | TITLE & BENEFICIARY [NOTES]\n`;
     text += `--------------------------------------------------------\n`;
-    expenses.forEach(e => {
-      const person = this.getPersonName(e);
-      const personTag = person !== '-' ? ` [For: ${person}]` : '';
-      const notesTag = e.notes ? ` (${e.notes})` : '';
-      text += `${(e.date || '').padEnd(10)} | ${(currency + parseFloat(e.amount).toLocaleString()).padStart(12)} | ${e.title}${personTag}${notesTag}\n`;
-    });
+    if (expenses.length === 0) {
+      text += `No expense records found for ${periodLabel}.\n`;
+    } else {
+      expenses.forEach(e => {
+        const person = this.getPersonName(e);
+        const personTag = person !== '-' ? ` [For: ${person}]` : '';
+        const notesTag = e.notes ? ` (${e.notes})` : '';
+        text += `${(e.date || '').padEnd(10)} | ${(currency + parseFloat(e.amount).toLocaleString()).padStart(12)} | ${e.title}${personTag}${notesTag}\n`;
+      });
+    }
 
     text += `--------------------------------------------------------\n`;
     text += `GRAND TOTAL : ${currency}${totalSpent.toLocaleString()}\n`;

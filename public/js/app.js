@@ -1410,26 +1410,34 @@ class Application {
     }
   }
 
-  downloadPDFReport(period) {
+  _ensureExportPeriod(period, onProceed) {
     const p = period || this.getExportSelectedPeriod();
-    if (window.reports) {
-      const expenses = window.reports.getFilteredExpenses(p);
-      if (expenses.length === 0) {
-        const allExpenses = window.reports.getFilteredExpenses('all');
-        if (allExpenses.length > 0) {
-          const proceed = confirm(
-            `No expenses found for "${window.reports.getPeriodLabel(p)}".\n\nWould you like to export All-Time expenses (${allExpenses.length} records) instead?`
-          );
-          if (proceed) {
-            this.setExportPeriodMode('all');
-            window.reports.downloadPDF('all');
-            return;
-          }
-        }
-        this.showToast(`Notice: 0 records found for "${window.reports.getPeriodLabel(p)}". Select another month/date from the calendar!`, 'warning');
-      }
-      window.reports.downloadPDF(p);
+    if (!window.reports) {
+      if (typeof onProceed === 'function') onProceed(p);
+      return;
     }
+    const expenses = window.reports.getFilteredExpenses(p);
+    if (expenses.length === 0) {
+      const allExpenses = window.reports.getFilteredExpenses('all');
+      if (allExpenses.length > 0) {
+        const proceed = confirm(
+          `No expenses found for "${window.reports.getPeriodLabel(p)}".\n\nWould you like to export All-Time expenses (${allExpenses.length} records) instead?`
+        );
+        if (proceed) {
+          this.setExportPeriodMode('all');
+          if (typeof onProceed === 'function') onProceed('all');
+          return;
+        }
+      }
+      this.showToast(`Notice: 0 records found for "${window.reports.getPeriodLabel(p)}". Select another month/date from the calendar!`, 'warning');
+    }
+    if (typeof onProceed === 'function') onProceed(p);
+  }
+
+  downloadPDFReport(period) {
+    this._ensureExportPeriod(period, (p) => {
+      if (window.reports) window.reports.downloadPDF(p);
+    });
   }
 
   printPDFStatement(period) {
@@ -1440,35 +1448,39 @@ class Application {
   }
 
   downloadExcelReport(period) {
-    const p = period || this.getExportSelectedPeriod();
-    if (window.reports) window.reports.downloadExcel(p);
+    this._ensureExportPeriod(period, (p) => {
+      if (window.reports) window.reports.downloadExcel(p);
+    });
   }
 
   downloadWordDocReport(period) {
-    const p = period || this.getExportSelectedPeriod();
-    if (window.reports) window.reports.downloadWord(p);
+    this._ensureExportPeriod(period, (p) => {
+      if (window.reports) window.reports.downloadWord(p);
+    });
   }
 
   downloadTextSummary(period) {
-    const p = period || this.getExportSelectedPeriod();
-    if (window.reports) window.reports.downloadText(p);
+    this._ensureExportPeriod(period, (p) => {
+      if (window.reports) window.reports.downloadText(p);
+    });
   }
 
-    downloadCSV(period) {
-    const p = period || this.getExportSelectedPeriod();
-    if (window.reports) {
-      window.reports.downloadCSV(p);
-    } else {
-      const csvStr = window.storage.exportExpensesCSV();
-      const blob = new Blob([csvStr], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `expenses-export-${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      this.showToast('CSV Exported successfully!', 'success');
-    }
+  downloadCSV(period) {
+    this._ensureExportPeriod(period, (p) => {
+      if (window.reports) {
+        window.reports.downloadCSV(p);
+      } else {
+        const csvStr = window.storage.exportExpensesCSV();
+        const blob = new Blob([csvStr], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `expenses-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        this.showToast('CSV Exported successfully!', 'success');
+      }
+    });
   }
 
   handleFileImport(e) {
