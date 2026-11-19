@@ -1566,10 +1566,10 @@
                     <i class="fa-solid fa-cloud-arrow-down"></i> Restore from Server Backup
                   </button>
 
-                  <label class="action-btn btn-secondary" style="cursor: pointer;">
+                  <button type="button" class="action-btn btn-secondary" onclick="document.getElementById('import-json-input').click();" style="cursor: pointer;">
                     <i class="fa-solid fa-upload"></i> Restore JSON Backup
-                    <input type="file" id="import-json-input" accept=".json" style="display: none;">
-                  </label>
+                  </button>
+                  <input type="file" id="import-json-input" accept=".json,application/json,text/plain" style="display: none;">
                 </div>
               </div>
 

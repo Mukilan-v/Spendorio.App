@@ -884,12 +884,36 @@ class StorageManager {
   importAllDataJSON(jsonStr) {
     try {
       const data = JSON.parse(jsonStr);
-      if (data.settings) localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data.settings));
-      if (data.tasks) localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(data.tasks));
-      if (data.expenses) localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses));
-      if (data.incomes) localStorage.setItem(STORAGE_KEYS.INCOMES, JSON.stringify(data.incomes));
-      if (data.streaks) localStorage.setItem(STORAGE_KEYS.STREAKS, JSON.stringify(data.streaks));
+      const sKey = this.getUserStorageKey(STORAGE_KEYS.SETTINGS);
+      const tKey = this.getUserStorageKey(STORAGE_KEYS.TASKS);
+      const eKey = this.getUserStorageKey(STORAGE_KEYS.EXPENSES);
+      const iKey = this.getUserStorageKey(STORAGE_KEYS.INCOMES);
+      const strKey = this.getUserStorageKey(STORAGE_KEYS.STREAKS);
+
+      if (data.settings) {
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data.settings));
+        localStorage.setItem(sKey, JSON.stringify(data.settings));
+      }
+      if (data.tasks) {
+        localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(data.tasks));
+        localStorage.setItem(tKey, JSON.stringify(data.tasks));
+      }
+      if (data.expenses) {
+        localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses));
+        localStorage.setItem(eKey, JSON.stringify(data.expenses));
+      }
+      if (data.incomes) {
+        localStorage.setItem(STORAGE_KEYS.INCOMES, JSON.stringify(data.incomes));
+        localStorage.setItem(iKey, JSON.stringify(data.incomes));
+      }
+      if (data.streaks) {
+        localStorage.setItem(STORAGE_KEYS.STREAKS, JSON.stringify(data.streaks));
+        localStorage.setItem(strKey, JSON.stringify(data.streaks));
+      }
       this.pushDataToServer();
+      if (window.firebaseSync && window.firebaseSync.isConfigured()) {
+        window.firebaseSync.pushLocalData();
+      }
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
