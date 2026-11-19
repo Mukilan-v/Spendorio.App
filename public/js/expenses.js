@@ -714,10 +714,10 @@ class ExpenseManager {
                   </div>
                   <div style="display:flex; align-items:center; gap:6px;">
                     <span style="color:${g.color}; font-weight:800; white-space:nowrap;">+${currency}${parseFloat(item.amount).toLocaleString()}</span>
-                    <button class="task-action-btn edit" style="padding:2px; font-size:0.7rem;" onclick="window.expenses.openEditIncomeModal('${item.id}')" title="Edit Pocket Money">
+                    <button class="task-action-btn edit" style="min-width:30px; min-height:30px; padding:4px 6px; font-size:0.8rem; border-radius:6px; cursor:pointer; touch-action:manipulation;" onclick="window.expenses.openEditIncomeModal('${item.id}')" title="Edit Pocket Money" aria-label="Edit Pocket Money">
                       <i class="fa-solid fa-pen-to-square"></i>
                     </button>
-                    <button class="task-action-btn delete" style="padding:2px; font-size:0.7rem;" onclick="window.expenses.handleDeleteIncome('${item.id}')" title="Delete">
+                    <button class="task-action-btn delete" style="min-width:30px; min-height:30px; padding:4px 6px; font-size:0.8rem; border-radius:6px; cursor:pointer; touch-action:manipulation;" onclick="window.expenses.handleDeleteIncome('${item.id}')" title="Delete" aria-label="Delete">
                       <i class="fa-solid fa-trash-can"></i>
                     </button>
                   </div>
@@ -937,6 +937,10 @@ class ExpenseManager {
     const incomes = window.storage.getIncomes();
     const inc = incomes.find(i => String(i.id) === String(incomeId));
     if (!inc) return;
+
+    if (window.app && typeof window.app.closeStatDetailsModal === 'function') {
+      window.app.closeStatDetailsModal();
+    }
 
     const modal = document.getElementById('income-modal');
     const form = document.getElementById('income-form');

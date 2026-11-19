@@ -1343,10 +1343,21 @@ body {
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  padding: 6px 8px;
+  min-width: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: var(--transition);
+}
+
+.task-action-btn:active {
+  transform: scale(0.92);
 }
 
 .task-action-btn:hover {

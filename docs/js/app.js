@@ -764,10 +764,10 @@ class Application {
               <div style="font-weight: 700; font-size: 0.96rem; color: var(--success);">
                 +${currency}${parseFloat(inc.amount || 0).toLocaleString()}
               </div>
-              <button type="button" class="task-action-btn edit" style="padding: 3px 6px; font-size: 0.75rem;" onclick="if (window.expenses) window.expenses.openEditIncomeModal('${inc.id}');" title="Edit income record">
+              <button type="button" class="task-action-btn edit" style="min-width: 34px; min-height: 34px; padding: 6px 8px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: rgba(16, 185, 129, 0.25);" onclick="if (window.app) window.app.closeStatDetailsModal(); if (window.expenses) window.expenses.openEditIncomeModal('${inc.id}');" title="Edit income record" aria-label="Edit income record">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
-              <button type="button" class="task-action-btn delete" style="padding: 3px 6px; font-size: 0.75rem;" onclick="if (window.expenses) window.expenses.handleDeleteIncome('${inc.id}');" title="Delete income record">
+              <button type="button" class="task-action-btn delete" style="min-width: 34px; min-height: 34px; padding: 6px 8px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: rgba(239, 68, 68, 0.25);" onclick="if (window.expenses) window.expenses.handleDeleteIncome('${inc.id}');" title="Delete income record" aria-label="Delete income record">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
@@ -902,10 +902,10 @@ class Application {
               <div style="font-weight: 800; font-size: 1.05rem; color: #8b5cf6; white-space: nowrap;">
                 +${currency}${parseFloat(i.amount).toLocaleString()}
               </div>
-              <button type="button" class="task-action-btn edit" style="padding: 3px 6px; font-size: 0.75rem;" onclick="if (window.expenses) window.expenses.openEditIncomeModal('${i.id}');" title="Edit pocket money record">
+              <button type="button" class="task-action-btn edit" style="min-width: 34px; min-height: 34px; padding: 6px 8px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: rgba(139, 92, 246, 0.25);" onclick="if (window.app) window.app.closeStatDetailsModal(); if (window.expenses) window.expenses.openEditIncomeModal('${i.id}');" title="Edit pocket money record" aria-label="Edit pocket money record">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
-              <button type="button" class="task-action-btn delete" style="padding: 3px 6px; font-size: 0.75rem;" onclick="if (window.expenses) window.expenses.handleDeleteIncome('${i.id}');" title="Delete pocket money record">
+              <button type="button" class="task-action-btn delete" style="min-width: 34px; min-height: 34px; padding: 6px 8px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: rgba(239, 68, 68, 0.25);" onclick="if (window.expenses) window.expenses.handleDeleteIncome('${i.id}');" title="Delete pocket money record" aria-label="Delete pocket money record">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
