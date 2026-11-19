@@ -213,6 +213,12 @@ class Application {
 
   switchTab(tabId) {
     this.currentTab = tabId;
+    if (tabId === 'settings' || tabId === 'analytics') {
+      setTimeout(() => this.updateExportSummary(), 50);
+    }
+    if (tabId === 'settings' || tabId === 'analytics') {
+      setTimeout(() => this.updateExportSummary(), 50);
+    }
 
     // Update active nav button
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -1197,45 +1203,211 @@ class Application {
     this.showToast('Backup JSON exported successfully!', 'success');
   }
 
-  handleExportPeriodChange(val) {
+  getLatestExpenseMonth() {
+    try {
+      const expenses = window.storage ? window.storage.getExpenses() : [];
+      for (const e of expenses) {
+        if (e.date && /^\d{4}-\d{2}/.test(e.date)) {
+          return e.date.substring(0, 7);
+        }
+      }
+    } catch(e) {}
+    return new Date().toISOString().substring(0, 7);
+  }
+
+  setExportPeriodMode(mode) {
+    this.exportPeriodMode = mode;
+
+    // Update pill buttons active state
+    const pills = ['all', 'month', 'custom-month', 'custom-date', 'custom-range'];
+    pills.forEach(p => {
+      const el = document.getElementById(`pill-${p}`);
+      if (el) {
+        if (p === mode) {
+          el.style.background = 'var(--primary)';
+          el.style.color = '#ffffff';
+          el.style.borderColor = 'var(--primary)';
+        } else {
+          el.style.background = 'var(--bg-card)';
+          el.style.color = 'var(--text-secondary)';
+          el.style.borderColor = 'var(--border-color)';
+        }
+      }
+    });
+
     const monthWrap = document.getElementById('export-month-picker-wrap');
     const dateWrap = document.getElementById('export-date-picker-wrap');
     const rangeWrap = document.getElementById('export-range-picker-wrap');
+    const labelEl = document.getElementById('export-picker-label');
     const today = new Date().toISOString().split('T')[0];
-    const curMonth = today.substring(0, 7);
+    const latestMonth = this.getLatestExpenseMonth();
 
-    if (monthWrap) monthWrap.style.display = (val === 'custom-month') ? 'flex' : 'none';
-    if (dateWrap) dateWrap.style.display = (val === 'custom-date') ? 'flex' : 'none';
-    if (rangeWrap) rangeWrap.style.display = (val === 'custom-range') ? 'flex' : 'none';
+    if (monthWrap) monthWrap.style.display = (mode === 'month' || mode === 'custom-month') ? 'inline-flex' : 'none';
+    if (dateWrap) dateWrap.style.display = (mode === 'custom-date') ? 'inline-flex' : 'none';
+    if (rangeWrap) rangeWrap.style.display = (mode === 'custom-range') ? 'inline-flex' : 'none';
+
+    if (labelEl) {
+      if (mode === 'all') labelEl.textContent = '🌐 Entire Ledger:';
+      else if (mode === 'month') labelEl.textContent = '🗓️ Current Month:';
+      else if (mode === 'custom-month') labelEl.textContent = '📅 Pick Any Month:';
+      else if (mode === 'custom-date') labelEl.textContent = '📆 Pick Any Date:';
+      else if (mode === 'custom-range') labelEl.textContent = '↔️ Date Range:';
+    }
 
     const monthInput = document.getElementById('export-month-picker');
-    if (monthInput && !monthInput.value) monthInput.value = curMonth;
+    if (monthInput) {
+      if (mode === 'month') {
+        monthInput.value = today.substring(0, 7);
+      } else if (mode === 'custom-month') {
+        if (!monthInput.value || monthInput.value === today.substring(0, 7)) {
+          monthInput.value = latestMonth;
+        }
+      }
+    }
 
     const dateInput = document.getElementById('export-date-picker');
     if (dateInput && !dateInput.value) dateInput.value = today;
 
     const fromInput = document.getElementById('export-range-from');
     const toInput = document.getElementById('export-range-to');
-    if (fromInput && !fromInput.value) fromInput.value = `${curMonth}-01`;
+    if (fromInput && !fromInput.value) fromInput.value = `${latestMonth}-01`;
     if (toInput && !toInput.value) toInput.value = today;
+
+    const sel = document.getElementById('export-period-select');
+    if (sel) sel.value = mode;
+
+    this.updateExportSummary();
+  }
+
+  getLatestExpenseMonth() {
+    try {
+      const expenses = window.storage ? window.storage.getExpenses() : [];
+      for (const e of expenses) {
+        if (e.date && /^\d{4}-\d{2}/.test(e.date)) {
+          return e.date.substring(0, 7);
+        }
+      }
+    } catch(e) {}
+    return new Date().toISOString().substring(0, 7);
+  }
+
+  setExportPeriodMode(mode) {
+    this.exportPeriodMode = mode;
+
+    // Update pill buttons active state
+    const pills = ['all', 'month', 'custom-month', 'custom-date', 'custom-range'];
+    pills.forEach(p => {
+      const el = document.getElementById(`pill-${p}`);
+      if (el) {
+        if (p === mode) {
+          el.style.background = 'var(--primary)';
+          el.style.color = '#ffffff';
+          el.style.borderColor = 'var(--primary)';
+        } else {
+          el.style.background = 'var(--bg-card)';
+          el.style.color = 'var(--text-secondary)';
+          el.style.borderColor = 'var(--border-color)';
+        }
+      }
+    });
+
+    const monthWrap = document.getElementById('export-month-picker-wrap');
+    const dateWrap = document.getElementById('export-date-picker-wrap');
+    const rangeWrap = document.getElementById('export-range-picker-wrap');
+    const labelEl = document.getElementById('export-picker-label');
+    const today = new Date().toISOString().split('T')[0];
+    const latestMonth = this.getLatestExpenseMonth();
+
+    if (monthWrap) monthWrap.style.display = (mode === 'month' || mode === 'custom-month') ? 'inline-flex' : 'none';
+    if (dateWrap) dateWrap.style.display = (mode === 'custom-date') ? 'inline-flex' : 'none';
+    if (rangeWrap) rangeWrap.style.display = (mode === 'custom-range') ? 'inline-flex' : 'none';
+
+    if (labelEl) {
+      if (mode === 'all') labelEl.textContent = '🌐 Entire Ledger:';
+      else if (mode === 'month') labelEl.textContent = '🗓️ Current Month:';
+      else if (mode === 'custom-month') labelEl.textContent = '📅 Pick Any Month:';
+      else if (mode === 'custom-date') labelEl.textContent = '📆 Pick Any Date:';
+      else if (mode === 'custom-range') labelEl.textContent = '↔️ Date Range:';
+    }
+
+    const monthInput = document.getElementById('export-month-picker');
+    if (monthInput) {
+      if (mode === 'month') {
+        monthInput.value = today.substring(0, 7);
+      } else if (mode === 'custom-month') {
+        if (!monthInput.value || monthInput.value === today.substring(0, 7)) {
+          monthInput.value = latestMonth;
+        }
+      }
+    }
+
+    const dateInput = document.getElementById('export-date-picker');
+    if (dateInput && !dateInput.value) dateInput.value = today;
+
+    const fromInput = document.getElementById('export-range-from');
+    const toInput = document.getElementById('export-range-to');
+    if (fromInput && !fromInput.value) fromInput.value = `${latestMonth}-01`;
+    if (toInput && !toInput.value) toInput.value = today;
+
+    const sel = document.getElementById('export-period-select');
+    if (sel) sel.value = mode;
+
+    this.updateExportSummary();
+  }
+
+  handleExportPeriodChange(val) {
+    this.setExportPeriodMode(val);
   }
 
   getExportSelectedPeriod() {
-    const sel = document.getElementById('export-period-select')?.value || 'all';
-    if (sel === 'custom-month') {
+    const mode = this.exportPeriodMode || document.getElementById('export-period-select')?.value || 'month';
+    if (mode === 'all') return 'all';
+    if (mode === 'month') {
       const m = document.getElementById('export-month-picker')?.value;
       return m ? `month:${m}` : 'month';
     }
-    if (sel === 'custom-date') {
+    if (mode === 'custom-month') {
+      const m = document.getElementById('export-month-picker')?.value;
+      return m ? `month:${m}` : 'month';
+    }
+    if (mode === 'custom-date') {
       const d = document.getElementById('export-date-picker')?.value;
       return d ? `date:${d}` : 'today';
     }
-    if (sel === 'custom-range') {
+    if (mode === 'custom-range') {
       const from = document.getElementById('export-range-from')?.value;
       const to = document.getElementById('export-range-to')?.value || from;
       return (from && to) ? `range:${from}:${to}` : 'all';
     }
-    return sel;
+    return mode;
+  }
+
+  updateExportSummary() {
+    const period = this.getExportSelectedPeriod();
+    const summaryText = document.getElementById('export-summary-text');
+    const summaryPill = document.getElementById('export-summary-pill');
+    if (!summaryText || !window.reports) return;
+
+    const expenses = window.reports.getFilteredExpenses(period);
+    const total = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+    const currency = window.storage ? window.storage.getCurrencySymbol() : '₹';
+    const label = window.reports.getPeriodLabel(period);
+
+    if (expenses.length > 0) {
+      summaryText.innerHTML = `<strong>${expenses.length} records</strong> (${currency}${total.toLocaleString()}) ready for ${label}`;
+      if (summaryPill) {
+        summaryPill.style.background = 'rgba(16, 185, 129, 0.12)';
+        summaryPill.style.color = '#059669';
+        summaryPill.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      }
+    } else {
+      summaryText.innerHTML = `⚠️ <strong>0 records</strong> in ${label}. Tap <em>"Pick Month"</em> or <em>"All-Time"</em>!`;
+      if (summaryPill) {
+        summaryPill.style.background = 'rgba(245, 158, 11, 0.15)';
+        summaryPill.style.color = '#d97706';
+        summaryPill.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+      }
+    }
   }
 
   downloadPDFReport(period) {
@@ -1243,9 +1415,16 @@ class Application {
     if (window.reports) {
       const expenses = window.reports.getFilteredExpenses(p);
       if (expenses.length === 0) {
-        this.showToast(`Notice: No expenses found for "${window.reports.getPeriodLabel(p)}". Pick your target date/month in calendar!`, 'info');
+        this.showToast(`Notice: 0 records found for "${window.reports.getPeriodLabel(p)}". Tap "Pick Month" or "All-Time" to select your data!`, 'warning');
       }
       window.reports.downloadPDF(p);
+    }
+  }
+
+  printPDFStatement(period) {
+    const p = period || this.getExportSelectedPeriod();
+    if (window.reports) {
+      window.reports.openPrintWindow(p);
     }
   }
 
@@ -1264,7 +1443,7 @@ class Application {
     if (window.reports) window.reports.downloadText(p);
   }
 
-  downloadCSV(period) {
+    downloadCSV(period) {
     const p = period || this.getExportSelectedPeriod();
     if (window.reports) {
       window.reports.downloadCSV(p);

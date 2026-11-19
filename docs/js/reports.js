@@ -129,27 +129,29 @@ class ReportManager {
   // ──────────────────────────────────────────────────────────────────────────
   // 1. PDF / Printable Statement Generator
   // ──────────────────────────────────────────────────────────────────────────
-  downloadPDF(period = 'all') {
-    const currency = window.storage.getCurrencySymbol() || '₹';
-    const expenses = this.getFilteredExpenses(period);
-    const incomes = this.getFilteredIncomes(period);
-    const totalSpent = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-    const totalIncome = incomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
-    const netBalance = totalIncome - totalSpent;
-    const persons = this.getPersonBreakdown(expenses);
-    const categories = this.getCategoryBreakdown(expenses);
-    const periodLabel = this.getPeriodLabel(period);
-    const nowStr = new Date().toLocaleString();
+  generateStatementHtml(params) {
+    const {
+      periodLabel,
+      nowStr,
+      currency,
+      totalSpent,
+      totalIncome,
+      netBalance,
+      persons,
+      categories,
+      expenses,
+      incomes
+    } = params;
 
-    const printHtml = `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Expense Statement - ${periodLabel}</title>
+  <title>Expense Statement - ${this.escapeHtml(periodLabel)}</title>
   <style>
-    @page { size: A4; margin: 12mm; }
+    @page { size: A4; margin: 10mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #1e293b; background: #fff; line-height: 1.45; padding: 20px; font-size: 13px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #1e293b; background: #fff; line-height: 1.45; padding: 18px; font-size: 12.5px; }
     .no-print { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
     .btn { background: #4f46e5; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
     .btn-secondary { background: #64748b; }
@@ -197,7 +199,7 @@ class ReportManager {
   <div class="header">
     <div>
       <div class="title">Spendorio &amp; SpendTracker</div>
-      <div class="subtitle">Official Expense Statement • ${periodLabel}</div>
+      <div class="subtitle">Official Expense Statement • ${this.escapeHtml(periodLabel)}</div>
     </div>
     <div class="meta">
       <div>Generated: ${nowStr}</div>
@@ -226,7 +228,7 @@ class ReportManager {
     <div class="kpi-card">
       <div class="kpi-label">Individuals Tracked</div>
       <div class="kpi-value" style="color: #8b5cf6;">${persons.length}</div>
-      <div class="kpi-sub">Mom, Dad, etc.</div>
+      <div class="kpi-sub">Beneficiaries tracked</div>
     </div>
   </div>
 
@@ -243,12 +245,12 @@ class ReportManager {
           </tr>
         </thead>
         <tbody>
-          ${persons.map(p => {
+          ${persons.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">No individual records</td></tr>' : persons.map(p => {
             const pct = totalSpent > 0 ? Math.round((p.total / totalSpent) * 100) : 0;
             return `<tr>
-              <td><strong>${p.name}</strong></td>
+              <td><strong>${this.escapeHtml(p.name)}</strong></td>
               <td class="text-right">${p.count}</td>
-              <td class="text-right"><strong>${currency}${p.total.toLocaleString()}</strong></td>
+              <td class="text-right" style="font-weight: 700; color: #ef4444;">${currency}${p.total.toLocaleString()}</td>
               <td class="text-right">${pct}%</td>
             </tr>`;
           }).join('')}
@@ -257,7 +259,7 @@ class ReportManager {
     </div>
 
     <div>
-      <div class="section-title">Category Spending Breakdown</div>
+      <div class="section-title">Category Breakdown</div>
       <table>
         <thead>
           <tr>
@@ -268,12 +270,12 @@ class ReportManager {
           </tr>
         </thead>
         <tbody>
-          ${categories.map(c => {
+          ${categories.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">No category records</td></tr>' : categories.map(c => {
             const pct = totalSpent > 0 ? Math.round((c.total / totalSpent) * 100) : 0;
             return `<tr>
-              <td>${c.category}</td>
+              <td><strong>${this.escapeHtml(c.category)}</strong></td>
               <td class="text-right">${c.count}</td>
-              <td class="text-right"><strong>${currency}${c.total.toLocaleString()}</strong></td>
+              <td class="text-right" style="font-weight: 700; color: #ef4444;">${currency}${c.total.toLocaleString()}</td>
               <td class="text-right">${pct}%</td>
             </tr>`;
           }).join('')}
@@ -282,7 +284,7 @@ class ReportManager {
     </div>
   </div>
 
-  <div class="section-title">Itemized Expense Ledger (${expenses.length} Records)</div>
+  <div class="section-title">Itemized Expense Records (${expenses.length} Entries)</div>
   <table>
     <thead>
       <tr>
@@ -293,7 +295,7 @@ class ReportManager {
         <th style="width: 85px;">Beneficiary</th>
         <th style="width: 60px;">Payment</th>
         <th class="text-right" style="width: 75px; white-space: nowrap;">Amount</th>
-        <th>Notes & Remarks</th>
+        <th>Notes &amp; Remarks</th>
       </tr>
     </thead>
     <tbody>
@@ -327,36 +329,73 @@ class ReportManager {
   </table>
 
   <div class="footer">
-    Generated automatically by Spendorio &amp; SpendTracker • Private & Confidential
+    Generated automatically by Spendorio &amp; SpendTracker • Private &amp; Confidential
   </div>
 
   <script>
-    // Auto-trigger print dialog after render
     window.addEventListener('load', () => {
       setTimeout(() => { window.print(); }, 400);
     });
   </script>
 </body>
 </html>`;
+  }
 
-    // DIRECT PDF DOWNLOAD ENGINE (Clean Capture & Pagebreak Support)
+  downloadPDF(period = 'all') {
+    const currency = window.storage ? window.storage.getCurrencySymbol() : '₹';
+    const expenses = this.getFilteredExpenses(period);
+    const incomes = this.getFilteredIncomes(period);
+    const totalSpent = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+    const totalIncome = incomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+    const netBalance = totalIncome - totalSpent;
+    const persons = this.getPersonBreakdown(expenses);
+    const categories = this.getCategoryBreakdown(expenses);
+    const periodLabel = this.getPeriodLabel(period);
+    const nowStr = new Date().toLocaleString();
+
+    const printHtml = this.generateStatementHtml({
+      periodLabel,
+      nowStr,
+      currency,
+      totalSpent,
+      totalIncome,
+      netBalance,
+      persons,
+      categories,
+      expenses,
+      incomes
+    });
+
     if (typeof html2pdf !== 'undefined') {
+      let stage = null;
       try {
-        const container = document.createElement('div');
-        container.style.width = '194mm';
-        container.style.padding = '12px 16px';
-        container.style.background = '#ffffff';
-        container.style.color = '#0f172a';
-        container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        container.innerHTML = printHtml;
-        const noPrint = container.querySelectorAll('.no-print, script');
-        noPrint.forEach(el => {
-          if (typeof el.remove === 'function') el.remove();
-          else if (el.parentNode) el.parentNode.removeChild(el);
-        });
+        stage = document.createElement('div');
+        stage.id = 'spendorio-pdf-render-stage';
+        stage.style.position = 'fixed';
+        stage.style.top = '0';
+        stage.style.left = '0';
+        stage.style.width = '194mm';
+        stage.style.zIndex = '999999';
+        stage.style.background = '#ffffff';
+        stage.style.color = '#0f172a';
+        stage.style.padding = '20px';
+        stage.style.boxSizing = 'border-box';
+        stage.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+        const styleMatch = printHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+        const bodyMatch = printHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        const css = styleMatch ? styleMatch[1] : '';
+        const bodyContent = bodyMatch ? bodyMatch[1] : printHtml;
+
+        stage.innerHTML = `<style>${css}</style>${bodyContent}`;
+
+        const noPrint = stage.querySelectorAll('.no-print, script');
+        noPrint.forEach(el => el.remove ? el.remove() : el.parentNode && el.parentNode.removeChild(el));
+
+        document.body.appendChild(stage);
 
         if (window.app && window.app.showToast) {
-          window.app.showToast('Generating direct PDF statement...', 'info');
+          window.app.showToast(`Generating official PDF for ${periodLabel}...`, 'info');
         }
 
         const opt = {
@@ -367,6 +406,9 @@ class ReportManager {
             scale: 2,
             useCORS: true,
             letterRendering: true,
+            scrollY: 0,
+            scrollX: 0,
+            windowWidth: 800,
             logging: false
           },
           jsPDF: {
@@ -380,40 +422,80 @@ class ReportManager {
           }
         };
 
-        html2pdf().set(opt).from(container).save().then(() => {
+        const cleanUp = () => {
+          if (stage && stage.parentNode) {
+            stage.parentNode.removeChild(stage);
+          }
+        };
+
+        html2pdf().set(opt).from(stage).save().then(() => {
+          cleanUp();
           if (window.app && window.app.showToast) {
-            window.app.showToast('PDF statement downloaded to your device!', 'success');
+            window.app.showToast('✅ PDF statement downloaded! Open in Adobe Reader.', 'success');
           }
         }).catch(err => {
-          console.warn('html2pdf fallback to print preview:', err);
-          this._fallbackPrintWindow(printHtml, period, nowStr);
+          cleanUp();
+          console.warn('html2pdf direct save error, launching print preview fallback:', err);
+          this.openPrintWindow(period);
         });
         return;
       } catch (err) {
-        console.warn('Direct PDF error, falling back:', err);
+        if (stage && stage.parentNode) stage.parentNode.removeChild(stage);
+        console.warn('Direct PDF initialization error, falling back:', err);
       }
     }
 
-    this._fallbackPrintWindow(printHtml, period, nowStr);
+    this.openPrintWindow(period);
+  }
+
+  openPrintWindow(period = 'all') {
+    const currency = window.storage ? window.storage.getCurrencySymbol() : '₹';
+    const expenses = this.getFilteredExpenses(period);
+    const incomes = this.getFilteredIncomes(period);
+    const totalSpent = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+    const totalIncome = incomes.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+    const netBalance = totalIncome - totalSpent;
+    const persons = this.getPersonBreakdown(expenses);
+    const categories = this.getCategoryBreakdown(expenses);
+    const periodLabel = this.getPeriodLabel(period);
+    const nowStr = new Date().toLocaleString();
+
+    const printHtml = this.generateStatementHtml({
+      periodLabel,
+      nowStr,
+      currency,
+      totalSpent,
+      totalIncome,
+      netBalance,
+      persons,
+      categories,
+      expenses,
+      incomes
+    });
+
+    try {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(printHtml);
+        printWindow.document.close();
+        if (window.app && window.app.showToast) {
+          window.app.showToast('Print preview opened! Choose "Save as PDF" to save pure vector PDF.', 'success');
+        }
+        return;
+      }
+    } catch(e) {
+      console.warn('Popup blocked:', e);
+    }
+
+    const blob = new Blob([printHtml], { type: 'text/html;charset=utf-8' });
+    this.triggerBlobDownload(blob, `Spendorio_Statement_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.html`);
+    if (window.app && window.app.showToast) {
+      window.app.showToast('Popup blocked: Statement downloaded as HTML. Open to view or print as PDF.', 'info');
+    }
   }
 
   _fallbackPrintWindow(printHtml, period, nowStr) {
-    // Open in a new tab/window which triggers print-to-PDF
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(printHtml);
-      printWindow.document.close();
-      if (window.app && window.app.showToast) {
-        window.app.showToast('PDF print preview opened! Choose "Save as PDF" to download.', 'success');
-      }
-    } else {
-      // If popup blocker blocked it, offer as downloadable HTML statement file
-      const blob = new Blob([printHtml], { type: 'text/html;charset=utf-8' });
-      this.triggerBlobDownload(blob, `expense-statement-${period}-${nowStr.replace(/[^a-zA-Z0-9]/g, '_')}.html`);
-      if (window.app && window.app.showToast) {
-        window.app.showToast('Popup was blocked: Statement downloaded as HTML! Open and print to PDF.', 'info');
-      }
-    }
+    this.openPrintWindow(period);
   }
 
   // ──────────────────────────────────────────────────────────────────────────

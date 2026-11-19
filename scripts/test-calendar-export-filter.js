@@ -150,7 +150,7 @@ console.log('--- TEST 2: UI Calendar Picker Interactions ---');
 
 // 2a. Select custom-month
 window.app.handleExportPeriodChange('custom-month');
-assert.strictEqual(elements['export-month-picker-wrap'].style.display, 'flex');
+assert.strictEqual(elements['export-month-picker-wrap'].style.display, 'inline-flex');
 assert.strictEqual(elements['export-date-picker-wrap'].style.display, 'none');
 assert.strictEqual(elements['export-range-picker-wrap'].style.display, 'none');
 
@@ -161,7 +161,7 @@ console.log('✓ Custom month picker resolves to month:2026-08');
 
 // 2b. Select custom-date
 window.app.handleExportPeriodChange('custom-date');
-assert.strictEqual(elements['export-date-picker-wrap'].style.display, 'flex');
+assert.strictEqual(elements['export-date-picker-wrap'].style.display, 'inline-flex');
 assert.strictEqual(elements['export-month-picker-wrap'].style.display, 'none');
 
 elements['export-period-select'].value = 'custom-date';
@@ -171,7 +171,7 @@ console.log('✓ Custom date picker resolves to date:2026-08-26');
 
 // 2c. Select custom-range
 window.app.handleExportPeriodChange('custom-range');
-assert.strictEqual(elements['export-range-picker-wrap'].style.display, 'flex');
+assert.strictEqual(elements['export-range-picker-wrap'].style.display, 'inline-flex');
 
 elements['export-period-select'].value = 'custom-range';
 elements['export-range-from'].value = '2026-08-01';
