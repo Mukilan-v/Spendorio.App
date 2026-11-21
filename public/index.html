@@ -1364,6 +1364,26 @@
                   <i class="fa-solid fa-floppy-disk"></i> Save &amp; Connect
                 </button>
               </div>
+
+              <!-- Live Diagnostics Box -->
+              <div id="firebase-sync-diagnostics-box" style="background: var(--bg-hover, rgba(0,0,0,0.03)); border: 1px dashed var(--border-color); border-radius: 8px; padding: 10px 12px; font-size: 0.82rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                  <span style="font-weight: 700; color: var(--text-primary);">
+                    <i class="fa-solid fa-stethoscope" style="color: #6366f1;"></i> Sync Diagnostics &amp; Status:
+                  </span>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="action-btn" onclick="window.firebaseSync && window.firebaseSync.runDiagnosticTest()" style="font-size: 0.75rem; padding: 4px 10px; background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3); font-weight: 700;">
+                      <i class="fa-solid fa-bolt"></i> Test Connection
+                    </button>
+                    <button type="button" class="action-btn" onclick="window.firebaseSync && window.firebaseSync.forceClearCacheAndReload()" style="font-size: 0.75rem; padding: 4px 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 700;" title="Clears offline cache and loads latest version">
+                      <i class="fa-solid fa-arrows-rotate"></i> Clear Cache &amp; Reload
+                    </button>
+                  </div>
+                </div>
+                <div id="firebase-diagnostic-result" style="margin-top: 6px; font-family: monospace; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+                  Tap "Test Connection" to test your database URL, permissions &amp; live sync status.
+                </div>
+              </div>
             </div>
 
             <!-- HELP, SUPPORT & FEEDBACK CARD -->

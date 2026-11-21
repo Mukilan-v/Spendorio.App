@@ -686,6 +686,170 @@
         modal.style.display = 'none';
         document.body.classList.remove('modal-open');
       }
+    },
+
+    // Live Connection Diagnostic Test
+    async runDiagnosticTest() {
+      const resultEl = document.getElementById('firebase-diagnostic-result');
+      if (resultEl) {
+        resultEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing live connection &amp; permissions...';
+        resultEl.style.color = '#6366f1';
+      }
+
+      const dbUrl = this.getDbUrl();
+      if (!dbUrl) {
+        if (resultEl) {
+          resultEl.innerHTML = '❌ <strong>Error: No Database URL Entered.</strong><br>Please paste your Firebase Database URL in the box above and tap "Save &amp; Connect".';
+          resultEl.style.color = '#ef4444';
+        }
+        return;
+      }
+
+      if (!this.isValidFirebaseUrl(dbUrl)) {
+        if (resultEl) {
+          resultEl.innerHTML = `❌ <strong>Error: Invalid URL Format.</strong><br>URL must contain <code>firebaseio.com</code> or <code>firebasedatabase.app</code>.<br>Current: ${dbUrl}`;
+          resultEl.style.color = '#ef4444';
+        }
+        return;
+      }
+
+      const userId = this.getCurrentUserId();
+      const localExp = (window.storage && window.storage.getExpenses) ? window.storage.getExpenses().length : 0;
+      const endpoint = `${dbUrl}/spendorio/users/${encodeURIComponent(userId)}.json`;
+
+      try {
+        // Step 1: Test GET (Read)
+        const getResp = await fetch(endpoint, { cache: 'no-cache' });
+        if (!getResp.ok) {
+          let errText = '';
+          try {
+            const errJson = await getResp.json();
+            errText = (errJson && errJson.error) ? String(errJson.error) : '';
+          } catch (e) {}
+
+          if (getResp.status === 401 || getResp.status === 403 || errText.toLowerCase().includes('permission denied')) {
+            if (resultEl) {
+              resultEl.innerHTML = `❌ <strong>401 Permission Denied!</strong><br>Your Firebase database rules are locked.<br>In Firebase Console &gt; Realtime Database &gt; <strong>Rules</strong> tab, set:<br><code>{"rules": {".read": true, ".write": true}}</code><br>and click <strong>Publish</strong>.`;
+              resultEl.style.color = '#ef4444';
+            }
+            return;
+          }
+          if (resultEl) {
+            resultEl.innerHTML = `❌ <strong>HTTP ${getResp.status} Error:</strong> ${errText || getResp.statusText}<br>Endpoint: ${endpoint}`;
+            resultEl.style.color = '#ef4444';
+          }
+          return;
+        }
+
+        const cloudData = await getResp.json();
+        const cloudExp = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses.length : 0;
+
+        // Step 2: Test PUT (Write)
+        const localTasks = (window.storage && window.storage.getTasks) ? window.storage.getTasks() : [];
+        const localExpenses = (window.storage && window.storage.getExpenses) ? window.storage.getExpenses() : [];
+        const localIncomes = (window.storage && window.storage.getIncomes) ? window.storage.getIncomes() : [];
+        const localSettings = (window.storage && window.storage.getSettings) ? window.storage.getSettings() : {};
+
+        const activeDeletedIds = (window.storage && typeof window.storage.getDeletedIds === 'function') ? window.storage.getDeletedIds() : new Set();
+        const cloudTasks = (cloudData && Array.isArray(cloudData.tasks)) ? cloudData.tasks : [];
+        const cloudExpenses = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses : [];
+        const cloudIncomes = (cloudData && Array.isArray(cloudData.incomes)) ? cloudData.incomes : [];
+
+        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses, activeDeletedIds);
+        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks, activeDeletedIds);
+        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes, activeDeletedIds);
+
+        const testPayload = {
+          userId: userId,
+          updatedAt: Date.now(),
+          device: (navigator.userAgent && navigator.userAgent.includes('Mobile')) ? 'Phone' : 'Desktop',
+          tasks: mergedTasks,
+          expenses: mergedExpenses,
+          incomes: mergedIncomes,
+          settings: localSettings,
+          deletedIds: Array.from(activeDeletedIds)
+        };
+
+        const putResp = await fetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(testPayload)
+        });
+
+        if (!putResp.ok) {
+          let putErr = '';
+          try {
+            const pj = await putResp.json();
+            putErr = (pj && pj.error) ? String(pj.error) : '';
+          } catch (e) {}
+
+          if (putResp.status === 401 || putResp.status === 403 || putErr.toLowerCase().includes('permission denied')) {
+            if (resultEl) {
+              resultEl.innerHTML = `❌ <strong>Write Permission Denied (HTTP 401)!</strong><br>Firebase allows read but blocked write.<br>Make sure <code>.write: true</code> is in your Rules and click <strong>Publish</strong>.`;
+              resultEl.style.color = '#ef4444';
+            }
+            return;
+          }
+          if (resultEl) {
+            resultEl.innerHTML = `❌ <strong>Write Failed (HTTP ${putResp.status}):</strong> ${putErr || putResp.statusText}`;
+            resultEl.style.color = '#ef4444';
+          }
+          return;
+        }
+
+        // Apply merged results locally as well
+        window.storage._isSyncingFromCloud = true;
+        try {
+          window.storage.saveExpenses(mergedExpenses);
+          window.storage.saveTasks(mergedTasks);
+          window.storage.saveIncomes(mergedIncomes);
+        } finally {
+          window.storage._isSyncingFromCloud = false;
+        }
+        this.refreshAllUI();
+
+        // Both Read and Write succeeded!
+        if (resultEl) {
+          resultEl.innerHTML = `🟢 <strong>100% CONNECTED &amp; VERIFIED!</strong><br>• User ID: <code>${userId}</code><br>• Local Expenses: <strong>${localExp}</strong><br>• Cloud Expenses: <strong>${mergedExpenses.length}</strong><br>• Status: Read &amp; Write working in real-time!`;
+          resultEl.style.color = '#10b981';
+        }
+        if (window.showToast) {
+          window.showToast(`✅ Cloud Sync 100% Verified! (${mergedExpenses.length} expenses synced)`, 'success');
+        }
+        this.updateSyncBadge('synced');
+        this.updateStatusUI();
+      } catch (netErr) {
+        if (resultEl) {
+          resultEl.innerHTML = `❌ <strong>Network / CORS Failed:</strong><br>${netErr.message}<br>Check your internet connection and verify the database URL is spelled correctly.`;
+          resultEl.style.color = '#ef4444';
+        }
+      }
+    },
+
+    // Force clear PWA cache and reload fresh app code from server
+    forceClearCacheAndReload() {
+      if (window.confirm('Clear cached app files and reload latest version?')) {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+              registration.unregister();
+            }
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            for (let name of names) {
+              caches.delete(name);
+            }
+          });
+        }
+        try {
+          sessionStorage.clear();
+        } catch (e) {}
+        setTimeout(() => {
+          window.location.reload(true);
+        }, 300);
+      }
     }
   };
 
