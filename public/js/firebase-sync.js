@@ -304,7 +304,11 @@
         } else {
           const tExist = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
           const tLocal = new Date(item.updatedAt || item.createdAt || 0).getTime();
-          if (tLocal >= tExist) {
+          // Conflict resolution: only overwrite cloud if local was strictly modified later
+          // If timestamps are tied, prefer the version that has an explicit updatedAt or keep cloud
+          if (tLocal > tExist) {
+            map.set(idStr, { ...existing, ...item });
+          } else if (tLocal === tExist && item.updatedAt && !existing.updatedAt) {
             map.set(idStr, { ...existing, ...item });
           }
         }

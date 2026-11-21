@@ -539,7 +539,7 @@ class StorageManager {
     const index = tasks.findIndex(t => t.id === updatedTask.id);
     if (index !== -1) {
       const oldCost = tasks[index].cost;
-      tasks[index] = { ...tasks[index], ...updatedTask };
+      tasks[index] = { ...tasks[index], ...updatedTask, updatedAt: new Date().toISOString() };
       this.saveTasks(tasks);
 
       // Synchronize linked expense if cost changed
@@ -694,9 +694,11 @@ class StorageManager {
 
   addExpense(expense) {
     const expenses = this.getExpenses();
+    const nowIso = new Date().toISOString();
     const generatedId = 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const newExpense = {
-      createdAt: new Date().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
       ...expense,
       amount: parseFloat(expense ? expense.amount : 0) || 0,
       id: (expense && expense.id && String(expense.id).trim() !== '' && String(expense.id) !== 'undefined') ? String(expense.id).trim() : generatedId
@@ -707,10 +709,17 @@ class StorageManager {
   }
 
   updateExpense(updatedExpense) {
+    if (!updatedExpense || !updatedExpense.id) return null;
+    const targetId = String(updatedExpense.id).trim();
     const expenses = this.getExpenses();
-    const index = expenses.findIndex(e => String(e.id) === String(updatedExpense.id));
+    const index = expenses.findIndex(e => String(e.id).trim() === targetId);
     if (index !== -1) {
-      expenses[index] = { ...expenses[index], ...updatedExpense, amount: parseFloat(updatedExpense.amount) || 0 };
+      expenses[index] = {
+        ...expenses[index],
+        ...updatedExpense,
+        amount: parseFloat(updatedExpense.amount) || 0,
+        updatedAt: new Date().toISOString()
+      };
       this.saveExpenses(expenses);
       return expenses[index];
     }
