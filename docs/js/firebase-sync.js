@@ -23,6 +23,10 @@
 
     init() {
       console.log('[FirebaseSync] Initializing Bidirectional Cloud Sync Engine...');
+      
+      // Auto-detect one-click setup URL param: ?firebase_sync=... or ?firebase_url=...
+      this.checkUrlSyncParam();
+
       this.bindEvents();
       this.updateStatusUI();
 
@@ -33,51 +37,195 @@
         }
       }, 1000);
 
-      // Start recurring background auto-sync every 15 seconds
+      // Start recurring background auto-sync every 10 seconds for real-time responsiveness
       this.startAutoSync();
+    },
+
+    // Check for ?firebase_sync=... query parameter to enable 1-tap phone setup
+    checkUrlSyncParam() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const syncParam = params.get('firebase_sync') || params.get('firebase_url');
+        if (syncParam) {
+          let decodedUrl = '';
+          try {
+            decodedUrl = decodeURIComponent(syncParam);
+            if (decodedUrl.startsWith('base64:')) {
+              decodedUrl = atob(decodedUrl.substring(7));
+            }
+          } catch (e) {
+            decodedUrl = syncParam;
+          }
+          const sanitized = this.sanitizeDbUrl(decodedUrl);
+          if (this.isValidFirebaseUrl(sanitized)) {
+            this.setDbUrl(sanitized);
+            try {
+              const cleanUrl = window.location.pathname + window.location.hash;
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch (e) {}
+            if (window.showToast) {
+              window.showToast('🎉 Cloud Sync Connected from phone setup link! Syncing data...', 'success');
+            }
+            setTimeout(() => this.syncNow(false), 400);
+          }
+        }
+      } catch (e) {
+        console.warn('[FirebaseSync] Error checking sync param:', e);
+      }
+    },
+
+    // Validates any Google Firebase Realtime Database URL format (US or regional)
+    isValidFirebaseUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== 'string') return false;
+      const clean = rawUrl.trim().toLowerCase();
+      // Supports standard .firebaseio.com AND modern regional endpoints .firebasedatabase.app (e.g. asia-southeast1)
+      const hasValidDomain = clean.includes('firebaseio.com') || clean.includes('firebasedatabase.app');
+      return hasValidDomain;
+    },
+
+    // Cleanly sanitize user pasted URLs (removes trailing slashes, .json, paths, spaces, quotes)
+    sanitizeDbUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== 'string') return '';
+      let url = rawUrl.trim();
+      url = url.replace(/^["']|["']$/g, '').trim();
+      if (!url) return '';
+      if (!url.startsWith('https://') && !url.startsWith('http://')) {
+        url = 'https://' + url;
+      }
+      if (url.startsWith('http://')) {
+        url = 'https://' + url.substring(7);
+      }
+      // If user pasted a URL with path (e.g. /data.json or /spendorio), extract exact root database endpoint
+      try {
+        const parsed = new URL(url);
+        if (parsed.hostname.includes('firebaseio.com') || parsed.hostname.includes('firebasedatabase.app')) {
+          return 'https://' + parsed.hostname;
+        }
+      } catch (e) {
+        const match = url.match(/^(https:\/\/[a-z0-9\-.]+\.(firebaseio\.com|firebasedatabase\.app))/i);
+        if (match) return match[1];
+      }
+      url = url.replace(/\/+$/, '').replace(/\.json\/?$/, '').replace(/\/+$/, '');
+      return url;
     },
 
     isConfigured() {
       const url = this.getDbUrl();
-      return !!(url && url.startsWith('https://') && url.includes('firebaseio.com'));
+      return !!(url && this.isValidFirebaseUrl(url));
     },
 
     getDbUrl() {
-      let url = (localStorage.getItem(STORAGE_KEY_FIREBASE_URL) || '').trim();
-      if (!url) return '';
-      url = url.replace(/\/+$/, '').replace(/\.json$/, '');
-      return url;
+      const url = (localStorage.getItem(STORAGE_KEY_FIREBASE_URL) || '').trim();
+      return this.sanitizeDbUrl(url);
     },
 
     setDbUrl(url) {
-      if (!url) {
+      const sanitized = this.sanitizeDbUrl(url);
+      if (!sanitized) {
         localStorage.removeItem(STORAGE_KEY_FIREBASE_URL);
         this.updateStatusUI();
         return;
       }
-      url = url.trim().replace(/\/+$/, '').replace(/\.json$/, '');
-      if (!url.startsWith('https://')) {
-        url = 'https://' + url;
-      }
-      localStorage.setItem(STORAGE_KEY_FIREBASE_URL, url);
+      localStorage.setItem(STORAGE_KEY_FIREBASE_URL, sanitized);
       this.updateStatusUI();
     },
 
-    // Strict Unified User ID: Mukilan's accounts on both Phone & Laptop map to user_mukilan
+    // Unified User ID: Maps owner accounts on Phone & Laptop consistently to user_mukilan
     getCurrentUserId() {
       if (!window.storage) return 'user_mukilan';
       if (window.storage.isCurrentGuest && window.storage.isCurrentGuest()) {
         return null; // Guest trial sessions never sync to cloud
       }
       const user = window.storage.getCurrentSessionUser ? window.storage.getCurrentSessionUser() : null;
-      if (user && user.username) {
-        const u = user.username.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-        if (u === 'mukiviswa' || u === 'mukilanviswa' || u === 'mukilan') {
-          return 'user_mukilan';
-        }
-        return 'user_' + u;
+      if (!user) {
+        return 'user_mukilan'; // Offline single-user default maps to owner
       }
-      return 'user_mukilan';
+      const u = (user.username || '').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const uid = (user.id || '').toLowerCase();
+      const email = (user.email || '').toLowerCase();
+      const fn = (user.fullName || '').toLowerCase();
+
+      // If user is owner or any alias of Mukilan, always map to user_mukilan so phone and laptop share the EXACT same cloud storage node
+      if (
+        user.isOwner ||
+        u === 'mukiviswa' ||
+        u === 'mukilanviswa' ||
+        u === 'mukilan' ||
+        u.includes('mukil') ||
+        uid === 'user-mukiviswa' ||
+        email === 'mukilanviswa@gmail.com' ||
+        email === 'mukiviswa@gmail.com' ||
+        email === 'spendorio102026@gmail.com' ||
+        fn.includes('mukilan') ||
+        fn.includes('mukivis')
+      ) {
+        return 'user_mukilan';
+      }
+      return 'user_' + (u || 'mukilan');
+    },
+
+    // Generate and copy a 1-tap setup link for the user's phone
+    copyPhoneSetupLink() {
+      const currentUrl = this.getDbUrl();
+      if (!currentUrl) {
+        if (window.showToast) {
+          window.showToast('Please enter and save your Firebase Database URL on laptop first.', 'warning');
+        }
+        return;
+      }
+      const cleanBase = window.location.origin + window.location.pathname;
+      const shareableUrl = `${cleanBase}?firebase_sync=${encodeURIComponent(currentUrl)}`;
+      
+      const onSuccess = () => {
+        if (window.showToast) {
+          window.showToast('📱 Phone link copied! Send it to your phone (WhatsApp/Email) & tap it to sync instantly!', 'success');
+        }
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareableUrl).then(onSuccess).catch(() => {
+          this.fallbackCopyText(shareableUrl, onSuccess);
+        });
+      } else {
+        this.fallbackCopyText(shareableUrl, onSuccess);
+      }
+    },
+
+    fallbackCopyText(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        if (cb) cb();
+      } catch (e) {
+        prompt('Copy this setup link and send to your phone:', text);
+      }
+      document.body.removeChild(ta);
+    },
+
+    // Copy copy-pasteable rules json
+    copyFirebaseRules() {
+      const rules = '{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}';
+      const onSuccess = () => {
+        if (window.showToast) {
+          window.showToast('📋 Firebase Rules copied! Paste them in Firebase Console -> Realtime Database -> Rules tab', 'success');
+        }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(rules).then(onSuccess).catch(() => {
+          this.fallbackCopyText(rules, onSuccess);
+        });
+      } else {
+        this.fallbackCopyText(rules, onSuccess);
+      }
+    },
+
+    openRulesHelpModal() {
+      this.openSetupGuide();
     },
 
     bindEvents() {
@@ -112,7 +260,23 @@
         if (!document.hidden && navigator.onLine && this.isConfigured()) {
           this.syncNow(true);
         }
-      }, 15000); // Check every 15 seconds
+      }, 10000); // Check every 10 seconds for real-time multi-device sync
+    },
+
+    ensureEntityId(item, prefix = 'item', idx = 0) {
+      if (!item || typeof item !== 'object') return null;
+      if (item.id && String(item.id).trim() !== '' && String(item.id) !== 'undefined' && String(item.id) !== 'null') {
+        return String(item.id).trim();
+      }
+      const base = (item.date || '') + '_' + (item.title || item.name || '') + '_' + (item.amount || '') + '_' + (item.createdAt || idx);
+      let hash = 0;
+      for (let i = 0; i < base.length; i++) {
+        hash = ((hash << 5) - hash) + base.charCodeAt(i);
+        hash |= 0;
+      }
+      const assignedId = `${prefix}-${Math.abs(hash)}-${idx}`;
+      item.id = assignedId;
+      return assignedId;
     },
 
     // Union merge lists by unique entity ID (respects tombstones to guarantee deleted items never resurrect)
@@ -121,18 +285,18 @@
       const deleted = deletedIdsSet || (window.storage && window.storage.getDeletedIds ? window.storage.getDeletedIds() : new Set());
 
       // 1. Process cloud items (strictly discard deleted tombstones)
-      (cloudList || []).forEach(item => {
-        if (!item || !item.id) return;
-        const idStr = String(item.id).trim();
-        if (deleted.has(idStr)) return;
+      (cloudList || []).forEach((item, idx) => {
+        if (!item || typeof item !== 'object') return;
+        const idStr = this.ensureEntityId(item, 'cloud', idx);
+        if (!idStr || deleted.has(idStr)) return;
         map.set(idStr, item);
       });
 
       // 2. Process local items (strictly discard deleted tombstones)
-      (localList || []).forEach(item => {
-        if (!item || !item.id) return;
-        const idStr = String(item.id).trim();
-        if (deleted.has(idStr)) return;
+      (localList || []).forEach((item, idx) => {
+        if (!item || typeof item !== 'object') return;
+        const idStr = this.ensureEntityId(item, 'local', idx);
+        if (!idStr || deleted.has(idStr)) return;
 
         const existing = map.get(idStr);
         if (!existing) {
@@ -176,6 +340,19 @@
 
         // 1. Fetch Cloud Data
         const cloudResponse = await fetch(endpoint, { cache: 'no-cache' });
+        if (!cloudResponse.ok) {
+          let errDetail = '';
+          try {
+            const errJson = await cloudResponse.json();
+            errDetail = (errJson && errJson.error) ? String(errJson.error) : '';
+          } catch (e) {}
+          if (cloudResponse.status === 401 || cloudResponse.status === 403 || errDetail.toLowerCase().includes('permission denied')) {
+            const permErr = new Error('FIREBASE_PERMISSION_DENIED');
+            permErr.status = cloudResponse.status;
+            throw permErr;
+          }
+        }
+
         let cloudData = null;
         if (cloudResponse.ok) {
           cloudData = await cloudResponse.json();
@@ -185,6 +362,8 @@
         const localExpenses = window.storage.getExpenses() || [];
         const localIncomes = window.storage.getIncomes() || [];
         const localSettings = window.storage.getSettings() || {};
+
+        const preLocalExpCount = localExpenses.length;
 
         const cloudTasks = (cloudData && Array.isArray(cloudData.tasks)) ? cloudData.tasks : [];
         const cloudExpenses = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses : [];
@@ -235,14 +414,30 @@
         this.updateSyncBadge('synced');
         this.updateStatusUI();
 
+        const postExpCount = mergedExpenses.length;
+        const postTaskCount = mergedTasks.length;
+
         if (!silent && window.showToast) {
-          window.showToast(`✅ Synced with Cloud! (${mergedExpenses.length} expenses, ${mergedTasks.length} tasks)`, 'success');
+          if (postExpCount > preLocalExpCount) {
+            const added = postExpCount - preLocalExpCount;
+            window.showToast(`✅ Synced! Received ${added} new expense${added > 1 ? 's' : ''} from cloud (${postExpCount} total)`, 'success');
+          } else {
+            window.showToast(`✅ Synced with Cloud! (${postExpCount} expenses, ${postTaskCount} tasks)`, 'success');
+          }
         }
       } catch (err) {
         console.warn('[FirebaseSync] Sync error:', err.message);
-        this.updateSyncBadge('offline');
-        if (!silent && window.showToast) {
-          window.showToast('Cloud sync paused (check internet or database URL)', 'warning');
+        if (err.message === 'FIREBASE_PERMISSION_DENIED') {
+          this.updateSyncBadge('permission_error');
+          this.openRulesHelpModal();
+          if (window.showToast) {
+            window.showToast('⚠️ Firebase Rules Locked! Click Setup Guide to unlock read/write in Firebase Console', 'error');
+          }
+        } else {
+          this.updateSyncBadge('offline');
+          if (!silent && window.showToast) {
+            window.showToast('Cloud sync paused (check internet or database URL)', 'warning');
+          }
         }
       } finally {
         this.syncInProgress = false;
@@ -261,6 +456,12 @@
 
         // 1. Fetch current cloud state to merge before pushing
         const cloudResponse = await fetch(endpoint, { cache: 'no-cache' });
+        if (!cloudResponse.ok && (cloudResponse.status === 401 || cloudResponse.status === 403)) {
+          const permErr = new Error('FIREBASE_PERMISSION_DENIED');
+          permErr.status = cloudResponse.status;
+          throw permErr;
+        }
+
         let cloudData = null;
         if (cloudResponse.ok) {
           cloudData = await cloudResponse.json();
@@ -303,6 +504,12 @@
         }
       } catch (e) {
         console.warn('[FirebaseSync] Failed to push local data:', e.message);
+        if (e.message === 'FIREBASE_PERMISSION_DENIED') {
+          this.updateSyncBadge('permission_error');
+          if (window.showToast) {
+            window.showToast('⚠️ Firebase Rules Locked! Go to Firebase Console -> Rules & set .read: true, .write: true', 'error');
+          }
+        }
       }
     },
 
@@ -312,7 +519,7 @@
       const payload = {
         userId: userId,
         updatedAt: now,
-        device: navigator.userAgent.includes('Mobile') ? 'Phone' : 'Desktop',
+        device: (navigator.userAgent && navigator.userAgent.includes('Mobile')) ? 'Phone' : 'Desktop',
         tasks: tasks || [],
         expenses: expenses || [],
         incomes: incomes || [],
@@ -328,11 +535,26 @@
         } : null
       };
 
-      await fetch(endpoint, {
+      const resp = await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
+      if (!resp.ok) {
+        let errDetail = '';
+        try {
+          const errJson = await resp.json();
+          errDetail = (errJson && errJson.error) ? String(errJson.error) : '';
+        } catch (e) {}
+        if (resp.status === 401 || resp.status === 403 || errDetail.toLowerCase().includes('permission denied')) {
+          const permErr = new Error('FIREBASE_PERMISSION_DENIED');
+          permErr.status = resp.status;
+          throw permErr;
+        }
+        throw new Error(`Firebase PUT failed (${resp.status}): ${errDetail || resp.statusText}`);
+      }
+      return true;
     },
 
     // Refresh all UI components
@@ -367,11 +589,15 @@
       } else if (status === 'synced') {
         badge.className = 'pwa-network-badge online';
         badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>Cloud Synced</span>';
-        badge.title = 'Active: Real-time Cloud Synchronization Active';
+        badge.title = 'Active: Real-time Cloud Synchronization Active (Click to sync now)';
+      } else if (status === 'permission_error') {
+        badge.className = 'pwa-network-badge offline';
+        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i><span>Rules Locked</span>';
+        badge.title = 'Firebase Permission Denied! Set Realtime Database Rules to read/write true in Firebase Console.';
       } else if (status === 'offline') {
         badge.className = 'pwa-network-badge offline';
         badge.innerHTML = '<i class="fa-solid fa-bolt"></i><span>Offline Mode</span>';
-        badge.title = 'Offline: All data saved locally on device';
+        badge.title = 'Offline: All data saved locally on device (Click to sync)';
       }
     },
 
@@ -406,9 +632,11 @@
         const lastSync = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
         if (lastSync && isConf) {
           const d = new Date(parseInt(lastSync, 10));
-          lastSyncEl.textContent = 'Last synced: ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const expCount = (window.storage && window.storage.getExpenses) ? window.storage.getExpenses().length : 0;
+          lastSyncEl.textContent = `Last synced: ${timeStr} (${expCount} expenses active)`;
         } else {
-          lastSyncEl.textContent = isConf ? 'Ready to sync' : 'Connect below to enable multi-device sync';
+          lastSyncEl.textContent = isConf ? 'Ready to sync' : 'Connect below to enable real-time multi-device sync';
         }
       }
     },
@@ -426,18 +654,16 @@
         return;
       }
 
-      if (!url.startsWith('https://') && !url.startsWith('http://')) {
-        url = 'https://' + url;
-      }
+      const sanitized = this.sanitizeDbUrl(url);
 
-      if (!url.includes('firebaseio.com')) {
+      if (!this.isValidFirebaseUrl(sanitized)) {
         if (window.showToast) {
-          window.showToast('Please enter a valid Firebase Realtime Database URL (e.g. https://spendorio-default-rtdb.firebaseio.com)', 'warning');
+          window.showToast('Please enter a valid Firebase URL (e.g. https://your-project.firebasedatabase.app or https://your-project.firebaseio.com)', 'warning');
         }
         return;
       }
 
-      this.setDbUrl(url);
+      this.setDbUrl(sanitized);
       if (window.showToast) {
         window.showToast('✅ Firebase URL saved! Testing cloud connection...', 'info');
       }

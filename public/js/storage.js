@@ -164,15 +164,22 @@ class StorageManager {
     const uid = (user.id || '').toLowerCase();
     const uname = (user.username || '').toLowerCase();
     const email = (user.email || '').toLowerCase();
+    const fname = (user.fullName || '').toLowerCase();
 
     // STRICT OWNER IDENTIFICATION:
-    // Only the real owner Mukilan Viswa has isOwner: true or username 'mukilanviswa'
+    // Any representation of owner Mukilan Viswa is recognized across desktop and phone
     return (
       user.isOwner === true ||
       uid === 'user-mukiviswa' ||
       uname === 'mukilanviswa' ||
       uname === 'mukiviswa' ||
-      email === 'mukilanviswa@gmail.com'
+      uname === 'mukilan' ||
+      uname.includes('mukil') ||
+      email === 'mukilanviswa@gmail.com' ||
+      email === 'mukiviswa@gmail.com' ||
+      email === 'spendorio102026@gmail.com' ||
+      fname.includes('mukilan') ||
+      fname.includes('mukivis')
     );
   }
 
@@ -640,8 +647,21 @@ class StorageManager {
       const key = this.getUserStorageKey(STORAGE_KEYS.EXPENSES);
       const data = localStorage.getItem(key);
       if (data !== null) {
-        const parsed = JSON.parse(data);
+        let parsed = JSON.parse(data);
         if (Array.isArray(parsed)) {
+          let updated = false;
+          parsed = parsed.map((item, idx) => {
+            if (!item || typeof item !== 'object') return null;
+            if (!item.id || String(item.id).trim() === '' || String(item.id) === 'undefined') {
+              item.id = 'exp-' + (Date.parse(item.createdAt || item.date || 0) || (Date.now() - idx * 1000)) + '-' + idx;
+              updated = true;
+            }
+            return item;
+          }).filter(Boolean);
+
+          if (updated) {
+            localStorage.setItem(key, JSON.stringify(parsed));
+          }
           return parsed;
         }
       }

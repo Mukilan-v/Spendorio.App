@@ -1557,6 +1557,10 @@ class AuthManager {
       if (window.storage.init) window.storage.init();
       if (window.storage.syncWithServer) window.storage.syncWithServer();
     }
+    // Trigger immediate cloud sync on login
+    if (window.firebaseSync && window.firebaseSync.isConfigured()) {
+      setTimeout(() => window.firebaseSync.syncNow(false), 250);
+    }
     if (window.app && window.app.updateSummaryMetrics) window.app.updateSummaryMetrics();
     if (window.tasks && window.tasks.render) window.tasks.render();
     if (window.expenses && window.expenses.render) window.expenses.render();
@@ -1701,7 +1705,7 @@ class AuthManager {
     let dob = user.dob || '';
     const uname = (user.username || '').toLowerCase();
     const uid = (user.id || '').toLowerCase();
-    const isRealOwner = user.isOwner === true || uid === 'user-mukiviswa' || uname === 'mukilanviswa' || uname === 'mukiviswa';
+    const isRealOwner = user.isOwner === true || uid === 'user-mukiviswa' || uname === 'mukilanviswa' || uname === 'mukiviswa' || uname === 'mukilan' || uname.includes('mukil');
     if (!pImg && isRealOwner) {
       pImg = 'img/profile.jpg';
       dob = dob || '2004-09-12';
@@ -1756,6 +1760,10 @@ class AuthManager {
     if (window.storage) {
       if (window.storage.init) window.storage.init();
       if (window.storage.syncWithServer) window.storage.syncWithServer();
+    }
+    // Trigger immediate cloud sync on login
+    if (window.firebaseSync && window.firebaseSync.isConfigured()) {
+      setTimeout(() => window.firebaseSync.syncNow(false), 250);
     }
     if (window.app && window.app.updateSummaryMetrics) window.app.updateSummaryMetrics();
     if (window.tasks && window.tasks.render) window.tasks.render();
