@@ -32,6 +32,25 @@
 
     init() {
       console.log('[FirebaseSync] Initializing Bidirectional Cloud Sync Engine...');
+
+      // Purge any accidental cached Firebase responses from browser CacheStorage
+      try {
+        if (typeof window !== 'undefined' && 'caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.open(name).then(cache => {
+                cache.keys().then(requests => {
+                  requests.forEach(req => {
+                    if (req.url && (req.url.includes('firebaseio.com') || req.url.includes('firebasedatabase.app'))) {
+                      cache.delete(req);
+                    }
+                  });
+                }).catch(() => {});
+              }).catch(() => {});
+            });
+          }).catch(() => {});
+        }
+      } catch (e) {}
       
       // Auto-detect one-click setup URL param: ?firebase_sync=... or ?firebase_url=...
       this.checkUrlSyncParam();

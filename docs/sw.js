@@ -3,7 +3,7 @@
  * 100% Offline Capability, Instant (<0.05s) App Launch, and Resilient Asset Caching.
  */
 
-const CACHE_NAME = 'spendorio-v2.3.4';
+const CACHE_NAME = 'spendorio-v2.3.5';
 
 // Core assets required to run Spendorio completely offline
 const STATIC_ASSETS = [
@@ -92,6 +92,11 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // 0. Cloud Firebase Realtime Database & External API Requests: ALWAYS direct network, NEVER cache in SW
+  if (url.hostname.includes('firebaseio.com') || url.hostname.includes('firebasedatabase.app')) {
+    return; // Pass through natively to network so real-time cloud data is NEVER intercepted or stale
+  }
+
   // 1. API Endpoints: Network-Only / Network-First with safe offline JSON fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
@@ -171,7 +176,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. Static Assets (Fonts, Images, Icons): Cache-First Strategy
+  // 4. Static Assets (Fonts, Images, Icons) within this origin: Cache-First Strategy
+  if (url.origin !== self.location.origin) {
+    return; // Never cache third-party or cross-origin requests in SW
+  }
+
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
