@@ -12,6 +12,14 @@
   const STORAGE_KEY_LOCAL_UPDATED = 'spendorio_local_data_updated_at';
   const DEFAULT_RTDB_URL = 'https://spendorio-default-rtdb.firebaseio.com';
 
+  // Immediate fail-safe: Ensure default official database URL is pre-set in localStorage
+  try {
+    const existingDb = (localStorage.getItem(STORAGE_KEY_FIREBASE_URL) || '').trim();
+    if (!existingDb) {
+      localStorage.setItem(STORAGE_KEY_FIREBASE_URL, DEFAULT_RTDB_URL);
+    }
+  } catch (e) {}
+
   function markLocalUpdated() {
     try {
       localStorage.setItem(STORAGE_KEY_LOCAL_UPDATED, Date.now().toString());
@@ -389,6 +397,13 @@
 
       const userId = this.getCurrentUserId();
       if (!userId) return; // Never sync guest sessions
+
+      // When user initiates manual sync, also check for any PWA service worker updates
+      if (!silent && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (reg && reg.update) reg.update().catch(() => {});
+        }).catch(() => {});
+      }
 
       this.syncInProgress = true;
       this.syncStartTime = Date.now();

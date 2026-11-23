@@ -112,31 +112,50 @@ class AuthManager {
   // Force reset main view strictly to Dashboard Overview (used on both Login and Logout)
   forceResetToDashboard() {
     try {
-      if (window.app && typeof window.app.switchTab === 'function') {
-        window.app.switchTab('dashboard');
-      } else {
-        document.querySelectorAll('.tab-content').forEach(p => {
-          p.classList.toggle('active', p.id === 'tab-dashboard');
-        });
-        document.querySelectorAll('.nav-item').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.tab === 'dashboard');
-        });
+      // 1. Unconditionally enforce tab panes directly in DOM
+      document.querySelectorAll('.tab-content').forEach(p => {
+        const isDashboard = (p.id === 'tab-dashboard');
+        p.classList.toggle('active', isDashboard);
+        p.style.display = isDashboard ? 'flex' : 'none';
+      });
+
+      // 2. Unconditionally enforce nav button state in DOM
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === 'dashboard');
+      });
+
+      // 3. Keep application state synchronized
+      if (window.app) {
+        window.app.currentTab = 'dashboard';
         const pageTitleEl = document.getElementById('page-title-text');
         const pageSubEl = document.getElementById('page-subtitle-text');
         if (pageTitleEl) pageTitleEl.textContent = 'Dashboard Overview';
         if (pageSubEl) pageSubEl.textContent = 'Daily Routine, Habits & Expense Analytics';
-        if (window.app) window.app.currentTab = 'dashboard';
+        if (typeof window.app.updateSummaryMetrics === 'function') {
+          try { window.app.updateSummaryMetrics(); } catch (_) {}
+        }
       }
 
-      // Close mobile sidebar if open
+      // 4. Close mobile sidebar if open
       document.querySelector('.sidebar')?.classList.remove('open');
-      // Dismiss any open modal dialogs
-      document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
 
-      // Reset scroll position to top
+      // 5. Dismiss any open modals or dialogs
+      document.querySelectorAll('.modal.active, .modal-overlay.active').forEach(m => {
+        m.classList.remove('active');
+        m.style.display = 'none';
+      });
+      document.body.classList.remove('modal-open');
+
+      // 6. Reset all scroll positions to 0 (top)
       window.scrollTo(0, 0);
-      const mainContent = document.querySelector('.main-content');
-      if (mainContent) mainContent.scrollTop = 0;
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      const cb = document.querySelector('.content-body');
+      if (cb) cb.scrollTop = 0;
+      const mw = document.querySelector('.main-wrapper');
+      if (mw) mw.scrollTop = 0;
+      const ac = document.querySelector('.app-container');
+      if (ac) ac.scrollTop = 0;
     } catch (e) {
       console.warn('[Auth] forceResetToDashboard error:', e);
     }
@@ -1586,7 +1605,13 @@ class AuthManager {
     localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(sessionPayload));
     this.currentUser = sessionUser;
     this.clearSignupForm();
+    this.forceResetToDashboard();
     this.applySessionUI(true);
+    this.forceResetToDashboard();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => this.forceResetToDashboard());
+    }
+    setTimeout(() => this.forceResetToDashboard(), 50);
 
     if (window.app && window.app.showToast) {
       window.app.showToast(`Welcome, ${sessionUser.fullName}! Account created & saved.`, 'success');
@@ -1787,7 +1812,20 @@ class AuthManager {
     this.clearLoginForm();
 
     this.currentUser = sessionUser;
+    this.forceResetToDashboard();
+    this.forceResetToDashboard();
     this.applySessionUI(true);
+    this.forceResetToDashboard();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => this.forceResetToDashboard());
+    }
+    setTimeout(() => this.forceResetToDashboard(), 50);
+    this.forceResetToDashboard();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => this.forceResetToDashboard());
+    }
+    setTimeout(() => this.forceResetToDashboard(), 50);
+    setTimeout(() => this.forceResetToDashboard(), 200);
 
     if (window.app && window.app.showToast) {
       window.app.showToast(`Welcome back, ${sessionUser.fullName}!`, 'success');
@@ -1843,7 +1881,13 @@ class AuthManager {
       window.storage.resetGuestDataToFresh();
     }
 
+    this.forceResetToDashboard();
     this.applySessionUI(true);
+    this.forceResetToDashboard();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => this.forceResetToDashboard());
+    }
+    setTimeout(() => this.forceResetToDashboard(), 50);
 
     if (window.app && window.app.showToast) {
       window.app.showToast('Logged in as Guest User. Fresh clean workspace ready!', 'info');
@@ -1879,9 +1923,11 @@ class AuthManager {
     this.clearLoginForm();
     this.clearSignupForm();
 
+    this.forceResetToDashboard();
     this.applySessionUI(false);
     this.switchTab('login');
     this.forceResetToDashboard();
+    setTimeout(() => this.forceResetToDashboard(), 50);
 
     this.clearLogoutReminderTimer();
     const reminder = document.getElementById('logout-gentle-reminder');

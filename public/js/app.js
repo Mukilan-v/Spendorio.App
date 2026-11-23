@@ -216,19 +216,26 @@ class Application {
     if (tabId === 'settings' || tabId === 'analytics') {
       setTimeout(() => this.updateExportSummary(), 50);
     }
-    if (tabId === 'settings' || tabId === 'analytics') {
-      setTimeout(() => this.updateExportSummary(), 50);
-    }
 
     // Update active nav button
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('active', item.dataset.tab === tabId);
     });
 
-    // Update active tab pane
+    // Update active tab pane with guaranteed display style
     document.querySelectorAll('.tab-content').forEach(pane => {
-      pane.classList.toggle('active', pane.id === `tab-${tabId}`);
+      const isTarget = (pane.id === `tab-${tabId}`);
+      pane.classList.toggle('active', isTarget);
+      pane.style.display = isTarget ? 'flex' : 'none';
     });
+
+    // Close mobile sidebar if open
+    document.querySelector('.sidebar')?.classList.remove('open');
+
+    // Scroll to top
+    window.scrollTo(0, 0);
+    const cb = document.querySelector('.content-body');
+    if (cb) cb.scrollTop = 0;
 
     // Update page title & subtitle
     const titleMap = {

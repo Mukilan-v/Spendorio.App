@@ -43,8 +43,12 @@
     // 1. Service Worker Registration
     registerServiceWorker() {
       if ('serviceWorker' in navigator) {
+        let isRefreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('[Spendorio PWA] Service worker controller updated successfully.');
+          if (isRefreshing) return;
+          isRefreshing = true;
+          console.log('[Spendorio PWA] Service worker controller updated! Auto-reloading client to apply latest version...');
+          window.location.reload();
         });
 
         window.addEventListener('load', () => {
@@ -55,8 +59,25 @@
 
               // Automatically trigger an update check on page load
               if (reg.update) {
-                reg.update();
+                reg.update().catch(() => {});
               }
+
+              // Check for updates on visibility and focus (e.g. waking phone from sleep)
+              document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && reg && reg.update) {
+                  reg.update().catch(() => {});
+                }
+              });
+              window.addEventListener('pageshow', () => {
+                if (reg && reg.update) {
+                  reg.update().catch(() => {});
+                }
+              });
+              window.addEventListener('focus', () => {
+                if (reg && reg.update) {
+                  reg.update().catch(() => {});
+                }
+              });
 
               // Check for updates
               reg.onupdatefound = () => {
@@ -65,10 +86,16 @@
                 installingWorker.onstatechange = () => {
                   if (installingWorker.state === 'installed') {
                     if (navigator.serviceWorker.controller) {
-                      console.log('[Spendorio PWA] New update ready. Refresh when convenient.');
+                      console.log('[Spendorio PWA] New update ready. Refreshing...');
                       if (window.showToast) {
-                        window.showToast('🚀 App updated! Works faster & offline.', 'info');
+                        window.showToast('🚀 Updating app to latest version...', 'info');
                       }
+                      setTimeout(() => {
+                        if (!isRefreshing) {
+                          isRefreshing = true;
+                          window.location.reload();
+                        }
+                      }, 700);
                     } else {
                       console.log('[Spendorio PWA] Offline caching complete! Ready for offline use.');
                     }

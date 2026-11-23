@@ -52,8 +52,37 @@
       if (idInput) idInput.value = '';
       if (pwInput) pwInput.value = '';
     }
-    window.addEventListener('DOMContentLoaded', clearAuthInputFields);
-    window.addEventListener('pageshow', clearAuthInputFields);
+
+    function forceDefaultDashboardTab() {
+      try {
+        var panes = document.querySelectorAll('.tab-content');
+        for (var i = 0; i < panes.length; i++) {
+          var isDash = panes[i].id === 'tab-dashboard';
+          panes[i].classList.toggle('active', isDash);
+          panes[i].style.display = isDash ? 'flex' : 'none';
+        }
+        var navs = document.querySelectorAll('.nav-item');
+        for (var j = 0; j < navs.length; j++) {
+          navs[j].classList.toggle('active', navs[j].getAttribute('data-tab') === 'dashboard');
+        }
+      } catch (e) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      clearAuthInputFields();
+      forceDefaultDashboardTab();
+    });
+    window.addEventListener('pageshow', function() {
+      clearAuthInputFields();
+      forceDefaultDashboardTab();
+    });
+
+    // Check service worker update immediately on page parse
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(function(reg) {
+        if (reg && reg.update) reg.update().catch(function() {});
+      }).catch(function() {});
+    }
 
     // Cache lifecycle is managed by sw.js
 
@@ -3015,15 +3044,15 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="js/pwa.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/firebase-sync.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/auth.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/storage.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/tasks.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/expenses.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/html2pdf.bundle.min.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/reports.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/charts.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
-  <script src="js/app.js?v=20261123_v40_zero_config_firebase_sync_fix"></script>
+  <script src="js/pwa.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/firebase-sync.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/auth.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/storage.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/tasks.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/expenses.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/html2pdf.bundle.min.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/reports.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/charts.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
+  <script src="js/app.js?v=20261123_v41_dashboard_first_and_auto_sync"></script>
 </body>
 </html>

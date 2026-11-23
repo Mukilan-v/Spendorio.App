@@ -3,7 +3,7 @@
  * 100% Offline Capability, Instant (<0.05s) App Launch, and Resilient Asset Caching.
  */
 
-const CACHE_NAME = 'spendorio-v2.3.3';
+const CACHE_NAME = 'spendorio-v2.3.4';
 
 // Core assets required to run Spendorio completely offline
 const STATIC_ASSETS = [
@@ -154,7 +154,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       (async () => {
         try {
-          const networkResponse = await fetch(request);
+          const networkResponse = await fetch(request, { cache: 'no-cache' });
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
             const cache = await caches.open(CACHE_NAME);
