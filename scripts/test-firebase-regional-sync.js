@@ -144,6 +144,36 @@ assert.strictEqual(sync.getDbUrl(), 'https://auto-connect-db.asia-southeast1.fir
 assert.strictEqual(sync.isConfigured(), true);
 console.log('  ✅ Phone 1-tap setup URL parameter auto-configuration passed.');
 
+// Test 7: Watchdog Auto-Clearing of Stuck Sync Lock
+console.log('Test 7: Watchdog lock clearing');
+sync.syncInProgress = true;
+sync.syncStartTime = Date.now() - 15000; // 15 seconds ago (stuck)
+// Trigger syncNow which should clear the lock via watchdog
+let calledFetch = false;
+sync.fetchWithTimeout = async () => {
+  calledFetch = true;
+  return { ok: false, status: 500 };
+};
+sync.syncNow(true);
+assert.strictEqual(calledFetch, true, 'Watchdog must force-clear stale lock and proceed with sync');
+console.log('  ✅ Watchdog lock clearing passed.');
+
+// Test 8: Phone & Laptop Bidirectional Merge Simulation
+console.log('Test 8: Phone & Laptop Bidirectional Cost Merge Simulation');
+// Laptop added an expense yesterday (22 Nov): ₹450
+const laptopExpenses = [
+  { id: 'exp-laptop-1', title: 'Yesterday Laptop Cost', amount: 450, date: '2026-11-22', createdAt: '2026-11-22T10:00:00Z', updatedAt: '2026-11-22T10:00:00Z' }
+];
+// Phone added an expense today (23 Nov): ₹120
+const phoneExpenses = [
+  { id: 'exp-phone-1', title: 'Today Phone Cost', amount: 120, date: '2026-11-23', createdAt: '2026-11-23T08:30:00Z', updatedAt: '2026-11-23T08:30:00Z' }
+];
+const bidirectionallyMerged = sync.mergeEntitiesById(phoneExpenses, laptopExpenses, new Set());
+assert.strictEqual(bidirectionallyMerged.length, 2, 'Merged list must contain both Laptop and Phone expenses');
+assert(bidirectionallyMerged.some(e => e.id === 'exp-laptop-1'), 'Must contain yesterday laptop cost');
+assert(bidirectionallyMerged.some(e => e.id === 'exp-phone-1'), 'Must contain today phone cost');
+console.log('  ✅ Phone & Laptop bidirectional cost merge simulation passed.');
+
 console.log('\n🎉 ALL FIREBASE REGIONAL SYNC TESTS PASSED SUCCESSFULLY!');
 if (sync && sync.pollTimer) clearInterval(sync.pollTimer);
 process.exit(0);

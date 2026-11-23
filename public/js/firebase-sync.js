@@ -228,6 +228,24 @@
       this.openSetupGuide();
     },
 
+    // Reliable fetch with timeout to prevent iOS Safari & sleep hangs
+    async fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+      if (typeof AbortController === 'undefined') {
+        return fetch(url, options);
+      }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        return response;
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+
     bindEvents() {
       // Sync immediately when user switches back to this browser tab
       document.addEventListener('visibilitychange', () => {
@@ -243,6 +261,14 @@
         }
       });
 
+      // iOS Safari PWA lifecycle: fires reliably when app is restored from background / bfcache
+      window.addEventListener('pageshow', () => {
+        if (this.isConfigured()) {
+          this.syncNow(true);
+          this.startAutoSync();
+        }
+      });
+
       // Sync when internet connection is restored
       window.addEventListener('online', () => {
         if (this.isConfigured()) {
@@ -252,15 +278,25 @@
           this.syncNow(false);
         }
       });
+
+      // Mobile user activity wake-up: if a sync was pending while offline, trigger sync on next touch
+      const onUserActivity = () => {
+        if (this.hasPendingSync && this.isConfigured() && !this.syncInProgress) {
+          this.syncNow(true);
+        }
+      };
+      window.addEventListener('touchstart', onUserActivity, { passive: true });
+      window.addEventListener('mousedown', onUserActivity, { passive: true });
     },
 
     startAutoSync() {
       if (this.pollTimer) clearInterval(this.pollTimer);
+      // Continuous background sync every 5 seconds for real-time reflection between Phone & Laptop
       this.pollTimer = setInterval(() => {
-        if (!document.hidden && navigator.onLine && this.isConfigured()) {
+        if (!document.hidden && this.isConfigured()) {
           this.syncNow(true);
         }
-      }, 10000); // Check every 10 seconds for real-time multi-device sync
+      }, 5000);
     },
 
     ensureEntityId(item, prefix = 'item', idx = 0) {
@@ -274,7 +310,8 @@
         hash = ((hash << 5) - hash) + base.charCodeAt(i);
         hash |= 0;
       }
-      const assignedId = `${prefix}-${Math.abs(hash)}-${idx}`;
+      // Deterministic ID without environment prefix so cloud and local versions match cleanly
+      const assignedId = `item-${Math.abs(hash)}`;
       item.id = assignedId;
       return assignedId;
     },
@@ -318,16 +355,20 @@
 
     // Main 2-way Bidirectional Union Sync
     async syncNow(silent = false) {
-      if (this.syncInProgress) return;
+      // 1. Watchdog: If previous sync has been locked for > 10s, force-reset it so the app never hangs
+      if (this.syncInProgress) {
+        const elapsed = Date.now() - (this.syncStartTime || 0);
+        if (elapsed > 10000) {
+          console.warn(`[FirebaseSync] Force-clearing stale sync lock after watchdog timeout (${elapsed}ms)`);
+          this.syncInProgress = false;
+        } else {
+          return;
+        }
+      }
+
       if (!this.isConfigured()) {
         if (!silent && window.showToast) {
           window.showToast('Please enter your Firebase Database URL in Settings first.', 'warning');
-        }
-        return;
-      }
-      if (!navigator.onLine) {
-        if (!silent && window.showToast) {
-          window.showToast('Device is offline. Changes saved locally and will sync when online.', 'info');
         }
         return;
       }
@@ -336,14 +377,28 @@
       if (!userId) return; // Never sync guest sessions
 
       this.syncInProgress = true;
+      this.syncStartTime = Date.now();
       this.updateSyncBadge('syncing');
 
       try {
         const dbUrl = this.getDbUrl();
-        const endpoint = `${dbUrl}/spendorio/users/${encodeURIComponent(userId)}.json`;
+        // Append cache-busting timestamp to avoid any stale browser/proxy HTTP caching
+        const endpoint = `${dbUrl}/spendorio/users/${encodeURIComponent(userId)}.json?_ts=${Date.now()}`;
+        const putEndpoint = `${dbUrl}/spendorio/users/${encodeURIComponent(userId)}.json`;
 
-        // 1. Fetch Cloud Data
-        const cloudResponse = await fetch(endpoint, { cache: 'no-cache' });
+        // 1. Fetch Cloud Data with 8s timeout
+        let cloudResponse = null;
+        try {
+          cloudResponse = await this.fetchWithTimeout(endpoint, { cache: 'no-store' }, 8000);
+        } catch (netErr) {
+          this.hasPendingSync = true;
+          this.updateSyncBadge('offline');
+          if (!silent && window.showToast) {
+            window.showToast('Cloud sync paused (device offline or connection timed out)', 'warning');
+          }
+          return;
+        }
+
         if (!cloudResponse.ok) {
           let errDetail = '';
           try {
@@ -359,13 +414,17 @@
 
         let cloudData = null;
         if (cloudResponse.ok) {
-          cloudData = await cloudResponse.json();
+          try {
+            cloudData = await cloudResponse.json();
+          } catch (e) {
+            cloudData = null;
+          }
         }
 
-        const localTasks = window.storage.getTasks() || [];
-        const localExpenses = window.storage.getExpenses() || [];
-        const localIncomes = window.storage.getIncomes() || [];
-        const localSettings = window.storage.getSettings() || {};
+        const localTasks = (window.storage && window.storage.getTasks) ? window.storage.getTasks() : [];
+        const localExpenses = (window.storage && window.storage.getExpenses) ? window.storage.getExpenses() : [];
+        const localIncomes = (window.storage && window.storage.getIncomes) ? window.storage.getIncomes() : [];
+        const localSettings = (window.storage && window.storage.getSettings) ? window.storage.getSettings() : {};
 
         const preLocalExpCount = localExpenses.length;
 
@@ -395,26 +454,29 @@
         const mergedSettings = { ...cloudSettings, ...localSettings };
 
         // 3. Apply to Local Storage (Protected from bounce-back push)
-        window.storage._isSyncingFromCloud = true;
-        try {
-          window.storage.saveExpenses(mergedExpenses);
-          window.storage.saveTasks(mergedTasks);
-          window.storage.saveIncomes(mergedIncomes);
-          if (cloudProfile && window.auth && typeof window.auth.applyCloudProfile === 'function') {
-            window.auth.applyCloudProfile(cloudProfile);
+        if (window.storage) {
+          window.storage._isSyncingFromCloud = true;
+          try {
+            window.storage.saveExpenses(mergedExpenses);
+            window.storage.saveTasks(mergedTasks);
+            window.storage.saveIncomes(mergedIncomes);
+            if (cloudProfile && window.auth && typeof window.auth.applyCloudProfile === 'function') {
+              window.auth.applyCloudProfile(cloudProfile);
+            }
+          } finally {
+            window.storage._isSyncingFromCloud = false;
           }
-        } finally {
-          window.storage._isSyncingFromCloud = false;
         }
 
-        // Refresh all UI components immediately
+        // Refresh all UI components immediately so both device entries appear on screen
         this.refreshAllUI();
 
         // 4. Ensure cloud has the clean synchronized state
-        await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, mergedSettings, Array.from(activeDeletedIds));
+        await this.pushMergedPayload(putEndpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, mergedSettings, Array.from(activeDeletedIds));
 
         const now = Date.now();
         localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
+        this.hasPendingSync = false;
         this.updateSyncBadge('synced');
         this.updateStatusUI();
 
@@ -426,7 +488,7 @@
             const added = postExpCount - preLocalExpCount;
             window.showToast(`✅ Synced! Received ${added} new expense${added > 1 ? 's' : ''} from cloud (${postExpCount} total)`, 'success');
           } else {
-            window.showToast(`✅ Synced with Cloud! (${postExpCount} expenses, ${postTaskCount} tasks)`, 'success');
+            window.showToast(`✅ Synced with Cloud! (${postExpCount} expenses active)`, 'success');
           }
         }
       } catch (err) {
@@ -438,6 +500,7 @@
             window.showToast('⚠️ Firebase Rules Locked! Click Setup Guide to unlock read/write in Firebase Console', 'error');
           }
         } else {
+          this.hasPendingSync = true;
           this.updateSyncBadge('offline');
           if (!silent && window.showToast) {
             window.showToast('Cloud sync paused (check internet or database URL)', 'warning');
@@ -445,79 +508,20 @@
         }
       } finally {
         this.syncInProgress = false;
+        this.syncStartTime = 0;
       }
     },
 
-    // Push local data directly when user creates an expense/task
-    async pushLocalData(silent = true) {
-      if (!this.isConfigured() || !navigator.onLine) return;
-      const userId = this.getCurrentUserId();
-      if (!userId || !window.storage) return;
-
-      try {
-        const dbUrl = this.getDbUrl();
-        const endpoint = `${dbUrl}/spendorio/users/${encodeURIComponent(userId)}.json`;
-
-        // 1. Fetch current cloud state to merge before pushing
-        const cloudResponse = await fetch(endpoint, { cache: 'no-cache' });
-        if (!cloudResponse.ok && (cloudResponse.status === 401 || cloudResponse.status === 403)) {
-          const permErr = new Error('FIREBASE_PERMISSION_DENIED');
-          permErr.status = cloudResponse.status;
-          throw permErr;
-        }
-
-        let cloudData = null;
-        if (cloudResponse.ok) {
-          cloudData = await cloudResponse.json();
-        }
-
-        const localTasks = window.storage.getTasks() || [];
-        const localExpenses = window.storage.getExpenses() || [];
-        const localIncomes = window.storage.getIncomes() || [];
-        const localSettings = window.storage.getSettings() || {};
-
-        const cloudTasks = (cloudData && Array.isArray(cloudData.tasks)) ? cloudData.tasks : [];
-        const cloudExpenses = (cloudData && Array.isArray(cloudData.expenses)) ? cloudData.expenses : [];
-        const cloudIncomes = (cloudData && Array.isArray(cloudData.incomes)) ? cloudData.incomes : [];
-        const cloudDeletedIds = (cloudData && Array.isArray(cloudData.deletedIds)) ? cloudData.deletedIds : [];
-
-        if (cloudDeletedIds.length > 0 && window.storage && typeof window.storage.addDeletedIds === 'function') {
-          window.storage.addDeletedIds(cloudDeletedIds);
-        }
-        const activeDeletedIds = (window.storage && typeof window.storage.getDeletedIds === 'function') ? window.storage.getDeletedIds() : new Set();
-
-        const mergedExpenses = this.mergeEntitiesById(localExpenses, cloudExpenses, activeDeletedIds);
-        mergedExpenses.sort((a, b) => {
-          const da = a.date || a.createdAt || '';
-          const db = b.date || b.createdAt || '';
-          return db.localeCompare(da);
-        });
-
-        const mergedTasks = this.mergeEntitiesById(localTasks, cloudTasks, activeDeletedIds);
-        const mergedIncomes = this.mergeEntitiesById(localIncomes, cloudIncomes, activeDeletedIds);
-
-        await this.pushMergedPayload(endpoint, userId, mergedTasks, mergedExpenses, mergedIncomes, localSettings, Array.from(activeDeletedIds));
-
-        const now = Date.now();
-        localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
-        this.updateSyncBadge('synced');
-        this.updateStatusUI();
-
-        if (!silent && window.showToast) {
-          window.showToast('☁️ Saved to cloud! Automatically synced across all devices.', 'success');
-        }
-      } catch (e) {
-        console.warn('[FirebaseSync] Failed to push local data:', e.message);
-        if (e.message === 'FIREBASE_PERMISSION_DENIED') {
-          this.updateSyncBadge('permission_error');
-          if (window.showToast) {
-            window.showToast('⚠️ Firebase Rules Locked! Go to Firebase Console -> Rules & set .read: true, .write: true', 'error');
-          }
-        }
-      }
+    // When local data changes (added/edited/deleted), trigger immediate bidirectional sync
+    pushLocalData(silent = true) {
+      if (!this.isConfigured()) return;
+      if (this._debounceTimer) clearTimeout(this._debounceTimer);
+      this._debounceTimer = setTimeout(() => {
+        this.syncNow(silent);
+      }, 150);
     },
 
-    // Push unified payload to Firebase REST endpoint
+    // Push unified payload to Firebase REST endpoint with timeout
     async pushMergedPayload(endpoint, userId, tasks, expenses, incomes, settings, deletedIds = []) {
       const now = Date.now();
       const payload = {
@@ -539,11 +543,11 @@
         } : null
       };
 
-      const resp = await fetch(endpoint, {
+      const resp = await this.fetchWithTimeout(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      });
+      }, 9000);
 
       if (!resp.ok) {
         let errDetail = '';
@@ -722,8 +726,8 @@
       const endpoint = `${dbUrl}/spendorio/users/${encodeURIComponent(userId)}.json`;
 
       try {
-        // Step 1: Test GET (Read)
-        const getResp = await fetch(endpoint, { cache: 'no-cache' });
+        // Step 1: Test GET (Read) with cache-busting and timeout
+        const getResp = await this.fetchWithTimeout(`${endpoint}?_ts=${Date.now()}`, { cache: 'no-store' }, 8000);
         if (!getResp.ok) {
           let errText = '';
           try {
@@ -774,11 +778,11 @@
           deletedIds: Array.from(activeDeletedIds)
         };
 
-        const putResp = await fetch(endpoint, {
+        const putResp = await this.fetchWithTimeout(endpoint, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(testPayload)
-        });
+        }, 9000);
 
         if (!putResp.ok) {
           let putErr = '';
@@ -814,7 +818,7 @@
 
         // Both Read and Write succeeded!
         if (resultEl) {
-          resultEl.innerHTML = `🟢 <strong>100% CONNECTED &amp; VERIFIED!</strong><br>• User ID: <code>${userId}</code><br>• Local Expenses: <strong>${localExp}</strong><br>• Cloud Expenses: <strong>${mergedExpenses.length}</strong><br>• Status: Read &amp; Write working in real-time!`;
+          resultEl.innerHTML = `🟢 <strong>100% CONNECTED &amp; VERIFIED!</strong><br>• User ID: <code>${userId}</code><br>• Local Stored: <strong>${localExp}</strong><br>• Cloud Stored: <strong>${cloudExp}</strong><br>• Total Synced: <strong>${mergedExpenses.length}</strong><br>• Status: Read &amp; Write working in real-time!`;
           resultEl.style.color = '#10b981';
         }
         if (window.showToast) {

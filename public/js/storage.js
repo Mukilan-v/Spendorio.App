@@ -819,9 +819,11 @@ class StorageManager {
 
   addIncome(income) {
     const incomes = this.getIncomes();
+    const nowIso = new Date().toISOString();
     const generatedId = 'inc-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const newIncome = {
-      createdAt: new Date().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
       ...income,
       amount: parseFloat(income ? income.amount : 0) || 0,
       id: (income && income.id && String(income.id).trim() !== '' && String(income.id) !== 'undefined') ? String(income.id).trim() : generatedId
