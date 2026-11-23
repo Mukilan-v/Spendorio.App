@@ -109,6 +109,39 @@ class AuthManager {
     return false;
   }
 
+  // Force reset main view strictly to Dashboard Overview (used on both Login and Logout)
+  forceResetToDashboard() {
+    try {
+      if (window.app && typeof window.app.switchTab === 'function') {
+        window.app.switchTab('dashboard');
+      } else {
+        document.querySelectorAll('.tab-content').forEach(p => {
+          p.classList.toggle('active', p.id === 'tab-dashboard');
+        });
+        document.querySelectorAll('.nav-item').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === 'dashboard');
+        });
+        const pageTitleEl = document.getElementById('page-title-text');
+        const pageSubEl = document.getElementById('page-subtitle-text');
+        if (pageTitleEl) pageTitleEl.textContent = 'Dashboard Overview';
+        if (pageSubEl) pageSubEl.textContent = 'Daily Routine, Habits & Expense Analytics';
+        if (window.app) window.app.currentTab = 'dashboard';
+      }
+
+      // Close mobile sidebar if open
+      document.querySelector('.sidebar')?.classList.remove('open');
+      // Dismiss any open modal dialogs
+      document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+
+      // Reset scroll position to top
+      window.scrollTo(0, 0);
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) mainContent.scrollTop = 0;
+    } catch (e) {
+      console.warn('[Auth] forceResetToDashboard error:', e);
+    }
+  }
+
   // Update DOM visibility between Auth Screen and Main App
   applySessionUI(isLoggedIn) {
     const authScreen = document.getElementById('auth-screen');
@@ -118,6 +151,10 @@ class AuthManager {
       if (authScreen && authScreen.style) authScreen.style.display = 'none';
       if (appContainer && appContainer.style) appContainer.style.display = 'flex';
       this.updateUserProfileBadges();
+
+      // ALWAYS show the Dashboard first when logging in
+      this.forceResetToDashboard();
+
       // Start 1-minute gentle logout security reminder
       this.startLogoutReminderTimer();
     } else {
@@ -126,6 +163,9 @@ class AuthManager {
       this.clearLogoutReminderTimer();
       const reminder = document.getElementById('logout-gentle-reminder');
       if (reminder && reminder.style) reminder.style.display = 'none';
+
+      // ALWAYS reset main app view to Dashboard upon logout so next login is guaranteed on Dashboard
+      this.forceResetToDashboard();
     }
   }
 
@@ -1841,6 +1881,7 @@ class AuthManager {
 
     this.applySessionUI(false);
     this.switchTab('login');
+    this.forceResetToDashboard();
 
     this.clearLogoutReminderTimer();
     const reminder = document.getElementById('logout-gentle-reminder');
