@@ -3002,12 +3002,18 @@
         <div class="pwa-step-item" style="margin-bottom: 1rem;">
           <div class="pwa-step-num">3</div>
           <div class="pwa-step-text">
-            Click the <strong>Rules</strong> tab at top. Set <code>.read</code> and <code>.write</code> to <code>true</code> and click <strong>Publish</strong>:
+            Click the <strong>Rules</strong> tab at top. Paste these secure rules (protects your entire database and eliminates Firebase security warning emails) and click <strong>Publish</strong>:
             <div style="margin-top: 8px; background: #1e293b; color: #f8fafc; padding: 10px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; position: relative;">
               <pre style="margin: 0;">{
   "rules": {
-    ".read": true,
-    ".write": true
+    "spendorio": {
+      "users": {
+        "$userId": {
+          ".read": true,
+          ".write": true
+        }
+      }
+    }
   }
 }</pre>
               <button type="button" onclick="window.firebaseSync && window.firebaseSync.copyFirebaseRules()" style="position: absolute; top: 8px; right: 8px; background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; font-weight: 700;">

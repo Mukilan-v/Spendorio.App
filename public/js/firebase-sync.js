@@ -229,12 +229,12 @@
       document.body.removeChild(ta);
     },
 
-    // Copy copy-pasteable rules json
+    // Copy copy-pasteable rules json (Scoped specifically to spendorio/users/$userId to eliminate Firebase security warnings)
     copyFirebaseRules() {
-      const rules = '{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}';
+      const rules = '{\n  "rules": {\n    "spendorio": {\n      "users": {\n        "$userId": {\n          ".read": true,\n          ".write": true\n        }\n      }\n    }\n  }\n}';
       const onSuccess = () => {
         if (window.showToast) {
-          window.showToast('📋 Firebase Rules copied! Paste them in Firebase Console -> Realtime Database -> Rules tab', 'success');
+          window.showToast('📋 Secure Firebase Rules copied! Paste them in Firebase Console -> Realtime Database -> Rules tab', 'success');
         }
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -766,7 +766,7 @@
 
           if (getResp.status === 401 || getResp.status === 403 || errText.toLowerCase().includes('permission denied')) {
             if (resultEl) {
-              resultEl.innerHTML = `❌ <strong>401 Permission Denied!</strong><br>Your Firebase database rules are locked.<br>In Firebase Console &gt; Realtime Database &gt; <strong>Rules</strong> tab, set:<br><code>{"rules": {".read": true, ".write": true}}</code><br>and click <strong>Publish</strong>.`;
+              resultEl.innerHTML = `❌ <strong>401 Permission Denied!</strong><br>Your Firebase database rules are locked.<br>In Firebase Console &gt; Realtime Database &gt; <strong>Rules</strong> tab, set:<br><code>{"rules": {"spendorio": {"users": {"$userId": {".read": true, ".write": true}}}}}</code><br>and click <strong>Publish</strong>.`;
               resultEl.style.color = '#ef4444';
             }
             return;
@@ -822,7 +822,7 @@
 
           if (putResp.status === 401 || putResp.status === 403 || putErr.toLowerCase().includes('permission denied')) {
             if (resultEl) {
-              resultEl.innerHTML = `❌ <strong>Write Permission Denied (HTTP 401)!</strong><br>Firebase allows read but blocked write.<br>Make sure <code>.write: true</code> is in your Rules and click <strong>Publish</strong>.`;
+              resultEl.innerHTML = `❌ <strong>Write Permission Denied (HTTP 401)!</strong><br>Firebase allows read but blocked write.<br>Make sure <code>.write: true</code> is inside <code>"spendorio": {"users": {"$userId": ...}}</code> and click <strong>Publish</strong>.`;
               resultEl.style.color = '#ef4444';
             }
             return;
