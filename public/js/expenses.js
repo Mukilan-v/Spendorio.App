@@ -20,6 +20,10 @@ class ExpenseManager {
 
   setPeriodFilter(period) {
     this.periodFilter = period;
+    const filterSelect = document.getElementById('expense-period-filter');
+    if (filterSelect && (period === 'today' || period === 'month' || period === 'all')) {
+      filterSelect.value = period;
+    }
     this.render();
   }
 
@@ -386,12 +390,31 @@ class ExpenseManager {
     ` : '';
 
     if (filtered.length === 0) {
+      const allExpensesTotal = window.storage.getExpenses();
+      const curMonth = this.currentDate.substring(0, 7);
+      const monthExpenses = allExpensesTotal.filter(e => e.date && e.date.startsWith(curMonth));
+
+      const isTodayEmpty = this.periodFilter === 'today' && allExpensesTotal.length > 0;
+      const emptyMsg = isTodayEmpty
+        ? `No expenses logged for <strong>Today (${this.currentDate})</strong>.<br><span style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-top:4px;">You have <strong>${monthExpenses.length} expenses</strong> this month (${allExpensesTotal.length} all-time) synced on your account.</span>`
+        : `No expenses found for the selected period & filters.`;
+
       tableBody.innerHTML = filterBanner + `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-            <i class="fa-solid fa-receipt" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; display: block;"></i>
-            No expenses found for the selected period & filters.
-            ${this.selectedPersonFilter ? `<div style="margin-top:0.5rem;"><button class="action-btn btn-primary" onclick="window.expenses.clearPersonFilter()">Clear Person Filter</button></div>` : ''}
+          <td colspan="7" style="text-align: center; padding: 2.25rem 1rem; color: var(--text-muted);">
+            <i class="fa-solid fa-receipt" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; display: block; color: var(--primary);"></i>
+            <div>${emptyMsg}</div>
+            <div style="margin-top: 1rem; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              ${allExpensesTotal.length > 0 ? `
+                <button type="button" class="action-btn btn-primary" onclick="window.expenses.setPeriodFilter('month')" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">
+                  <i class="fa-solid fa-calendar-days"></i> View This Month (${monthExpenses.length})
+                </button>
+                <button type="button" class="action-btn btn-secondary" onclick="window.expenses.setPeriodFilter('all')" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">
+                  <i class="fa-solid fa-list-ul"></i> View All Time (${allExpensesTotal.length})
+                </button>
+              ` : ''}
+              ${this.selectedPersonFilter ? `<button type="button" class="action-btn" onclick="window.expenses.clearPersonFilter()" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;"><i class="fa-solid fa-xmark"></i> Clear Person Filter</button>` : ''}
+            </div>
           </td>
         </tr>
       `;

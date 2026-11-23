@@ -10,6 +10,7 @@
   const STORAGE_KEY_FIREBASE_URL = 'spendorio_firebase_db_url';
   const STORAGE_KEY_LAST_SYNC = 'spendorio_firebase_last_sync';
   const STORAGE_KEY_LOCAL_UPDATED = 'spendorio_local_data_updated_at';
+  const DEFAULT_RTDB_URL = 'https://spendorio-default-rtdb.firebaseio.com';
 
   function markLocalUpdated() {
     try {
@@ -27,6 +28,12 @@
       // Auto-detect one-click setup URL param: ?firebase_sync=... or ?firebase_url=...
       this.checkUrlSyncParam();
 
+      // Ensure default Firebase Database URL is active out-of-the-box on all devices (Laptop & Phone)
+      const currentUrl = (localStorage.getItem(STORAGE_KEY_FIREBASE_URL) || '').trim();
+      if (!currentUrl) {
+        localStorage.setItem(STORAGE_KEY_FIREBASE_URL, DEFAULT_RTDB_URL);
+      }
+
       this.bindEvents();
       this.updateStatusUI();
 
@@ -35,9 +42,9 @@
         if (this.isConfigured()) {
           this.syncNow(true);
         }
-      }, 1000);
+      }, 600);
 
-      // Start recurring background auto-sync every 10 seconds for real-time responsiveness
+      // Start recurring background auto-sync every 5 seconds for real-time responsiveness
       this.startAutoSync();
     },
 
@@ -116,7 +123,9 @@
 
     getDbUrl() {
       const url = (localStorage.getItem(STORAGE_KEY_FIREBASE_URL) || '').trim();
-      return this.sanitizeDbUrl(url);
+      if (url) return this.sanitizeDbUrl(url);
+      // Seamless zero-setup default: Spendorio official Realtime Database
+      return DEFAULT_RTDB_URL;
     },
 
     setDbUrl(url) {
@@ -152,12 +161,17 @@
         u === 'mukilanviswa' ||
         u === 'mukilan' ||
         u.includes('mukil') ||
+        u.includes('muki') ||
+        u.includes('viswa') ||
         uid === 'user-mukiviswa' ||
         email === 'mukilanviswa@gmail.com' ||
         email === 'mukiviswa@gmail.com' ||
         email === 'spendorio102026@gmail.com' ||
+        email.includes('mukilan') ||
+        email.includes('mukiviswa') ||
         fn.includes('mukilan') ||
-        fn.includes('mukivis')
+        fn.includes('mukivis') ||
+        fn.includes('viswa')
       ) {
         return 'user_mukilan';
       }
@@ -513,7 +527,7 @@
     },
 
     // When local data changes (added/edited/deleted), trigger immediate bidirectional sync
-    pushLocalData(silent = true) {
+    pushLocalData(silent = false) {
       if (!this.isConfigured()) return;
       if (this._debounceTimer) clearTimeout(this._debounceTimer);
       this._debounceTimer = setTimeout(() => {

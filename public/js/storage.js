@@ -175,11 +175,16 @@ class StorageManager {
       uname === 'mukiviswa' ||
       uname === 'mukilan' ||
       uname.includes('mukil') ||
+      uname.includes('muki') ||
+      uname.includes('viswa') ||
       email === 'mukilanviswa@gmail.com' ||
       email === 'mukiviswa@gmail.com' ||
       email === 'spendorio102026@gmail.com' ||
+      email.includes('mukilan') ||
+      email.includes('mukiviswa') ||
       fname.includes('mukilan') ||
-      fname.includes('mukivis')
+      fname.includes('mukivis') ||
+      fname.includes('viswa')
     );
   }
 
